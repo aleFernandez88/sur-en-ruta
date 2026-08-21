@@ -1,0 +1,138 @@
+---
+/**
+ * Inversion.astro — Sección 5. Etapa 1: validar el sistema en 90 días. Cierre y pedido.
+ *
+ * CÁSCARA VACÍA (2026-08-21): estructura semántica y jerarquía de headings correctas, sin copy
+ * real. El copy, los montos y los porcentajes salen de docs/landing-inversores-contenido.md y de
+ * src/data/inversion.ts (hoy vacío), pero cargarlos es un paso aparte — ver
+ * docs/planes/2026-08-20-landing-inversores.md, paso 11.
+ *
+ * REGLA DE MONEDA (ver CLAUDE.md): cuando se cargue el monto real, va siempre con la moneda
+ * escrita (`$U` o `UYU`), nunca un `$` a secas. Por eso ni el placeholder usa el símbolo suelto.
+ */
+
+// Estructura fija: 3 etapas del modelo económico y 8 rubros de la Etapa 1 (verificados contra el PDF).
+const etapasPlaceholder = [1, 2, 3];
+const rubrosPlaceholder = [1, 2, 3, 4, 5, 6, 7, 8];
+---
+
+<section id="inversion" aria-labelledby="inversion-titulo">
+	<h2 id="inversion-titulo">[TODO: titular Inversión]</h2>
+
+	<ol class="inversion-timeline">
+		{etapasPlaceholder.map((n) => (
+			<li class:list={['etapa', { destacada: n === 1 }]}>[TODO: etapa {n}]</li>
+		))}
+	</ol>
+
+	<div class="inversion-reparto">
+		<h3>[TODO: subtítulo — reparto de la Etapa 1]</h3>
+		<ul class="grafico-barras">
+			{rubrosPlaceholder.map((n) => (
+				<li class="barra-rubro">
+					<span class="barra-etiqueta">[TODO: rubro {n}]</span>
+					<span class="barra-visual" style={`--pct: ${n * 10}%`} aria-hidden="true"></span>
+					<span class="barra-valor">[TODO: % rubro {n}]</span>
+				</li>
+			))}
+		</ul>
+	</div>
+
+	<div class="inversion-monto">
+		<p class="monto-total">[TODO: monto total de la Etapa 1 + moneda — nunca "$" sin moneda]</p>
+		<p class="monto-equivalente">[TODO: equivalente aproximado en USD, con tipo de cambio, fecha y fuente]</p>
+	</div>
+
+	<div class="inversion-cierre">
+		<h3>[TODO: subtítulo — qué se compra con la inversión]</h3>
+		<ul>
+			<li>[TODO: indicador — puntos adheridos]</li>
+			<li>[TODO: indicador — viajeros y vehículos registrados]</li>
+			<li>[TODO: indicador — consumo en comercios adheridos]</li>
+			<li>[TODO: indicador — distribución por departamento]</li>
+		</ul>
+	</div>
+
+	<a href="mailto:" class="cta cta-primario">[TODO: CTA final — solicitar el dossier]</a>
+</section>
+
+<style>
+	section {
+		padding: var(--espacio-2xl) var(--espacio-md);
+		display: grid;
+		gap: var(--espacio-lg);
+	}
+
+	h2 {
+		font-size: var(--texto-2xl);
+	}
+
+	.inversion-timeline {
+		display: grid;
+		grid-auto-flow: column;
+		gap: var(--espacio-sm);
+		list-style: none;
+		padding: 0;
+		margin: 0;
+	}
+
+	.etapa {
+		padding: var(--espacio-sm);
+		background-color: var(--color-superficie);
+		border-radius: var(--radio-md);
+		text-align: center;
+	}
+
+	.etapa.destacada {
+		background-color: var(--color-acento);
+		color: var(--color-fondo);
+		font-weight: 700;
+	}
+
+	.grafico-barras {
+		display: grid;
+		gap: var(--espacio-xs);
+		list-style: none;
+		padding: 0;
+		margin: 0;
+	}
+
+	.barra-rubro {
+		display: grid;
+		grid-template-columns: 12rem 1fr 4rem;
+		align-items: center;
+		gap: var(--espacio-sm);
+	}
+
+	.barra-visual {
+		display: block;
+		height: 0.75rem;
+		border-radius: var(--radio-full);
+		background-color: var(--color-acento);
+		width: var(--pct);
+	}
+
+	.monto-total {
+		font-size: var(--texto-lg);
+		font-weight: 700;
+		/* Deliberadamente sobrio: no es el elemento más grande de la sección (ver plan, punto f.2). */
+	}
+
+	.monto-equivalente {
+		font-size: var(--texto-sm);
+	}
+
+	.cta {
+		display: inline-block;
+		padding: var(--espacio-xs) var(--espacio-md);
+		border-radius: var(--radio-md);
+		text-decoration: none;
+		font-weight: 700;
+		justify-self: start;
+	}
+
+	.cta-primario {
+		background-color: var(--color-acento);
+		color: var(--color-fondo);
+	}
+</style>

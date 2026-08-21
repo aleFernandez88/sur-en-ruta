@@ -1,0 +1,112 @@
+---
+/**
+ * Rutas.astro — Sección 4. Seis rutas temáticas + Uruguay como hub regional.
+ *
+ * CÁSCARA VACÍA (2026-08-21): estructura semántica y jerarquía de headings correctas, sin copy
+ * real. El copy sale de docs/landing-inversores-contenido.md, pero cargarlo es un paso aparte —
+ * ver docs/planes/2026-08-20-landing-inversores.md, paso 11.
+ *
+ * IMPORTANTE para cuando se cargue el contenido real: el plan exige un rótulo obligatorio y
+ * literal sobre el mapa ("Rutas propuestas. El relevamiento territorial es parte de la Etapa 1.")
+ * — sin él, el mapa insinúa una red que todavía no existe. Acá queda como TODO, no se omite.
+ *
+ * También según el plan: esta sección es "la única isla interactiva" (selector de rutas,
+ * hidratación client:visible). Esa interactividad no se cablea todavía — es comportamiento, no
+ * estructura — y queda anotada como TODO junto al selector.
+ */
+import MapaPlaceholder from './MapaPlaceholder.astro';
+
+// Estructura fija: 6 rutas temáticas y 4 ferias internacionales (verificadas contra el PDF).
+const rutasPlaceholder = [1, 2, 3, 4, 5, 6];
+const feriasPlaceholder = [1, 2, 3, 4];
+---
+
+<section id="rutas" aria-labelledby="rutas-titulo">
+	<h2 id="rutas-titulo">[TODO: titular Rutas]</h2>
+
+	<div class="rutas-mapa-interactivo">
+		<!-- TODO: mapa a pantalla completa con las 6 rutas dibujables; hidratar con client:visible -->
+		<MapaPlaceholder etiqueta="mapa interactivo de rutas" />
+
+		<div class="rutas-selector" role="group" aria-label="[TODO: selector de rutas]">
+			{rutasPlaceholder.map((n) => (
+				<button type="button" disabled>[TODO: ruta {n}]</button>
+			))}
+		</div>
+
+		<!-- TODO: rótulo obligatorio y literal — ver comentario superior del componente -->
+		<p class="rutas-rotulo">[TODO: rótulo — rutas propuestas / relevamiento pendiente]</p>
+	</div>
+
+	<div class="rutas-hub-regional">
+		<h3>[TODO: subtítulo — Uruguay como hub regional]</h3>
+		<!-- TODO: mapa del Cono Sur con Uruguay como puerta de entrada -->
+		<MapaPlaceholder etiqueta="mapa del Cono Sur" />
+
+		<p>[TODO: propuesta de valor al mercado externo]</p>
+		<p>[TODO: mención de guarderías de motorhomes como ingreso recurrente]</p>
+
+		<ul class="rutas-ferias">
+			{feriasPlaceholder.map((n) => (
+				<li>[TODO: feria {n}]</li>
+			))}
+		</ul>
+	</div>
+</section>
+
+<style>
+	section {
+		padding: var(--espacio-2xl) var(--espacio-md);
+		display: grid;
+		gap: var(--espacio-lg);
+	}
+
+	h2 {
+		font-size: var(--texto-2xl);
+	}
+
+	.rutas-mapa-interactivo {
+		display: grid;
+		gap: var(--espacio-sm);
+	}
+
+	.rutas-selector {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--espacio-xs);
+	}
+
+	.rutas-selector button {
+		padding: var(--espacio-xs) var(--espacio-sm);
+		border-radius: var(--radio-full);
+		border: 2px solid var(--color-tinta);
+		background: transparent;
+		color: var(--color-tinta);
+		font: inherit;
+	}
+
+	.rutas-rotulo {
+		font-size: var(--texto-sm);
+		font-style: italic;
+	}
+
+	.rutas-hub-regional {
+		display: grid;
+		gap: var(--espacio-sm);
+	}
+
+	.rutas-ferias {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--espacio-sm);
+		list-style: none;
+		padding: 0;
+		margin: 0;
+	}
+
+	.rutas-ferias li {
+		padding: var(--espacio-xs) var(--espacio-sm);
+		background-color: var(--color-superficie);
+		border-radius: var(--radio-sm);
+	}
+</style>

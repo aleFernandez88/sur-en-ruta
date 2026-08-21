@@ -1,0 +1,49 @@
+/*
+ * tokens.css — sistema de diseño de Sur en Ruta (landing de inversores)
+ *
+ * Nombres semánticos, nunca el nombre de la paleta: cuando exista
+ * docs/decisiones/identidad-visual.md (paso 13 del plan de la landing), adoptar la paleta elegida
+ * es cambiar los valores de esta capa, no repasar la landing entera. Son los mismos nombres de
+ * token que usa prototipos/identidad/index.html, para que la decisión se traslade sin traducción.
+ */
+
+:root {
+  /* === Color — PROVISORIO — reemplazar con docs/decisiones/identidad-visual.md === */
+  --color-fondo: #f3f1ec;
+  --color-tinta: #1e1d1b;
+  --color-acento: #163fbf;
+  --color-superficie: #e8e4d9;
+
+  /* === Tipografía ===
+   * PROVISORIO — el paso 7 (tipografías self-hosted) depende de la decisión de identidad
+   * (paso 13), que todavía no existe. Mientras tanto se usa una pila de sistema/fallback
+   * genérica: no se embebe ninguna fuente real todavía.
+   */
+  --fuente-titular: ui-serif, Georgia, "Times New Roman", serif;
+  --fuente-texto: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
+  --escala-titular: 1;
+
+  /* Escala tipográfica fluida */
+  --texto-xs: clamp(0.75rem, 0.71rem + 0.2vw, 0.85rem);
+  --texto-sm: clamp(0.875rem, 0.83rem + 0.22vw, 1rem);
+  --texto-base: clamp(1rem, 0.95rem + 0.25vw, 1.125rem);
+  --texto-lg: clamp(1.25rem, 1.15rem + 0.5vw, 1.5rem);
+  --texto-xl: clamp(1.75rem, 1.5rem + 1.25vw, 2.5rem);
+  --texto-2xl: clamp(2.5rem, 2rem + 2.5vw, 4rem);
+  --texto-3xl: calc(clamp(3rem, 2.25rem + 3.75vw, 5.5rem) * var(--escala-titular));
+
+  /* Espaciado */
+  --espacio-2xs: 0.25rem;
+  --espacio-xs: 0.5rem;
+  --espacio-sm: 1rem;
+  --espacio-md: 1.5rem;
+  --espacio-lg: 2.5rem;
+  --espacio-xl: 4rem;
+  --espacio-2xl: 6rem;
+
+  /* Radios */
+  --radio-sm: 0.25rem;
+  --radio-md: 0.5rem;
+  --radio-lg: 1rem;
+  --radio-full: 999px;
+}

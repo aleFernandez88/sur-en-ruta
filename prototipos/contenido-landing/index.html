@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="es-UY">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sur en Ruta — Borrador de contenido (descartable)</title>
+<style>
+  :root {
+    --fondo: #f5f3ee;
+    --tinta: #1c1a17;
+    --linea: #d8d3c8;
+    --acento: #b5502f;
+    --nota-fondo: #fff6e0;
+    --nota-borde: #d9b866;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: Georgia, 'Times New Roman', serif;
+    background: var(--fondo);
+    color: var(--tinta);
+    line-height: 1.55;
+  }
+  .aviso {
+    background: var(--nota-fondo);
+    border-bottom: 2px solid var(--nota-borde);
+    padding: 1rem 1.5rem;
+    font-family: -apple-system, Segoe UI, Helvetica, Arial, sans-serif;
+    font-size: 0.9rem;
+  }
+  .aviso strong { display: block; margin-bottom: 0.25rem; font-size: 0.95rem; }
+  main { max-width: 760px; margin: 0 auto; padding: 2rem 1.5rem 5rem; }
+  .seccion {
+    border-top: 1px solid var(--linea);
+    padding: 2.5rem 0;
+  }
+  .seccion:first-of-type { border-top: none; }
+  .seccion__num {
+    font-family: -apple-system, Segoe UI, Helvetica, Arial, sans-serif;
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--acento);
+    margin: 0 0 0.5rem;
+  }
+  h1 { font-size: 2rem; margin: 0 0 0.75rem; }
+  h2 { font-size: 1.5rem; margin: 0 0 0.75rem; }
+  .bajada { font-size: 1.15rem; color: #4a453d; margin: 0 0 1.5rem; }
+  .datos {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1.5rem;
+    font-family: -apple-system, Segoe UI, Helvetica, Arial, sans-serif;
+    font-size: 0.85rem;
+    margin: 1rem 0;
+    padding: 0;
+    list-style: none;
+  }
+  .datos li::before { content: "— "; color: var(--acento); }
+  .ctas { display: flex; gap: 0.75rem; margin-top: 1.25rem; flex-wrap: wrap; }
+  .cta {
+    font-family: -apple-system, Segoe UI, Helvetica, Arial, sans-serif;
+    font-size: 0.85rem;
+    padding: 0.6rem 1.1rem;
+    border-radius: 3px;
+    border: 1px solid var(--tinta);
+  }
+  .cta--primaria { background: var(--tinta); color: var(--fondo); }
+  .cta--secundaria { background: transparent; color: var(--tinta); }
+  .tarjetas {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin: 1.25rem 0;
+    padding: 0;
+    list-style: none;
+  }
+  .tarjetas li {
+    border: 1px solid var(--linea);
+    border-radius: 4px;
+    padding: 0.9rem 1rem;
+    font-size: 0.95rem;
+  }
+  .cita {
+    border-left: 3px solid var(--acento);
+    padding: 0.25rem 0 0.25rem 1rem;
+    margin: 1.25rem 0;
+    font-style: italic;
+    color: #4a453d;
+  }
+  .rotulo {
+    display: inline-block;
+    font-family: -apple-system, Segoe UI, Helvetica, Arial, sans-serif;
+    font-size: 0.8rem;
+    background: var(--nota-fondo);
+    border: 1px solid var(--nota-borde);
+    border-radius: 3px;
+    padding: 0.3rem 0.6rem;
+    margin: 0.5rem 0 1rem;
+  }
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 1.25rem 0;
+    font-family: -apple-system, Segoe UI, Helvetica, Arial, sans-serif;
+    font-size: 0.85rem;
+  }
+  th, td { border: 1px solid var(--linea); padding: 0.5rem 0.6rem; text-align: right; }
+  th:first-child, td:first-child { text-align: left; }
+  tfoot td { font-weight: bold; }
+  .pendiente {
+    background: var(--nota-fondo);
+    border: 1px dashed var(--nota-borde);
+    border-radius: 4px;
+    padding: 0.75rem 1rem;
+    font-family: -apple-system, Segoe UI, Helvetica, Arial, sans-serif;
+    font-size: 0.85rem;
+    margin: 1rem 0;
+  }
+  .pendiente strong { color: var(--acento); }
+  .visual-nota {
+    font-family: -apple-system, Segoe UI, Helvetica, Arial, sans-serif;
+    font-size: 0.8rem;
+    color: #74695a;
+    margin-top: 0.75rem;
+  }
+  .cierre {
+    font-family: -apple-system, Segoe UI, Helvetica, Arial, sans-serif;
+    font-size: 0.8rem;
+    color: #74695a;
+    padding: 2rem 1.5rem;
+    max-width: 760px;
+    margin: 0 auto;
+  }
+</style>
+</head>
+<body>
+
+<div class="aviso">
+  <strong>Esto es un borrador de contenido, no un diseño.</strong>
+  Muestra el copy propuesto para las 5 secciones de la landing de inversores, tal como se
+  redactó en <code>docs/landing-inversores-contenido.md</code> a partir del plan de
+  <code>verzet-group-architect</code>. Tipografía y color son genéricos a propósito — la
+  identidad visual real todavía no está decidida (ver <code>prototipos/identidad/</code>). No
+  se publica nunca; es una herramienta interna para revisar el mensaje con Ana.
+</div>
+
+<main>
+
+  <section class="seccion">
+    <p class="seccion__num">Sección 1 — Hero</p>
+    <p class="rotulo">Proyecto RENAMU</p>
+    <h1>El país entero, en una sola red.</h1>
+    <p class="bajada">Paradas habilitadas, comercios adheridos y rutas temáticas para el turismo itinerante uruguayo.</p>
+    <ul class="datos">
+      <li>Piloto: Maldonado · 90 días</li>
+      <li>Un punto de servicio cada 90 km</li>
+      <li>6 componentes de sistema</li>
+    </ul>
+    <div class="ctas">
+      <span class="cta cta--primaria">Ver el plan de inversión</span>
+      <span class="cta cta--secundaria">Solicitar el dossier</span>
+    </div>
+    <p class="visual-nota">Visual (no se ve acá): silueta de Uruguay dibujándose con animación de trazo, corredores encendiéndose. Sin foto.</p>
+  </section>
+
+  <section class="seccion">
+    <p class="seccion__num">Sección 2 — Problema / Oportunidad</p>
+    <h2>La actividad ya existe. Lo que falta es el sistema.</h2>
+    <p>La actividad ya existe. La oportunidad está en ordenarla, profesionalizarla, conectarla y medirla.</p>
+    <ul class="tarjetas">
+      <li>El viajero no sabe dónde parar ni qué normas rigen.</li>
+      <li>Los comercios no tienen forma de captar ese público.</li>
+      <li>El Estado no tiene datos para planificar.</li>
+      <li>El pernocte y los residuos ocurren sin control.</li>
+    </ul>
+    <p class="cita">"Hoy nadie mide esta actividad. Quien la ordena, la mide."</p>
+    <p class="visual-nota">Bloque deliberado, no un hueco a tapar: el documento admite que no hay un número público de motorhomes registrados en Uruguay. Se usa como argumento.</p>
+  </section>
+
+  <section class="seccion">
+    <p class="seccion__num">Sección 3 — El sistema</p>
+    <h2>RENAMU ordena el territorio. Sur en Ruta lo conecta.</h2>
+    <p><strong>RENAMU</strong> es el marco institucional y territorial — articula con intendencias y municipios. <strong>Sur en Ruta</strong> es la plataforma de conexión, comunicación y activación comercial sobre ese marco.</p>
+    <div class="pendiente">
+      <strong>Pendiente:</strong> los 6 componentes de sistema todavía no están nombrados en ningún documento a mano (el plan confirma la cantidad, no los nombres — hay que volver al PDF fuente, secc. 3-4, o preguntarle a Ana/Ale).
+    </div>
+    <p>Los 4 niveles de punto (de menor a mayor):</p>
+    <ul class="tarjetas">
+      <li>Básico</li>
+      <li>De servicio</li>
+      <li>Amigo</li>
+      <li>Experiencial</li>
+    </ul>
+    <p class="cita">"La inversión principal del proyecto no está solamente en infraestructura física, sino en crear un sistema ordenado."</p>
+  </section>
+
+  <section class="seccion">
+    <p class="seccion__num">Sección 4 — Rutas (el techo)</p>
+    <h2>Seis rutas. Y una posición que ningún vecino tiene.</h2>
+    <p class="rotulo">Rutas propuestas. El relevamiento territorial es parte de la Etapa 1.</p>
+    <ul class="tarjetas">
+      <li>Vino</li>
+      <li>Oceánica</li>
+      <li>Termal</li>
+      <li>Rural</li>
+      <li>Patrimonial y Cultural</li>
+      <li>Naturaleza y Aventura</li>
+    </ul>
+    <p>Uruguay como puerta de entrada entre Argentina y Brasil: base segura para iniciar o terminar recorridos sudamericanos. Canal concreto de captación: 4 ferias internacionales — Düsseldorf, Barcelona, ExpoRodantear, Curitiba.</p>
+    <p class="visual-nota">Línea de ingreso a mencionar: guarderías de motorhomes, como ingreso recurrente y de estadía larga.</p>
+  </section>
+
+  <section class="seccion">
+    <p class="seccion__num">Sección 5 — Inversión</p>
+    <h2>Etapa 1: validar el sistema en 90 días.</h2>
+    <p>Validación (Etapa 1, con cifras) → Expansión territorial inicial → Consolidación nacional básica (2 y 3 sin cifras — el documento no las publica).</p>
+    <table>
+      <thead>
+        <tr><th>Rubro</th><th>$U</th><th>≈ USD (ref. 2026-08-20)</th><th>%</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Desarrollo web / plataforma / app MVP</td><td>550.000</td><td>~13.300</td><td>52,4%</td></tr>
+        <tr><td>Señalética inicial puntos piloto</td><td>140.000</td><td>~3.400</td><td>13,3%</td></tr>
+        <tr><td>Pasaporte de sellos, revista, impresos</td><td>100.000</td><td>~2.400</td><td>9,5%</td></tr>
+        <tr><td>Relevamiento territorial (viáticos)</td><td>70.000</td><td>~1.700</td><td>6,7%</td></tr>
+        <tr><td>Comunicación, redes, fotografía, audiovisual</td><td>70.000</td><td>~1.700</td><td>6,7%</td></tr>
+        <tr><td>Asesoramiento legal, técnico, administrativo</td><td>60.000</td><td>~1.450</td><td>5,7%</td></tr>
+        <tr><td>Fondo de contingencia</td><td>50.000</td><td>~1.200</td><td>4,8%</td></tr>
+        <tr><td>Branding, diseño gráfico, identidad</td><td>10.000</td><td>~240</td><td>1,0%</td></tr>
+      </tbody>
+      <tfoot>
+        <tr><td>Total Etapa 1</td><td>$U 1.050.000</td><td>≈ USD 25.400</td><td>100%</td></tr>
+      </tfoot>
+    </table>
+    <p class="visual-nota">Titular de un vistazo: más de la mitad (52,4%) va a producto digital, no a obra. El monto se muestra sobrio, nunca como el elemento más grande de la sección.</p>
+    <div class="pendiente">
+      <strong>Pendiente:</strong> el equivalente en USD usa una referencia de dolarapi.com del 2026-08-20 — falta contrastarlo contra el BCU (fuente oficial) antes de publicar.
+    </div>
+    <p>Qué se compra con esto: puntos adheridos, viajeros y vehículos registrados, consumo en comercios adheridos, distribución por departamento — los indicadores que la Etapa 1 deja medidos.</p>
+    <div class="ctas">
+      <span class="cta cta--primaria">Solicitar el dossier completo</span>
+    </div>
+  </section>
+
+</main>
+
+<p class="cierre">
+  Fuente del contenido: <code>docs/landing-inversores-contenido.md</code> y el plan
+  <code>verzet-group-hq\planes\sur-en-ruta-2026-08-20-landing-inversores.md</code>. Regla de
+  moneda aplicada arriba: nunca <code>$</code> a secas, siempre <code>$U</code> / <code>UYU</code>.
+  Cero métricas de tracción inventadas.
+</p>
+
+</body>
+</html>

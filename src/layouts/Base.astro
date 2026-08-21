@@ -1,0 +1,60 @@
+---
+/**
+ * Base.astro — layout de <head> de la landing de inversores.
+ *
+ * Sin analytics de terceros en la v1 (ver docs/planes/2026-08-20-landing-inversores.md, paso 10).
+ */
+import '../styles/tokens.css';
+import '../styles/base.css';
+
+interface Props {
+  title?: string;
+  description?: string;
+}
+
+const {
+  title = 'Sur en Ruta — El país entero, en una sola red',
+  description = 'Sur en Ruta: sistema nacional de turismo itinerante en Uruguay. Plan de inversión para la Etapa 1: validar el sistema en 90 días.',
+} = Astro.props;
+
+const urlCanonica = new URL(Astro.url.pathname, Astro.site ?? 'https://surenruta.uy');
+const urlImagenOG = new URL('/og-image.png', Astro.site ?? 'https://surenruta.uy');
+---
+
+<!doctype html>
+<html lang="es-UY">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+		<title>{title}</title>
+		<meta name="description" content={description} />
+		<link rel="canonical" href={urlCanonica} />
+
+		<!-- Open Graph -->
+		<meta property="og:type" content="website" />
+		<meta property="og:title" content={title} />
+		<meta property="og:description" content={description} />
+		<!-- TODO: falta generar og-image.png 1200x630 (no hay banco de imágenes propio todavía) -->
+		<meta property="og:image" content={urlImagenOG} />
+		<meta property="og:url" content={urlCanonica} />
+		<meta property="og:locale" content="es_UY" />
+
+		<!-- Twitter Card -->
+		<meta name="twitter:card" content="summary_large_image" />
+		<meta name="twitter:title" content={title} />
+		<meta name="twitter:description" content={description} />
+		<!-- TODO: falta generar og-image.png 1200x630 (mismo archivo que Open Graph) -->
+		<meta name="twitter:image" content={urlImagenOG} />
+
+		<meta name="theme-color" content="#f3f1ec" />
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<link rel="icon" href="/favicon.ico" />
+
+		<meta name="generator" content={Astro.generator} />
+	</head>
+	<body>
+		<a href="#contenido-principal" class="skip-link">Saltar al contenido principal</a>
+		<slot />
+	</body>
+</html>

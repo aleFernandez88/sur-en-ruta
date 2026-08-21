@@ -1,0 +1,87 @@
+---
+/**
+ * Hero.astro — Sección 1. Hook.
+ *
+ * CÁSCARA VACÍA (2026-08-21): estructura semántica y jerarquía de headings correctas, sin copy
+ * real. El titular, la bajada y los 3 datos ancla salen de docs/landing-inversores-contenido.md
+ * y del prototipo de identidad, pero cargarlos es un paso aparte — ver
+ * docs/planes/2026-08-20-landing-inversores.md, paso 11.
+ */
+import MapaPlaceholder from './MapaPlaceholder.astro';
+---
+
+<section id="hero" class="hero" aria-labelledby="hero-titulo">
+	<div class="hero-visual">
+		<!-- TODO: silueta de Uruguay animada con stroke-dashoffset (ver src/assets/mapa/FUENTE.md) -->
+		<MapaPlaceholder etiqueta="silueta de Uruguay animada" />
+	</div>
+
+	<div class="hero-contenido">
+		<h1 id="hero-titulo">[TODO: titular Hero]</h1>
+		<p class="hero-bajada">[TODO: bajada del Hero]</p>
+
+		<ul class="hero-datos-ancla">
+			<li>[TODO: dato ancla 1 — piloto]</li>
+			<li>[TODO: dato ancla 2 — criterio territorial]</li>
+			<li>[TODO: dato ancla 3 — componentes del sistema]</li>
+		</ul>
+
+		<div class="hero-ctas">
+			<a href="#inversion" class="cta cta-primario">[TODO: CTA primario]</a>
+			<a href="#" class="cta cta-secundario">[TODO: CTA secundario]</a>
+		</div>
+	</div>
+</section>
+
+<style>
+	.hero {
+		min-height: 100vh;
+		display: grid;
+		align-content: center;
+		gap: var(--espacio-xl);
+		padding: var(--espacio-xl) var(--espacio-md);
+	}
+
+	.hero-titulo,
+	h1 {
+		font-size: var(--texto-3xl);
+	}
+
+	.hero-bajada {
+		font-size: var(--texto-lg);
+		max-width: 40ch;
+	}
+
+	.hero-datos-ancla {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--espacio-md);
+		list-style: none;
+		padding: 0;
+		margin: var(--espacio-md) 0;
+	}
+
+	.hero-ctas {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--espacio-sm);
+	}
+
+	.cta {
+		display: inline-block;
+		padding: var(--espacio-xs) var(--espacio-md);
+		border-radius: var(--radio-md);
+		text-decoration: none;
+		font-weight: 700;
+	}
+
+	.cta-primario {
+		background-color: var(--color-acento);
+		color: var(--color-fondo);
+	}
+
+	.cta-secundario {
+		border: 2px solid var(--color-tinta);
+		color: var(--color-tinta);
+	}
+</style>

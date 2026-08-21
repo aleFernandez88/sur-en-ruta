@@ -1,0 +1,47 @@
+---
+/**
+ * MapaPlaceholder.astro — sustituto temporal del SVG de Uruguay.
+ *
+ * TODO: reemplazar por el SVG real (silueta + departamentos + corredores) cuando exista una
+ * geometría con licencia verificada. Ver src/assets/mapa/FUENTE.md.
+ */
+interface Props {
+  /** Texto descriptivo corto para diferenciar los distintos usos del placeholder en la página. */
+  etiqueta?: string;
+}
+
+const { etiqueta = 'mapa pendiente' } = Astro.props;
+---
+
+<div class="mapa-placeholder" role="img" aria-label={`Placeholder: ${etiqueta}`}>
+	<svg viewBox="0 0 400 250" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+		<rect x="1" y="1" width="398" height="248" rx="8" />
+		<text x="200" y="125" text-anchor="middle" dominant-baseline="middle">{etiqueta}</text>
+	</svg>
+</div>
+
+<style>
+	.mapa-placeholder {
+		width: 100%;
+	}
+
+	svg {
+		width: 100%;
+		height: auto;
+	}
+
+	rect {
+		fill: var(--color-superficie);
+		stroke: var(--color-tinta);
+		stroke-width: 2;
+		stroke-dasharray: 8 6;
+	}
+
+	text {
+		fill: var(--color-tinta);
+		font-family: var(--fuente-texto);
+		font-size: 1rem;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+	}
+</style>

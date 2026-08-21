@@ -1,0 +1,91 @@
+/*
+ * base.css — reset mínimo, tipografía base y reglas de accesibilidad transversales.
+ *
+ * Las reglas de movimiento y foco visible de acá abajo se aplican a TODA animación que se agregue
+ * más adelante (trazos del mapa, reveals al hacer scroll, barras del gráfico de inversión): no se
+ * repiten por sección, se heredan de esta capa.
+ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background-color: var(--color-fondo);
+  color: var(--color-tinta);
+  font-family: var(--fuente-texto);
+  font-size: var(--texto-base);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--fuente-titular);
+  line-height: 1.1;
+  margin: 0;
+}
+
+img,
+svg {
+  max-width: 100%;
+  display: block;
+}
+
+/* === Skip-link ===
+ * Oculto fuera de pantalla salvo cuando recibe foco por teclado (primer Tab de la página).
+ */
+.skip-link {
+  position: absolute;
+  top: -3rem;
+  left: var(--espacio-sm);
+  z-index: 100;
+  padding: var(--espacio-xs) var(--espacio-sm);
+  background-color: var(--color-acento);
+  color: var(--color-fondo);
+  border-radius: var(--radio-sm);
+  text-decoration: none;
+  transition: top 150ms ease-out;
+}
+
+.skip-link:focus {
+  top: var(--espacio-sm);
+}
+
+/* === Foco visible ===
+ * Sur en Ruta expone controles interactivos (CTAs, selector de rutas de la sección 4): el foco de
+ * teclado tiene que verse siempre, con un contorno de alto contraste sobre --color-acento.
+ */
+:focus-visible {
+  outline: 3px solid var(--color-acento);
+  outline-offset: 2px;
+}
+
+/* === Movimiento reducido ===
+ * Regla base: por defecto el movimiento es breve. Quien pida "reducir movimiento" al sistema
+ * operativo ve el estado final de cualquier animación (trazos, reveals, barras) sin transición.
+ */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

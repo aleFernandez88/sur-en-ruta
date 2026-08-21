@@ -1,0 +1,121 @@
+---
+/**
+ * Sistema.astro — Sección 3. RENAMU ordena el territorio, Sur en Ruta lo conecta.
+ *
+ * CÁSCARA VACÍA (2026-08-21): estructura semántica y jerarquía de headings correctas, sin copy
+ * real. El copy sale de docs/landing-inversores-contenido.md, pero cargarlo es un paso aparte —
+ * ver docs/planes/2026-08-20-landing-inversores.md, paso 11.
+ */
+
+// Estructura fija: 6 componentes del sistema y 4 niveles de punto (verificados contra el PDF).
+const componentesPlaceholder = [1, 2, 3, 4, 5, 6];
+const nivelesPlaceholder = [1, 2, 3, 4];
+---
+
+<section id="sistema" aria-labelledby="sistema-titulo">
+	<h2 id="sistema-titulo">[TODO: titular Sistema]</h2>
+
+	<!-- TODO: diagrama de dos capas — RENAMU (marco institucional) / Sur en Ruta (plataforma) -->
+	<div class="sistema-diagrama">
+		<div class="capa">[TODO: capa RENAMU]</div>
+		<div class="capa">[TODO: capa Sur en Ruta]</div>
+	</div>
+
+	<ul class="sistema-componentes">
+		{componentesPlaceholder.map((n) => (
+			<li class="tarjeta-componente">
+				<!-- TODO: iconografía SVG propia por componente -->
+				<span class="icono-placeholder" aria-hidden="true"></span>
+				<span>[TODO: componente {n}]</span>
+			</li>
+		))}
+	</ul>
+
+	<div class="sistema-niveles">
+		<h3>[TODO: subtítulo — escalera de niveles de punto]</h3>
+		<ol class="escalera">
+			{nivelesPlaceholder.map((n) => (
+				<li class="escalon" style={`--n: ${n}`}>[TODO: nivel {n}]</li>
+			))}
+		</ol>
+		<blockquote>[TODO: cita textual — secc. 11 del documento de propuesta]</blockquote>
+	</div>
+</section>
+
+<style>
+	section {
+		padding: var(--espacio-2xl) var(--espacio-md);
+		display: grid;
+		gap: var(--espacio-lg);
+	}
+
+	h2 {
+		font-size: var(--texto-2xl);
+	}
+
+	.sistema-diagrama {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: var(--espacio-sm);
+	}
+
+	.capa {
+		padding: var(--espacio-md);
+		background-color: var(--color-superficie);
+		border-radius: var(--radio-md);
+		text-align: center;
+	}
+
+	.sistema-componentes {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+		gap: var(--espacio-sm);
+		list-style: none;
+		padding: 0;
+		margin: 0;
+	}
+
+	.tarjeta-componente {
+		padding: var(--espacio-md);
+		background-color: var(--color-superficie);
+		border-radius: var(--radio-md);
+		display: grid;
+		gap: var(--espacio-xs);
+	}
+
+	.icono-placeholder {
+		display: block;
+		width: 2rem;
+		height: 2rem;
+		border-radius: var(--radio-sm);
+		border: 2px dashed var(--color-tinta);
+	}
+
+	.escalera {
+		display: grid;
+		grid-auto-flow: column;
+		gap: var(--espacio-xs);
+		list-style: none;
+		padding: 0;
+		margin: var(--espacio-sm) 0;
+	}
+
+	.escalon {
+		padding: var(--espacio-sm);
+		background-color: var(--color-acento);
+		color: var(--color-fondo);
+		border-radius: var(--radio-sm);
+		align-self: end;
+		/* Altura ascendente ilustrativa: se reemplaza por el gráfico real en el paso de contenido. */
+		height: calc(3rem + var(--n) * 1rem);
+		display: flex;
+		align-items: flex-end;
+	}
+
+	blockquote {
+		margin: 0;
+		font-style: italic;
+		border-left: 3px solid var(--color-acento);
+		padding-left: var(--espacio-sm);
+	}
+</style>

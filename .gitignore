@@ -5,3 +5,8 @@ dist/
 .env.*
 .DS_Store
 Thumbs.db
+
+# Documento de trabajo interno con detalle del NDA (nombre completo, relación contractual) y
+# desglose interno del plan económico. No va al repo público — ver docs/landing-inversores-contenido.md
+# para el contenido ya curado que sí está pensado para terminar público en la landing.
+docs/planes/

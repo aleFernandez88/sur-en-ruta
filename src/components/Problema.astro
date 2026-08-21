@@ -1,0 +1,69 @@
+---
+/**
+ * Problema.astro — Sección 2. Tesis de riesgo bajo: la actividad ya existe, falta el sistema.
+ *
+ * CÁSCARA VACÍA (2026-08-21): estructura semántica y jerarquía de headings correctas, sin copy
+ * real. El copy sale de docs/landing-inversores-contenido.md, pero cargarlo es un paso aparte —
+ * ver docs/planes/2026-08-20-landing-inversores.md, paso 11.
+ */
+import MapaPlaceholder from './MapaPlaceholder.astro';
+
+// Estructura fija: 4 tarjetas de fricción (secc. 2 del documento de propuesta).
+const tarjetasFriccion = [1, 2, 3, 4];
+---
+
+<section id="problema" aria-labelledby="problema-titulo">
+	<h2 id="problema-titulo">[TODO: titular Problema]</h2>
+
+	<div class="problema-mapa">
+		<!-- TODO: mismo mapa en dos estados (hoy disperso / con la red), transformación por scroll -->
+		<MapaPlaceholder etiqueta="mapa — estado hoy" />
+		<MapaPlaceholder etiqueta="mapa — estado con la red" />
+	</div>
+
+	<ul class="problema-tarjetas">
+		{tarjetasFriccion.map((n) => (
+			<li class="tarjeta">[TODO: fricción {n}]</li>
+		))}
+	</ul>
+
+	<p class="problema-honestidad">[TODO: bloque de honestidad sobre falta de datos de mercado]</p>
+</section>
+
+<style>
+	section {
+		padding: var(--espacio-2xl) var(--espacio-md);
+		display: grid;
+		gap: var(--espacio-lg);
+	}
+
+	h2 {
+		font-size: var(--texto-2xl);
+	}
+
+	.problema-mapa {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+		gap: var(--espacio-md);
+	}
+
+	.problema-tarjetas {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+		gap: var(--espacio-sm);
+		list-style: none;
+		padding: 0;
+		margin: 0;
+	}
+
+	.tarjeta {
+		padding: var(--espacio-md);
+		background-color: var(--color-superficie);
+		border-radius: var(--radio-md);
+	}
+
+	.problema-honestidad {
+		font-style: italic;
+		max-width: 60ch;
+	}
+</style>

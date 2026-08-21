@@ -1,0 +1,25 @@
+---
+/**
+ * index.astro — landing de inversores de Sur en Ruta. Ensambla las 5 secciones fijadas por el
+ * plan, en el orden Hero → Problema → Sistema → Rutas → Inversión.
+ *
+ * CÁSCARA VACÍA (2026-08-21): cada sección es un placeholder estructural — ver el comentario de
+ * cabecera de cada componente en src/components/.
+ */
+import Base from '../layouts/Base.astro';
+import Hero from '../components/Hero.astro';
+import Problema from '../components/Problema.astro';
+import Sistema from '../components/Sistema.astro';
+import Rutas from '../components/Rutas.astro';
+import Inversion from '../components/Inversion.astro';
+---
+
+<Base>
+	<main id="contenido-principal">
+		<Hero />
+		<Problema />
+		<Sistema />
+		<Rutas />
+		<Inversion />
+	</main>
+</Base>
