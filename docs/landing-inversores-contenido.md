@@ -75,10 +75,20 @@ ordena, la mide."**
 **Sur en Ruta** es la plataforma de conexión, comunicación y activación comercial sobre ese
 marco.
 
-**Los 6 componentes de sistema:** `[a confirmar contra el PDF de propuesta, secc. 3 y 4 —
-el plan confirma que son 6 pero no los nombra en el propio documento del plan]`. Estructura de
-tarjeta una vez que estén: nombre + una línea de *por qué importa* (no la descripción larga del
-PDF).
+**Los 6 componentes de sistema** (nombrados en el PDF de propuesta, secc. 3 y 4.1-4.6 —
+confirmado el 2026-08-21, ya cargados también en `src/data/componentes.ts`):
+1. **Áreas habilitadas o recomendadas** — espacios reconocidos por la red, de básicos a
+   experienciales, sin exigir la misma inversión a todos.
+2. **Puntos Amigos** — comercios y servicios que activan la economía local sin exigir grandes
+   inversiones para sumarse.
+3. **Sello Viajero Responsable** — certifica buenas prácticas del viajero y da confianza a
+   privados y al Estado.
+4. **Rutas temáticas** — los 6 circuitos que ordenan el recorrido (ver sección 4 de este
+   documento).
+5. **Pasaporte de Ruta** — sellos coleccionables por parada que dan visibilidad a comercios
+   chicos y generan pertenencia.
+6. **App y sistema de medición** — conecta toda la red en un mapa y convierte el movimiento
+   turístico en datos para planificar.
 
 **La escalera de los 4 niveles de punto (el sub-bloque que más pesa para un inversor):**
 1. Básico
@@ -171,13 +181,19 @@ límite, va al dossier, no a la landing.
 
 ## Resumen de lo que falta para cerrar el contenido real
 
-1. **Los 6 componentes de sistema, nombrados y con su línea de "por qué importa"** (sección 3)
-   — hueco más grande: el plan confirma la cifra (6) pero no los nombra; hay que volver al PDF
-   fuente (`docs/fuentes/`, secc. 3 y 4) o pedírselo a Ana/Ale.
+1. ~~Los 6 componentes de sistema, nombrados~~ — **resuelto 2026-08-21**, ver sección 3 arriba
+   y `src/data/componentes.ts`.
 2. **Confirmar el equivalente en USD contra el BCU** antes de publicar (sección 5) — hoy es una
    referencia dimensional de `dolarapi.com`, no la fuente oficial que pide el plan.
 3. **El dossier en sí** (el PDF/documento que se entrega tras el CTA) es una pieza aparte, fuera
-   del alcance de este borrador y del plan de la landing.
+   del alcance de este borrador y del plan de la landing. Al leer el PDF de propuesta completo
+   se confirmó que el documento fuente **tampoco** resuelve lo que un inversor necesita para
+   decidir: no define instrumento de inversión (equity/deuda/revenue share), no dice qué
+   entidad legal recibe la plata, y no tiene modelo de ingresos definido para Sur en Ruta en
+   régimen (solo lo menciona como *indicador a medir*, secc. 10.2, no como modelo). Esto no
+   bloquea la landing —la sección 5 ya está pensada para no prometer retorno—, pero si el
+   dossier hereda el mismo hueco, un inversor que llegue hasta ahí se queda sin la respuesta a
+   "¿qué gano si invierto?". Vale la pena consultarlo con Ana antes de armar el dossier.
 4. La identidad visual (paleta + tipografía) sigue en manos del prototipo — este contenido no
    depende de esa decisión para poder escribirse, pero el diseño final de cada sección sí.
 

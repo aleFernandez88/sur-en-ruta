@@ -470,6 +470,101 @@ a { color: inherit; }
   border-color: #F4F2EE;
 }
 
+/* -------- Panel de referencias (redes similares ya funcionando, para pispear diseño) -------- */
+
+.referencias-toggle {
+  position: fixed;
+  left: 18px;
+  bottom: 18px;
+  z-index: 101;
+  background: #141414;
+  color: #F4F2EE;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 10px 16px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.25);
+  box-shadow: 0 2px 10px rgba(0,0,0,0.35);
+  cursor: pointer;
+}
+
+.referencias-toggle:hover {
+  background: #1f1f1f;
+}
+
+.referencias-toggle[aria-expanded="true"] {
+  background: #F4F2EE;
+  color: #141414;
+  border-color: #F4F2EE;
+}
+
+.referencias {
+  position: fixed;
+  left: 18px;
+  bottom: 70px;
+  z-index: 100;
+  width: min(360px, calc(100vw - 36px));
+  max-height: 60vh;
+  overflow-y: auto;
+  background: #141414;
+  color: #F4F2EE;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+  padding: 16px 18px;
+  border-radius: 12px;
+  box-shadow: 0 4px 18px rgba(0,0,0,0.35);
+}
+
+.referencias.referencias--cerrado {
+  display: none;
+}
+
+.referencias h2 {
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  opacity: 0.6;
+  margin: 0 0 4px;
+}
+
+.referencias h2:not(:first-child) {
+  margin-top: 16px;
+}
+
+.referencias ul {
+  list-style: none;
+  margin: 0 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.referencias li {
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+  padding-bottom: 8px;
+}
+
+.referencias li:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.referencias a {
+  color: #F4F2EE;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.referencias p {
+  margin: 3px 0 0;
+  font-size: 12px;
+  opacity: 0.75;
+  line-height: 1.4;
+}
+
 .panel__fila {
   display: flex;
   align-items: center;
@@ -628,6 +723,54 @@ a { color: inherit; }
 </main>
 
 <button type="button" id="panel-toggle" class="panel-toggle" aria-expanded="false" aria-controls="panel-control">⚙ Personalizar</button>
+
+<button type="button" id="referencias-toggle" class="referencias-toggle" aria-expanded="false" aria-controls="referencias-panel">🔗 Referencias</button>
+
+<section class="referencias referencias--cerrado" id="referencias-panel" aria-label="Sitios de referencia (redes similares y diseño de rutas)" aria-hidden="true">
+
+  <h2>Redes similares ya funcionando</h2>
+  <ul>
+    <li>
+      <a href="https://www.france-passion.com/en/" target="_blank" rel="noopener">France Passion (Francia)</a>
+      <p>Red de ~2.200 paradas gratuitas en granjas y bodegas para motorhomes autosuficientes, con membresía paga. El precedente más parecido a Puntos Amigos + Pasaporte de Ruta.</p>
+    </li>
+    <li>
+      <a href="https://www.britstops.com/" target="_blank" rel="noopener">Brit Stops (Reino Unido / Irlanda)</a>
+      <p>Mismo modelo que France Passion, en pubs, granjas y comercios independientes — +1.500 paradas.</p>
+    </li>
+    <li>
+      <a href="https://areasautocaravanasandalucia.com/" target="_blank" rel="noopener">Red Andaluza de Áreas de Autocaravanas (España)</a>
+      <p>Red pública/institucional de 17 áreas oficiales — el precedente más parecido a RENAMU como marco público-territorial, no privado.</p>
+    </li>
+    <li>
+      <a href="https://park4night.com/" target="_blank" rel="noopener">Park4Night</a>
+      <p>App colaborativa global, +370.000 puntos con categorías, mapa y reseñas — referencia directa para el componente "App y sistema de medición".</p>
+    </li>
+    <li>
+      <a href="https://ioverlander.com/" target="_blank" rel="noopener">iOverlander</a>
+      <p>App libre y gratuita, +1M de puntos, cobertura mundial incluyendo Sudamérica.</p>
+    </li>
+  </ul>
+
+  <h2>Referencia regional (mismo año)</h2>
+  <ul>
+    <li>
+      <a href="https://www.revista-airelibre.com/2026/07/31/ruta-del-motorhome-cordoba-itinerario-turismo-rodantero/" target="_blank" rel="noopener">Ruta del Motorhome — Córdoba, Argentina (2026)</a>
+      <p>Primer corredor oficial y señalizado para motorhomes del país, con paradas técnicas gratuitas — antecedente directo en la región, lanzado este mismo año.</p>
+    </li>
+  </ul>
+
+  <h2>Referencia de diseño visual (rutas temáticas)</h2>
+  <ul>
+    <li>
+      <a href="https://www.rutadelosparques.org/" target="_blank" rel="noopener">Ruta de los Parques de la Patagonia (Chile)</a>
+      <p>Marca de ruta turística de 17 parques nacionales — buen ejemplo de identidad visual y storytelling territorial para inspirar la sección "Rutas" de la landing.</p>
+    </li>
+  </ul>
+
+  <p style="margin-top: 16px; opacity: 0.55;">Relevado el 2026-08-21. No es un listado cerrado — abrir cada link para pispear diseño, no solo para leer.</p>
+
+</section>
 
 <section class="panel panel--cerrado" id="panel-control" aria-label="Panel de control del prototipo" aria-hidden="true">
 
@@ -915,6 +1058,29 @@ a { color: inherit; }
   });
 
   // Colapsado por defecto: al abrir el archivo se ve el resultado, no el panel.
+  fijarEstadoPanel(false);
+})();
+
+// ---- Apertura/cierre del panel de referencias (independiente del panel de
+// personalización: no comparte estado ni z-index con él). ----
+(function () {
+  "use strict";
+
+  var elToggle = document.getElementById("referencias-toggle");
+  var elPanel = document.getElementById("referencias-panel");
+
+  function fijarEstadoPanel(abierto) {
+    elPanel.classList.toggle("referencias--cerrado", !abierto);
+    elPanel.setAttribute("aria-hidden", String(!abierto));
+    elToggle.setAttribute("aria-expanded", String(abierto));
+  }
+
+  elToggle.addEventListener("click", function () {
+    var estaCerrado = elPanel.classList.contains("referencias--cerrado");
+    fijarEstadoPanel(estaCerrado);
+  });
+
+  // Colapsado por defecto, igual que el panel de personalización.
   fijarEstadoPanel(false);
 })();
 </script>

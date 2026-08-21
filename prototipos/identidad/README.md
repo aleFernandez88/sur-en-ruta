@@ -47,6 +47,17 @@ Las 7 familias (`Archivo` e `Inter` se repiten) están embebidas en `woff2`, sub
 `latin-ext`, pesos 400 y 700 únicamente (los que usa este hero). Licencias en `LICENCIAS.md` de
 esta misma carpeta.
 
+## Referencias externas (para pispear diseño)
+
+Además del panel de personalización, hay un segundo botón flotante, abajo a la izquierda
+(**🔗 Referencias**), agregado el 2026-08-21. Abre un panel con links a redes de paradas para
+motorhomes que ya funcionan en el mundo y en la región (France Passion, Brit Stops, la Red
+Andaluza de Áreas de Autocaravanas, Park4Night, iOverlander), un antecedente regional del mismo
+año (la Ruta del Motorhome de Córdoba) y una referencia de diseño de ruta temática (Ruta de los
+Parques de la Patagonia). Es para que Ana pueda abrir cada sitio y mirar cómo resuelven diseño
+y comunicación otros proyectos con el mismo objetivo — no forma parte de la decisión de paleta
+ni tipografía. Es independiente del panel de personalización: no comparte estado ni z-index.
+
 ## Cómo se registra la elección
 
 - **Botón "Copiar la elección"** deja en el portapapeles una línea de texto con la fecha, el
@@ -77,3 +88,8 @@ un solo uso — no corresponde que quede expuesta en producción.
 Cero requests de red (ni fuentes, ni analytics, ni imágenes externas — verificado con DevTools →
 Network y también recargando con la red cortada), cero dependencias externas, cero
 `localStorage`, un solo archivo (~1,3 MB, casi todo tipografías embebidas en base64).
+
+**Excepción explícita (2026-08-21):** el panel de Referencias tiene links `<a target="_blank">`
+a sitios externos. Eso no rompe la restricción de arriba — son navegaciones que dispara el
+usuario al clickear, no requests que la página haga sola al cargar o mientras está abierta; sin
+conexión, el archivo se sigue abriendo y viendo igual, esos links simplemente no van a resolver.
