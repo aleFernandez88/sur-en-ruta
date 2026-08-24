@@ -1,0 +1,107 @@
+---
+/**
+ * CartelSeccion.astro — poste indicador con una flecha arriba ("N° Destino") y una placa
+ * rectangular abajo (el nombre de la sección, sin punta — solo ángulos rectos), montadas en
+ * paralelo (mismo ángulo) sobre un poste. Flechas/placa en azul/blanco (mismos tokens que
+ * HiloRuta, `--color-cartel-*`); poste en gris clarito, un solo color, sin textura
+ * (`--color-poste`).
+ *
+ * Tercera vuelta de diseño (2026-08-24): Ale pasó una referencia real (vector de Rawpixel vía
+ * Magnific — confirmado gratis con atribución obligatoria, ver memoria del proyecto) de un
+ * cartel de madera con dos flechas cruzadas y un poste. No se extrajo la geometría exacta de ese
+ * archivo (quedó sin resolver si el crédito visible que exige esa licencia es aceptable para una
+ * landing de inversores) — esto es un dibujo propio que reproduce la composición general.
+ *
+ * Cuarta vuelta (mismo día): la v3 tenía las dos flechas CRUZADAS (ángulos opuestos, como el
+ * cruce de sendero de la referencia). Ale pidió simplificar: la placa de abajo sin el lado en
+ * forma de flecha (rectángulo recto) y en paralelo a la de arriba (mismo ángulo, no cruzada).
+ *
+ * Quinta vuelta (mismo día): la placa de abajo quedó 5% más angosta de cada lado (para que se
+ * lea como una pieza más chica que la flecha de arriba, no del mismo ancho), y el poste suma una
+ * franja más oscura de un lado (`--color-poste-sombra`) simulando una sombra/bisel, para que no
+ * se vea plano.
+ *
+ * Se probó primero en Hero.astro y, confirmado el resultado, se replicó en las otras 4 —
+ * numeración 1 a 5, nombres no técnicos: 1 La Red · 2 La Oportunidad · 3 El Sistema · 4 Las
+ * Rutas · 5 La Inversión.
+ */
+interface Props {
+	/** Número de la sección (1 a 5). */
+	numero: number;
+	/** Nombre corto de la sección, va en la placa de abajo. */
+	nombre: string;
+}
+
+const { numero, nombre } = Astro.props;
+---
+
+<div class="cartel-seccion" aria-hidden="true">
+	<svg viewBox="0 0 220 150" xmlns="http://www.w3.org/2000/svg">
+		<rect class="cartel-poste" x="98" y="8" width="10" height="142" rx="5"></rect>
+		<!-- Sombra del poste: franja más oscura sobre el lado derecho, inset del alto total para no
+		     pisar las puntas redondeadas del rect de arriba. -->
+		<rect class="cartel-poste-sombra" x="104" y="13" width="4" height="132"></rect>
+
+		<g class="cartel-flecha" transform="rotate(-4 103 36)">
+			<path d="M8 18 H160 L198 36 L160 54 H8 Z"></path>
+			<text x="84" y="37" text-anchor="middle" dominant-baseline="central">{numero}° Destino</text>
+		</g>
+
+		<g class="cartel-placa" transform="rotate(-4 103 100)">
+			<!-- 5% del ancho original (190) recortado de cada lado: 9.5 hacia adentro por lado. -->
+			<rect x="17.5" y="82" width="171" height="36"></rect>
+			<text x="103" y="100" text-anchor="middle" dominant-baseline="central">{nombre}</text>
+		</g>
+	</svg>
+</div>
+
+<style>
+	.cartel-seccion {
+		width: clamp(11rem, 26vw, 16rem);
+	}
+
+	.cartel-seccion svg {
+		display: block;
+		width: 100%;
+		height: auto;
+	}
+
+	.cartel-poste {
+		fill: var(--color-poste);
+	}
+
+	.cartel-poste-sombra {
+		fill: var(--color-poste-sombra);
+	}
+
+	.cartel-flecha path,
+	.cartel-placa rect {
+		fill: var(--color-cartel-fondo);
+		stroke: var(--color-cartel-texto);
+		stroke-width: 3;
+		stroke-linejoin: round;
+	}
+
+	.cartel-flecha text,
+	.cartel-placa text {
+		fill: var(--color-cartel-texto);
+		font-family: var(--fuente-texto);
+		font-weight: 700;
+		text-transform: uppercase;
+		letter-spacing: 0.02em;
+	}
+
+	/* Más chica que la de abajo a propósito (invertido el 2026-08-24): el nombre de la sección
+	 * pesa más que "N° Destino", que es el mismo texto en las 5. */
+	.cartel-flecha text {
+		font-size: 12px;
+	}
+
+	/* Más grande que la de arriba para marcar jerarquía — pero el nombre de abajo varía de largo
+	 * por sección y la placa quedó 5% más angosta de cada lado, así que no puede ser tan grande
+	 * como para que "La Oportunidad" (el nombre más largo de los 5) se desborde. 16px, verificado
+	 * con getBBox en el navegador contra las 5 placas reales, no a ojo. */
+	.cartel-placa text {
+		font-size: 16px;
+	}
+</style>

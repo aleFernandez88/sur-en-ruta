@@ -73,6 +73,12 @@
   --color-linea-central: #ffc82c;
   --color-cartel-fondo: #1b4d8f;
   --color-cartel-texto: #ffffff;
+  /* Poste de CartelSeccion.astro: gris clarito, un solo color, sin textura — a propósito
+   * distinto del asfalto (más oscuro, es pavimento, no un poste). */
+  --color-poste: #c7c7c7;
+  /* Franja más oscura sobre un lado del poste, simulando sombra/bisel — no es un color de marca,
+   * es nada más que --color-poste oscurecido. */
+  --color-poste-sombra: #a3a3a3;
 
   /* Alto de HiloRuta (src/components/HiloRuta.astro): un solo valor para el componente y para el
    * padding-top que le deja lugar en src/styles/base.css, así no se desincroniza uno del otro.
@@ -81,4 +87,14 @@
    * correspondencia 1 a 1. Subió de 45 a 68 el 2026-08-24 para que entrara el cartelito con poste
    * arriba de la ruta sin recortarse contra el borde del contenedor. */
   --alto-hilo-ruta: 68px;
+
+  /* === Color de texto sobre foto (Hero) ===
+   * El resto de la landing usa texto oscuro (--color-tinta) sobre fondo claro. Encima de la foto
+   * del Hero eso no funciona: hace falta texto claro con buen contraste. No es exactamente una
+   * decisión de marca (es una necesidad de legibilidad que depende de la foto de fondo, no de la
+   * paleta), pero igual queda como token — mismo criterio de "un solo lugar para tocar" que el
+   * resto de este archivo. Blanco liso por ahora; se revisa junto con la identidad definitiva por
+   * si alguna de las 4 paletas pide un blanco con matiz en vez de uno puro.
+   */
+  --color-texto-sobre-foto: #ffffff;
 }

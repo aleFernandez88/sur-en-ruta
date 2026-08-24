@@ -6,14 +6,33 @@
  * contra el documento de propuesta original (secc. 1 y 9). El titular y la bajada vienen de la
  * exploración visual del 13/08 (ver docs/fuentes/README.md), que el plan pide reutilizar tal cual.
  *
- * Pendiente, fuera de este paso: el SVG real del mapa (paso 9 del plan) reemplaza a
- * MapaPlaceholder cuando exista (ver src/assets/mapa/FUENTE.md).
+ * Visual: foto de fondo a pantalla completa (`astro:assets` para AVIF/WebP + srcset automático).
+ * Reemplaza al MapaPlaceholder que tenía este componente hasta el 2026-08-24 — el plan original
+ * decía "sin foto" por un motivo de presupuesto que resultó ser un error (ver
+ * docs/planes/2026-08-20-landing-inversores.md, punto i de la sección 1): la landing tiene
+ * presupuesto propio, separado del de Sur en Ruta, y hay material real de Verzet Group.
+ *
+ * OJO — `src/assets/hero/ruta-placeholder.jpg` es una MUESTRA PROVISORIA, no la foto final — ver
+ * `src/assets/hero/FUENTE.md` para qué falta (licencia sin verificar, el terreno de fondo no es
+ * de Uruguay, sin camper en el cuadro). No deployar así como está.
  *
  * OJO — no confundir con HiloRuta: esa es la barra de progreso fija arriba de toda la pantalla
- * (vive en Base.astro, persiste en las 5 secciones, ligada al scroll de toda la página). El
- * MapaPlaceholder de acá abajo es la ilustración grande y propia del Hero, sección 1 nomás.
+ * (vive en Base.astro, persiste en las 5 secciones, ligada al scroll de toda la página). Esta foto
+ * es la ilustración grande y propia del Hero, sección 1 nomás.
+ *
+ * 2026-08-24: se probó una segunda vuelta (franja de empalme con el lenguaje visual de HiloRuta,
+ * cartelitos de ruta en vez de chips, eyebrow "Parada 1 de 5") — Ale la revirtió, no quedó del
+ * todo bien. Vuelve a la versión de foto + overlay + chips vidrio de acá abajo.
+ *
+ * Tercera vuelta (mismo día): `CartelSeccion.astro` — un poste indicador de dos placas (arriba,
+ * flecha, "N° Destino"; abajo, cuadrada, el nombre de la sección), ya replicado en las otras 4
+ * secciones (ver comentario de cabecera de ese componente). Reemplaza a la franja de eyebrow que
+ * decía "Proyecto RENAMU" — ese texto no queda reubicado en ningún lado (decisión explícita de
+ * Ale, no un olvido).
  */
-import MapaPlaceholder from './MapaPlaceholder.astro';
+import { Image } from 'astro:assets';
+import heroFoto from '../assets/hero/ruta-placeholder.jpg';
+import CartelSeccion from './CartelSeccion.astro';
 
 const datosAncla = [
 	'Piloto: Maldonado · 90 días',
@@ -23,13 +42,19 @@ const datosAncla = [
 ---
 
 <section id="hero" class="hero" aria-labelledby="hero-titulo">
-	<div class="hero-visual">
-		<!-- TODO: silueta de Uruguay animada con stroke-dashoffset (ver src/assets/mapa/FUENTE.md) -->
-		<MapaPlaceholder etiqueta="silueta de Uruguay animada" />
-	</div>
+	<Image
+		src={heroFoto}
+		alt=""
+		class="hero-foto"
+		widths={[640, 1024, 1600, 1920]}
+		sizes="100vw"
+		loading="eager"
+		fetchpriority="high"
+	/>
+	<div class="hero-overlay" aria-hidden="true"></div>
 
 	<div class="hero-contenido">
-		<p class="hero-eyebrow">Proyecto RENAMU</p>
+		<CartelSeccion numero={1} nombre="La Red" />
 		<h1 id="hero-titulo">El país entero, en una sola red.</h1>
 		<p class="hero-bajada">
 			Paradas habilitadas, comercios adheridos y rutas temáticas para el turismo itinerante
@@ -49,29 +74,57 @@ const datosAncla = [
 
 <style>
 	.hero {
+		position: relative;
 		min-height: 100vh;
 		display: grid;
 		align-content: center;
+		overflow: hidden;
+	}
+
+	.hero-foto {
+		position: absolute;
+		inset: 0;
+		z-index: 0;
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		/* La escena interesante (ruta + horizonte) está en la mitad inferior de la foto original;
+		 * con el hero a 100vh, "center" recortaba justo la franja de cielo más chata de arriba. */
+		object-position: center 75%;
+	}
+
+	/* Oscurece la foto lo justo para que el texto claro de encima siempre tenga contraste, más
+	 * marcado abajo (donde caen los CTAs) que arriba — no tan fuerte como para que la foto
+	 * desaparezca. color-mix sobre --color-tinta en vez de un rgba/hex suelto, para que se ajuste
+	 * solo si --color-tinta cambia con la identidad final. */
+	.hero-overlay {
+		position: absolute;
+		inset: 0;
+		z-index: 1;
+		background: linear-gradient(
+			180deg,
+			color-mix(in srgb, var(--color-tinta) 10%, transparent) 0%,
+			color-mix(in srgb, var(--color-tinta) 45%, transparent) 100%
+		);
+	}
+
+	.hero-contenido {
+		position: relative;
+		z-index: 2;
+		display: grid;
 		gap: var(--espacio-xl);
 		padding: var(--espacio-xl) var(--espacio-md);
 	}
 
-	.hero-eyebrow {
-		margin: 0 0 var(--espacio-xs);
-		font-size: var(--texto-sm);
-		font-weight: 700;
-		letter-spacing: 0.08em;
-		text-transform: uppercase;
-		color: var(--color-acento);
-	}
-
 	h1 {
 		font-size: var(--texto-3xl);
+		color: var(--color-texto-sobre-foto);
 	}
 
 	.hero-bajada {
 		font-size: var(--texto-lg);
 		max-width: 40ch;
+		color: var(--color-texto-sobre-foto);
 	}
 
 	.hero-datos-ancla {
@@ -85,10 +138,13 @@ const datosAncla = [
 
 	.hero-datos-ancla li {
 		padding: var(--espacio-xs) var(--espacio-sm);
-		background-color: var(--color-superficie);
 		border-radius: var(--radio-full);
+		background-color: color-mix(in srgb, var(--color-tinta) 45%, transparent);
+		backdrop-filter: blur(8px);
+		-webkit-backdrop-filter: blur(8px);
 		font-size: var(--texto-sm);
 		font-weight: 600;
+		color: var(--color-texto-sobre-foto);
 	}
 
 	.hero-ctas {
@@ -111,7 +167,7 @@ const datosAncla = [
 	}
 
 	.cta-secundario {
-		border: 2px solid var(--color-tinta);
-		color: var(--color-tinta);
+		border: 2px solid var(--color-texto-sobre-foto);
+		color: var(--color-texto-sobre-foto);
 	}
 </style>
