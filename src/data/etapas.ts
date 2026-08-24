@@ -2,9 +2,8 @@
  * etapas.ts — las 3 etapas del modelo económico (Validación / Expansión territorial inicial /
  * Consolidación nacional básica).
  *
- * CÁSCARA VACÍA (2026-08-21): el tipado está cerrado, pero el array queda vacío a propósito.
- * Los datos reales ya están redactados en docs/landing-inversores-contenido.md, pero cargarlos es
- * un paso aparte que todavía no toca — ver docs/planes/2026-08-20-landing-inversores.md, paso 8.
+ * Nombres y descripciones verificados contra el documento de propuesta original
+ * (`Activa turismo propuesta.pdf`, secc. 11, 11.3, 11.4 y 11.5) el 2026-08-24.
  *
  * Regla del plan (verificada contra el PDF, secc. 11.4 y 11.5): el documento NO publica montos
  * para la Etapa 2 ni la Etapa 3. El campo `montoUYU` va `null` en esos casos — nunca un valor
@@ -24,8 +23,26 @@ export interface Etapa {
   fuente: string;
 }
 
-// Ejemplo de shape esperado (comentado — no es dato real, solo referencia de forma):
-// { nombre: 'Validación', descripcion: 'Una línea.', montoUYU: 1050000, orden: 1, fuente: 'secc. 11' }
-// { nombre: 'Expansión territorial inicial', descripcion: 'Una línea.', montoUYU: null, orden: 2, fuente: 'secc. 11.4' }
-
-export const etapas: Etapa[] = [];
+export const etapas: Etapa[] = [
+  {
+    nombre: 'Validación del sistema',
+    descripcion: 'Demostrar que el sistema funciona en escala piloto: primeros privados, primera comunidad, primera medición real.',
+    montoUYU: 1050000,
+    orden: 1,
+    fuente: 'secc. 11.3',
+  },
+  {
+    nombre: 'Expansión territorial inicial',
+    descripcion: 'Pasar del piloto a una red inicial visible: más puntos, corredores ordenados y primeras métricas de comportamiento.',
+    montoUYU: null,
+    orden: 2,
+    fuente: 'secc. 11.4',
+  },
+  {
+    nombre: 'Consolidación nacional básica',
+    descripcion: 'Consolidar una red nacional básica, con presencia en los principales corredores turísticos del país.',
+    montoUYU: null,
+    orden: 3,
+    fuente: 'secc. 11.5',
+  },
+];

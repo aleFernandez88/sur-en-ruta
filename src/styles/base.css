@@ -18,6 +18,9 @@ html {
 
 body {
   margin: 0;
+  /* Deja lugar a HiloRuta (src/components/HiloRuta.astro), fija arriba de toda la pantalla, para
+   * que no tape el arranque del Hero. Mismo valor que --alto-hilo-ruta a propósito. */
+  padding-top: var(--alto-hilo-ruta);
   background-color: var(--color-fondo);
   color: var(--color-tinta);
   font-family: var(--fuente-texto);

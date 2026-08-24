@@ -2,58 +2,77 @@
 /**
  * Inversion.astro — Sección 5. Etapa 1: validar el sistema en 90 días. Cierre y pedido.
  *
- * CÁSCARA VACÍA (2026-08-21): estructura semántica y jerarquía de headings correctas, sin copy
- * real. El copy, los montos y los porcentajes salen de docs/landing-inversores-contenido.md y de
- * src/data/inversion.ts (hoy vacío), pero cargarlos es un paso aparte — ver
- * docs/planes/2026-08-20-landing-inversores.md, paso 11.
+ * Copy real cargado el 2026-08-24. Etapas, rubros y equivalente en USD salen de
+ * src/data/etapas.ts y src/data/inversion.ts, verificados contra el documento de propuesta
+ * original (secc. 10, 11, 11.3, 11.4 y 11.5).
  *
- * REGLA DE MONEDA (ver CLAUDE.md): cuando se cargue el monto real, va siempre con la moneda
- * escrita (`$U` o `UYU`), nunca un `$` a secas. Por eso ni el placeholder usa el símbolo suelto.
+ * REGLA DE MONEDA (ver CLAUDE.md): el monto y el equivalente se arman acá con el campo `moneda`
+ * de inversion.ts — nunca se imprime un `$` sin la moneda al lado. No se hardcodea el símbolo
+ * suelto en ningún lugar de este archivo.
  */
+import { etapas } from '../data/etapas';
+import { rubrosInversion, totalEtapa1UYU, equivalenteUSDEtapa1 } from '../data/inversion';
 
-// Estructura fija: 3 etapas del modelo económico y 8 rubros de la Etapa 1 (verificados contra el PDF).
-const etapasPlaceholder = [1, 2, 3];
-const rubrosPlaceholder = [1, 2, 3, 4, 5, 6, 7, 8];
+const formatoUYU = new Intl.NumberFormat('es-UY');
+const formatoPorcentaje = (valor: number) => valor.toLocaleString('es-UY', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+const fechaEquivalente = new Date(`${equivalenteUSDEtapa1.fecha}T00:00:00`).toLocaleDateString('es-UY');
+
+const rubroPrincipal = rubrosInversion[0];
+
+const indicadoresCierre = [
+	'Puntos adheridos.',
+	'Viajeros y vehículos registrados.',
+	'Consumo en comercios adheridos.',
+	'Distribución por departamento.',
+];
 ---
 
 <section id="inversion" aria-labelledby="inversion-titulo">
-	<h2 id="inversion-titulo">[TODO: titular Inversión]</h2>
+	<h2 id="inversion-titulo">Etapa 1: validar el sistema en 90 días.</h2>
 
 	<ol class="inversion-timeline">
-		{etapasPlaceholder.map((n) => (
-			<li class:list={['etapa', { destacada: n === 1 }]}>[TODO: etapa {n}]</li>
+		{etapas.map((etapa) => (
+			<li class:list={['etapa', { destacada: etapa.orden === 1 }]}>
+				<strong>{etapa.nombre}</strong>
+				<span>{etapa.descripcion}</span>
+			</li>
 		))}
 	</ol>
 
 	<div class="inversion-reparto">
-		<h3>[TODO: subtítulo — reparto de la Etapa 1]</h3>
+		<h3>El reparto de la Etapa 1</h3>
 		<ul class="grafico-barras">
-			{rubrosPlaceholder.map((n) => (
+			{rubrosInversion.map((rubro) => (
 				<li class="barra-rubro">
-					<span class="barra-etiqueta">[TODO: rubro {n}]</span>
-					<span class="barra-visual" style={`--pct: ${n * 10}%`} aria-hidden="true"></span>
-					<span class="barra-valor">[TODO: % rubro {n}]</span>
+					<span class="barra-etiqueta">{rubro.rubro}</span>
+					<span class="barra-visual" style={`--pct: ${rubro.porcentaje}%`} aria-hidden="true"></span>
+					<span class="barra-valor">{formatoPorcentaje(rubro.porcentaje)}%</span>
 				</li>
+			))}
+		</ul>
+		<p class="inversion-titular">
+			Más de la mitad (<strong>{formatoPorcentaje(rubroPrincipal.porcentaje)}%</strong>) va a
+			producto digital, no a obra.
+		</p>
+	</div>
+
+	<div class="inversion-monto">
+		<p class="monto-total">$U {formatoUYU.format(totalEtapa1UYU)}</p>
+		<p class="monto-equivalente">
+			≈ USD {formatoUYU.format(equivalenteUSDEtapa1.valor)} (tipo de cambio {equivalenteUSDEtapa1.tipoDeCambio}, {fechaEquivalente}, fuente: {equivalenteUSDEtapa1.fuente})
+		</p>
+	</div>
+
+	<div class="inversion-cierre">
+		<h3>Qué se compra con esto: los indicadores que la Etapa 1 deja medidos</h3>
+		<ul>
+			{indicadoresCierre.map((indicador) => (
+				<li>{indicador}</li>
 			))}
 		</ul>
 	</div>
 
-	<div class="inversion-monto">
-		<p class="monto-total">[TODO: monto total de la Etapa 1 + moneda — nunca "$" sin moneda]</p>
-		<p class="monto-equivalente">[TODO: equivalente aproximado en USD, con tipo de cambio, fecha y fuente]</p>
-	</div>
-
-	<div class="inversion-cierre">
-		<h3>[TODO: subtítulo — qué se compra con la inversión]</h3>
-		<ul>
-			<li>[TODO: indicador — puntos adheridos]</li>
-			<li>[TODO: indicador — viajeros y vehículos registrados]</li>
-			<li>[TODO: indicador — consumo en comercios adheridos]</li>
-			<li>[TODO: indicador — distribución por departamento]</li>
-		</ul>
-	</div>
-
-	<a href="mailto:" class="cta cta-primario">[TODO: CTA final — solicitar el dossier]</a>
+	<a href="mailto:" class="cta cta-primario">Solicitar el dossier completo</a>
 </section>
 
 <style>
@@ -65,6 +84,7 @@ const rubrosPlaceholder = [1, 2, 3, 4, 5, 6, 7, 8];
 
 	h2 {
 		font-size: var(--texto-2xl);
+		max-width: 22ch;
 	}
 
 	.inversion-timeline {
@@ -81,6 +101,12 @@ const rubrosPlaceholder = [1, 2, 3, 4, 5, 6, 7, 8];
 		background-color: var(--color-superficie);
 		border-radius: var(--radio-md);
 		text-align: center;
+		display: grid;
+		gap: var(--espacio-2xs);
+	}
+
+	.etapa span {
+		font-size: var(--texto-sm);
 	}
 
 	.etapa.destacada {
@@ -104,12 +130,21 @@ const rubrosPlaceholder = [1, 2, 3, 4, 5, 6, 7, 8];
 		gap: var(--espacio-sm);
 	}
 
+	.barra-etiqueta {
+		font-size: var(--texto-sm);
+	}
+
 	.barra-visual {
 		display: block;
 		height: 0.75rem;
 		border-radius: var(--radio-full);
 		background-color: var(--color-acento);
 		width: var(--pct);
+	}
+
+	.inversion-titular {
+		font-size: var(--texto-lg);
+		max-width: 40ch;
 	}
 
 	.monto-total {

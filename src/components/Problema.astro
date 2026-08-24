@@ -2,32 +2,49 @@
 /**
  * Problema.astro — Sección 2. Tesis de riesgo bajo: la actividad ya existe, falta el sistema.
  *
- * CÁSCARA VACÍA (2026-08-21): estructura semántica y jerarquía de headings correctas, sin copy
- * real. El copy sale de docs/landing-inversores-contenido.md, pero cargarlo es un paso aparte —
- * ver docs/planes/2026-08-20-landing-inversores.md, paso 11.
+ * Copy real cargado el 2026-08-24 desde docs/landing-inversores-contenido.md, verificado contra
+ * el documento de propuesta original (secc. 2 y 11.1) — la cita central y el bloque de honestidad
+ * son casi literales del PDF.
+ *
+ * Pendiente, fuera de este paso: el SVG real del mapa (paso 9 del plan) reemplaza a
+ * MapaPlaceholder cuando exista, y la transformación por scroll entre los dos estados es
+ * comportamiento (paso 12), no estructura.
  */
 import MapaPlaceholder from './MapaPlaceholder.astro';
 
-// Estructura fija: 4 tarjetas de fricción (secc. 2 del documento de propuesta).
-const tarjetasFriccion = [1, 2, 3, 4];
+const friccion = [
+	'El viajero no sabe dónde parar ni qué normas rigen.',
+	'Los comercios no tienen forma de captar ese público.',
+	'El Estado no tiene datos para planificar.',
+	'El pernocte y los residuos ocurren sin control.',
+];
 ---
 
 <section id="problema" aria-labelledby="problema-titulo">
-	<h2 id="problema-titulo">[TODO: titular Problema]</h2>
+	<h2 id="problema-titulo">La actividad ya existe. Lo que falta es el sistema.</h2>
+
+	<p class="problema-tesis">
+		La actividad ya existe. La oportunidad está en ordenarla, profesionalizarla, conectarla y
+		medirla.
+	</p>
 
 	<div class="problema-mapa">
 		<!-- TODO: mismo mapa en dos estados (hoy disperso / con la red), transformación por scroll -->
-		<MapaPlaceholder etiqueta="mapa — estado hoy" />
-		<MapaPlaceholder etiqueta="mapa — estado con la red" />
+		<MapaPlaceholder etiqueta="mapa — estado hoy: puntos dispersos, sin conexión" />
+		<MapaPlaceholder etiqueta="mapa — estado con la red: corredores y puntos categorizados" />
 	</div>
 
 	<ul class="problema-tarjetas">
-		{tarjetasFriccion.map((n) => (
-			<li class="tarjeta">[TODO: fricción {n}]</li>
+		{friccion.map((linea) => (
+			<li class="tarjeta">{linea}</li>
 		))}
 	</ul>
 
-	<p class="problema-honestidad">[TODO: bloque de honestidad sobre falta de datos de mercado]</p>
+	<p class="problema-honestidad">
+		El documento admite que no existe un número público nacional de motorhomes registrados en
+		Uruguay. Se usa como argumento, no se esconde: <strong>hoy nadie mide esta actividad. Quien
+		la ordena, la mide.</strong>
+	</p>
 </section>
 
 <style>
@@ -39,6 +56,12 @@ const tarjetasFriccion = [1, 2, 3, 4];
 
 	h2 {
 		font-size: var(--texto-2xl);
+		max-width: 20ch;
+	}
+
+	.problema-tesis {
+		font-size: var(--texto-lg);
+		max-width: 50ch;
 	}
 
 	.problema-mapa {

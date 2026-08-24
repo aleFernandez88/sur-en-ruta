@@ -2,53 +2,58 @@
 /**
  * Rutas.astro — Sección 4. Seis rutas temáticas + Uruguay como hub regional.
  *
- * CÁSCARA VACÍA (2026-08-21): estructura semántica y jerarquía de headings correctas, sin copy
- * real. El copy sale de docs/landing-inversores-contenido.md, pero cargarlo es un paso aparte —
- * ver docs/planes/2026-08-20-landing-inversores.md, paso 11.
+ * Copy real cargado el 2026-08-24. Las 6 rutas salen de src/data/rutas.ts y las 4 ferias de
+ * src/data/ferias.ts, ambos verificados contra el documento de propuesta original (secc. 4.4, 6 y
+ * 6.2).
  *
- * IMPORTANTE para cuando se cargue el contenido real: el plan exige un rótulo obligatorio y
- * literal sobre el mapa ("Rutas propuestas. El relevamiento territorial es parte de la Etapa 1.")
- * — sin él, el mapa insinúa una red que todavía no existe. Acá queda como TODO, no se omite.
+ * IMPORTANTE (se mantiene desde la cáscara vacía): el rótulo obligatorio y literal sigue acá tal
+ * cual lo exige el plan — sin él, el mapa insinúa una red que todavía no existe.
  *
  * También según el plan: esta sección es "la única isla interactiva" (selector de rutas,
  * hidratación client:visible). Esa interactividad no se cablea todavía — es comportamiento, no
- * estructura — y queda anotada como TODO junto al selector.
+ * estructura — y el selector queda deshabilitado con las 6 rutas reales como TODO de cableado.
  */
 import MapaPlaceholder from './MapaPlaceholder.astro';
-
-// Estructura fija: 6 rutas temáticas y 4 ferias internacionales (verificadas contra el PDF).
-const rutasPlaceholder = [1, 2, 3, 4, 5, 6];
-const feriasPlaceholder = [1, 2, 3, 4];
+import { rutas } from '../data/rutas';
+import { ferias } from '../data/ferias';
 ---
 
 <section id="rutas" aria-labelledby="rutas-titulo">
-	<h2 id="rutas-titulo">[TODO: titular Rutas]</h2>
+	<h2 id="rutas-titulo">Seis rutas. Y una posición que ningún vecino tiene.</h2>
 
 	<div class="rutas-mapa-interactivo">
 		<!-- TODO: mapa a pantalla completa con las 6 rutas dibujables; hidratar con client:visible -->
 		<MapaPlaceholder etiqueta="mapa interactivo de rutas" />
 
-		<div class="rutas-selector" role="group" aria-label="[TODO: selector de rutas]">
-			{rutasPlaceholder.map((n) => (
-				<button type="button" disabled>[TODO: ruta {n}]</button>
+		<div class="rutas-selector" role="group" aria-label="Rutas temáticas">
+			{/* TODO: cablear selección (client:visible) — hoy es solo estructura y color de trazo */}
+			{rutas.map((ruta) => (
+				<button type="button" disabled style={`--color-ruta: ${ruta.colorTrazo}`}>
+					{ruta.nombre}
+				</button>
 			))}
 		</div>
 
-		<!-- TODO: rótulo obligatorio y literal — ver comentario superior del componente -->
-		<p class="rutas-rotulo">[TODO: rótulo — rutas propuestas / relevamiento pendiente]</p>
+		<p class="rutas-rotulo">Rutas propuestas. El relevamiento territorial es parte de la Etapa 1.</p>
 	</div>
 
 	<div class="rutas-hub-regional">
-		<h3>[TODO: subtítulo — Uruguay como hub regional]</h3>
+		<h3>Uruguay como hub regional</h3>
 		<!-- TODO: mapa del Cono Sur con Uruguay como puerta de entrada -->
 		<MapaPlaceholder etiqueta="mapa del Cono Sur" />
 
-		<p>[TODO: propuesta de valor al mercado externo]</p>
-		<p>[TODO: mención de guarderías de motorhomes como ingreso recurrente]</p>
+		<p>
+			Base segura para iniciar o finalizar recorridos por Sudamérica, entre Argentina y Brasil:
+			un destino de escala, ordenado y preparado para el turismo itinerante internacional.
+		</p>
+		<p>
+			Las guarderías de motorhomes suman una línea de ingreso recurrente y de estadía larga, más
+			allá de la pernocta: un viajero puede dejar su unidad en Uruguay por temporadas.
+		</p>
 
 		<ul class="rutas-ferias">
-			{feriasPlaceholder.map((n) => (
-				<li>[TODO: feria {n}]</li>
+			{ferias.map((feria) => (
+				<li>{feria.nombre}{feria.ciudad ? `, ${feria.ciudad}` : ''} ({feria.pais})</li>
 			))}
 		</ul>
 	</div>
@@ -63,6 +68,7 @@ const feriasPlaceholder = [1, 2, 3, 4];
 
 	h2 {
 		font-size: var(--texto-2xl);
+		max-width: 22ch;
 	}
 
 	.rutas-mapa-interactivo {
@@ -79,7 +85,7 @@ const feriasPlaceholder = [1, 2, 3, 4];
 	.rutas-selector button {
 		padding: var(--espacio-xs) var(--espacio-sm);
 		border-radius: var(--radio-full);
-		border: 2px solid var(--color-tinta);
+		border: 2px solid var(--color-ruta, var(--color-tinta));
 		background: transparent;
 		color: var(--color-tinta);
 		font: inherit;

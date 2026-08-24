@@ -1,0 +1,192 @@
+---
+/**
+ * HiloRuta.astro — barra fija arriba de TODA la pantalla, hecha para leerse como una ruta real
+ * vista desde arriba: asfalto gris con 2-3 ondulaciones suaves y línea central amarilla punteada
+ * (puntos, no rayas — estática, sin movimiento propio). La ruta se va DIBUJANDO con el scroll de
+ * toda la página (vacía arriba del todo, completa al llegar a Inversión) y un marcador (por ahora
+ * un emoji de camper, placeholder hasta definir un ícono propio) viaja unos pasos detrás de la
+ * punta que va apareciendo, mirando hacia la derecha (sentido de avance) — ver memoria del
+ * proyecto (RENAMU / animaciones, 2026-08-24).
+ *
+ * Quinta vuelta de diseño (2026-08-24): la v4 tenía además dos líneas blancas continuas cerca de
+ * cada borde del asfalto. Ale pidió sacarlas (queda solo asfalto + línea central), y afinar y
+ * despuntear la línea central: 20% más fina (2px → 1.6px) y con look de puntos redondos, no de
+ * guiones — `stroke-linecap: round` con un dash mínimo (1) y un gap más grande (14).
+ *
+ * Cómo se resuelve el dibujado sobre una curva con varias capas (asfalto + línea central, ambas
+ * compartiendo el mismo <path> vía <use>): la técnica de "dibujar un trazo" (pathLength="1" +
+ * stroke-dasharray/dashoffset) no se le puede aplicar directo a la línea central, porque esta YA
+ * usa stroke-dasharray para su propio patrón de puntos — poner encima un segundo dashoffset
+ * rompería ese patrón. Se resuelve con una <mask>: una tercera copia (invisible) de la curva, con
+ * un trazo ancho y su propio dashoffset animado, agrupando las capas visibles adentro de un
+ * <g mask="...">. La máscara revela el tramo ya "recorrido" sin tocar el patrón de cada capa.
+ *
+ * Simplificación conocida, no un bug: el `viewBox` usa un ancho de referencia (1536, ronda un
+ * desktop típico) con `preserveAspectRatio="none"` para estirarse al 100% del viewport — el alto
+ * mapea 1 a 1 (siempre 45), así que la curva nunca se deforma verticalmente, pero en pantallas
+ * mucho más angostas (mobile) las ondulaciones se comprimen horizontalmente en vez de mantener su
+ * proporción exacta. Es decorativo y aria-hidden, así que es una simplificación aceptable — no
+ * vale la pena recalcular la geometría por JS para esto.
+ *
+ * Decorativo (aria-hidden): no da información que el scroll nativo de la página no dé ya.
+ * - Con `prefers-reduced-motion: reduce`, se apaga todo movimiento y queda la ruta completa con el
+ *   marcador al final.
+ * - En navegadores sin `animation-timeline: scroll()` (Firefox estable a mediados de 2026, ver
+ *   memoria del proyecto), el fallback también es la ruta completa — nunca vacía ni rota.
+ */
+
+const curva =
+	'M0,22.5 C128,7 256,7 384,22.5 S640,38 768,22.5 S1024,7 1152,22.5 S1408,38 1536,22.5';
+// CSS `path()` exige un <string> entre comillas — Astro serializa `define:vars` sin ellas, así
+// que se las agregamos acá para que `path(var(--curvaOffsetPath))` compile.
+const curvaOffsetPath = `"${curva}"`;
+---
+
+<div class="hilo-ruta" aria-hidden="true">
+	<svg
+		class="hilo-ruta-svg"
+		viewBox="0 0 1536 45"
+		preserveAspectRatio="none"
+		xmlns="http://www.w3.org/2000/svg"
+	>
+		<defs>
+			<path id="hilo-ruta-curva" d={curva} pathLength="1" fill="none"></path>
+			<mask id="hilo-ruta-mascara" maskUnits="userSpaceOnUse" x="0" y="0" width="1536" height="45">
+				<use href="#hilo-ruta-curva" class="hilo-ruta-mascara-trazo"></use>
+			</mask>
+		</defs>
+
+		<g mask="url(#hilo-ruta-mascara)">
+			<use href="#hilo-ruta-curva" class="hilo-ruta-pavimento"></use>
+			<use href="#hilo-ruta-curva" class="hilo-ruta-linea-central"></use>
+		</g>
+
+		<!-- TODO: reemplazar el emoji por un ícono propio (SVG) cuando se decida cuál. -->
+		<text class="hilo-ruta-marcador" text-anchor="middle" dominant-baseline="central">🚐</text>
+	</svg>
+</div>
+
+<style define:vars={{ curvaOffsetPath }}>
+	.hilo-ruta {
+		position: fixed;
+		top: 0;
+		left: 0;
+		right: 0;
+		height: var(--alto-hilo-ruta);
+		z-index: 60;
+		pointer-events: none;
+	}
+
+	.hilo-ruta-svg {
+		display: block;
+		width: 100%;
+		height: 100%;
+	}
+
+	/* El path maestro (#hilo-ruta-curva) es solo geometría: no lleva stroke/fill propios, así que
+	 * no se ve. OJO: no ponerle `visibility: hidden` acá — un <use> clona el id junto con el
+	 * contenido, así que esa regla también apagaría los <use> que lo pintan (ya pasó una vez). */
+
+	.hilo-ruta-pavimento {
+		fill: none;
+		stroke: var(--color-asfalto);
+		stroke-width: 20;
+	}
+
+	.hilo-ruta-linea-central {
+		fill: none;
+		stroke: var(--color-linea-central);
+		/* 20% más fina que la versión anterior (2 → 1.6). */
+		stroke-width: 1.6;
+		stroke-linecap: round;
+		/* Punteada (puntos redondos), no a rayas: dash chico + gap, con cabo redondeado para que
+		 * cada guión se vea como un punto. Estático, sin animación propia — el "dibujado" de la
+		 * ruta con el scroll lo hace la <mask>, no este dasharray.
+		 * OJO con las unidades: el <path> maestro tiene pathLength="1", y eso recalibra CUALQUIER
+		 * stroke-dasharray de sus <use> a esa escala normalizada (1 == el largo real de toda la
+		 * curva, ~1540 unidades). Un dasharray "1 14" en unidades "de toda la vida" en realidad
+		 * pedía un guión más largo que la curva entera — se veía sólida. Por eso acá los valores
+		 * son fracciones chicas de 1, no números de pocos dígitos.
+		 * El dash (primer valor) fija el largo del trazo; con cabo redondeado, el largo visual real
+		 * es aprox. dash + stroke-width. Antes (0.001 ≈ 1,5px de dash) daba un punto de ~3,1px de
+		 * largo total; achicando esa cuenta al revés, 0.003 (~4,6px de dash) da un trazo de ~6,3px,
+		 * el doble — "dos puntos juntos" de largo, sin tocar el gap. */
+		stroke-dasharray: 0.003 0.012;
+	}
+
+	/* Trazo de la máscara: ancho de sobra para tapar el pavimento (20) en cualquier punto de la
+	 * curva, invisible en sí (vive en <mask>, no se pinta). */
+	.hilo-ruta-mascara-trazo {
+		fill: none;
+		stroke: #fff;
+		stroke-width: 26;
+		stroke-linecap: round;
+		stroke-dasharray: 1;
+		/* Fallback y sin soporte de scroll-timeline: máscara abierta del todo, ruta completa. */
+		stroke-dashoffset: 0;
+	}
+
+	@supports (animation-timeline: scroll(root)) {
+		.hilo-ruta-mascara-trazo {
+			stroke-dashoffset: 1;
+			animation: hilo-ruta-dibujar linear both;
+			animation-timeline: scroll(root);
+		}
+	}
+
+	@keyframes hilo-ruta-dibujar {
+		from {
+			stroke-dashoffset: 1;
+		}
+		to {
+			stroke-dashoffset: 0;
+		}
+	}
+
+	.hilo-ruta-marcador {
+		font-size: 28px;
+		filter: drop-shadow(0 1px 1.5px rgba(0, 0, 0, 0.4));
+		transform-box: fill-box;
+		transform-origin: center;
+		/* El emoji mira "de fábrica" hacia la izquierda; se espeja para que apunte en el sentido
+		 * de avance (derecha). Si se reemplaza por un ícono propio dibujado mirando a la derecha,
+		 * este scaleX(-1) se saca. */
+		transform: scaleX(-1);
+		offset-path: path(var(--curvaOffsetPath));
+		offset-anchor: center;
+		offset-rotate: 0deg;
+		/* Fallback: la ruta ya está completa y el marcador, al final. */
+		offset-distance: 100%;
+	}
+
+	@supports (animation-timeline: scroll(root)) {
+		.hilo-ruta-marcador {
+			offset-distance: 0%;
+			animation: hilo-ruta-marcador-avanzar linear both;
+			animation-timeline: scroll(root);
+		}
+	}
+
+	/* Va un poco detrás de la punta que dibuja la <mask> (97%, no 100%), para que se lea como que
+	 * el camper recorre la ruta a medida que aparece, no que la punta lo persigue a él. */
+	@keyframes hilo-ruta-marcador-avanzar {
+		from {
+			offset-distance: 0%;
+		}
+		to {
+			offset-distance: 97%;
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.hilo-ruta-mascara-trazo {
+			animation: none !important;
+			stroke-dashoffset: 0;
+		}
+
+		.hilo-ruta-marcador {
+			animation: none !important;
+			offset-distance: 100%;
+		}
+	}
+</style>

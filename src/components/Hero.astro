@@ -2,12 +2,24 @@
 /**
  * Hero.astro — Sección 1. Hook.
  *
- * CÁSCARA VACÍA (2026-08-21): estructura semántica y jerarquía de headings correctas, sin copy
- * real. El titular, la bajada y los 3 datos ancla salen de docs/landing-inversores-contenido.md
- * y del prototipo de identidad, pero cargarlos es un paso aparte — ver
- * docs/planes/2026-08-20-landing-inversores.md, paso 11.
+ * Copy real cargado el 2026-08-24 desde docs/landing-inversores-contenido.md, verificado a su vez
+ * contra el documento de propuesta original (secc. 1 y 9). El titular y la bajada vienen de la
+ * exploración visual del 13/08 (ver docs/fuentes/README.md), que el plan pide reutilizar tal cual.
+ *
+ * Pendiente, fuera de este paso: el SVG real del mapa (paso 9 del plan) reemplaza a
+ * MapaPlaceholder cuando exista (ver src/assets/mapa/FUENTE.md).
+ *
+ * OJO — no confundir con HiloRuta: esa es la barra de progreso fija arriba de toda la pantalla
+ * (vive en Base.astro, persiste en las 5 secciones, ligada al scroll de toda la página). El
+ * MapaPlaceholder de acá abajo es la ilustración grande y propia del Hero, sección 1 nomás.
  */
 import MapaPlaceholder from './MapaPlaceholder.astro';
+
+const datosAncla = [
+	'Piloto: Maldonado · 90 días',
+	'Un punto de servicio cada 90 km',
+	'6 componentes de sistema',
+];
 ---
 
 <section id="hero" class="hero" aria-labelledby="hero-titulo">
@@ -17,18 +29,20 @@ import MapaPlaceholder from './MapaPlaceholder.astro';
 	</div>
 
 	<div class="hero-contenido">
-		<h1 id="hero-titulo">[TODO: titular Hero]</h1>
-		<p class="hero-bajada">[TODO: bajada del Hero]</p>
+		<p class="hero-eyebrow">Proyecto RENAMU</p>
+		<h1 id="hero-titulo">El país entero, en una sola red.</h1>
+		<p class="hero-bajada">
+			Paradas habilitadas, comercios adheridos y rutas temáticas para el turismo itinerante
+			uruguayo.
+		</p>
 
 		<ul class="hero-datos-ancla">
-			<li>[TODO: dato ancla 1 — piloto]</li>
-			<li>[TODO: dato ancla 2 — criterio territorial]</li>
-			<li>[TODO: dato ancla 3 — componentes del sistema]</li>
+			{datosAncla.map((dato) => <li>{dato}</li>)}
 		</ul>
 
 		<div class="hero-ctas">
-			<a href="#inversion" class="cta cta-primario">[TODO: CTA primario]</a>
-			<a href="#" class="cta cta-secundario">[TODO: CTA secundario]</a>
+			<a href="#inversion" class="cta cta-primario">Ver el plan de inversión</a>
+			<a href="mailto:" class="cta cta-secundario">Solicitar el dossier</a>
 		</div>
 	</div>
 </section>
@@ -42,7 +56,15 @@ import MapaPlaceholder from './MapaPlaceholder.astro';
 		padding: var(--espacio-xl) var(--espacio-md);
 	}
 
-	.hero-titulo,
+	.hero-eyebrow {
+		margin: 0 0 var(--espacio-xs);
+		font-size: var(--texto-sm);
+		font-weight: 700;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		color: var(--color-acento);
+	}
+
 	h1 {
 		font-size: var(--texto-3xl);
 	}
@@ -59,6 +81,14 @@ import MapaPlaceholder from './MapaPlaceholder.astro';
 		list-style: none;
 		padding: 0;
 		margin: var(--espacio-md) 0;
+	}
+
+	.hero-datos-ancla li {
+		padding: var(--espacio-xs) var(--espacio-sm);
+		background-color: var(--color-superficie);
+		border-radius: var(--radio-full);
+		font-size: var(--texto-sm);
+		font-weight: 600;
 	}
 
 	.hero-ctas {

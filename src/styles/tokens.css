@@ -46,4 +46,33 @@
   --radio-md: 0.5rem;
   --radio-lg: 1rem;
   --radio-full: 999px;
+
+  /* === Color de rutas temáticas — PROVISORIO ===
+   * 6 colores distinguibles para las 6 rutas de la sección 4 (src/data/rutas.ts). No son parte
+   * de la paleta core (fondo/tinta/acento/superficie) que decide Ana en el prototipo de
+   * identidad — es una asignación propia, a revisar junto con la identidad definitiva (paso 13).
+   * Viven acá y no como hex sueltos en el dato para que reemplazarlos sea editar este archivo,
+   * no recorrer componentes.
+   */
+  --color-ruta-vino: #7b2d43;
+  --color-ruta-oceanica: #1b6fa8;
+  --color-ruta-termal: #c1653c;
+  --color-ruta-rural: #6b8e4e;
+  --color-ruta-patrimonial: #8b5a9e;
+  --color-ruta-naturaleza: #2f9e7a;
+
+  /* === Color de pavimento (HiloRuta) ===
+   * Representan asfalto/demarcación real, no paleta de marca — por eso no llevan la marca
+   * PROVISORIO de arriba (no dependen de docs/decisiones/identidad-visual.md). Viven acá igual,
+   * y no como hex sueltos en el componente, por la misma regla de "un solo lugar para tocar".
+   */
+  --color-asfalto: #4a4a4a;
+  --color-linea-central: #ffc82c;
+  --color-linea-borde: #ffffff;
+
+  /* Alto de HiloRuta (src/components/HiloRuta.astro): un solo valor para el componente y para el
+   * padding-top que le deja lugar en src/styles/base.css, así no se desincroniza uno del otro.
+   * Tiene que coincidir con el alto del viewBox del SVG adentro del componente (hoy 45), porque
+   * el offset vertical de las líneas blancas se calcula asumiendo esa correspondencia 1 a 1. */
+  --alto-hilo-ruta: 45px;
 }

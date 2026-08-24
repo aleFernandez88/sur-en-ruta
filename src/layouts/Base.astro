@@ -1,11 +1,15 @@
 ---
 /**
- * Base.astro — layout de <head> de la landing de inversores.
+ * Base.astro — layout de <head> y chrome de página de la landing de inversores.
  *
  * Sin analytics de terceros en la v1 (ver docs/planes/2026-08-20-landing-inversores.md, paso 10).
+ *
+ * Incluye HiloRuta, el trazo fijo que se dibuja con el scroll de toda la página (no de una
+ * sección): vive acá y no en Hero.astro porque es un elemento persistente, no de una sección.
  */
 import '../styles/tokens.css';
 import '../styles/base.css';
+import HiloRuta from '../components/HiloRuta.astro';
 
 interface Props {
   title?: string;
@@ -47,6 +51,11 @@ const urlImagenOG = new URL('/og-image.png', Astro.site ?? 'https://surenruta.uy
 		<!-- TODO: falta generar og-image.png 1200x630 (mismo archivo que Open Graph) -->
 		<meta name="twitter:image" content={urlImagenOG} />
 
+		<!--
+			PROVISORIO: tiene que ser el mismo hex que --color-fondo en src/styles/tokens.css. Un
+			<meta> no puede leer un custom property de CSS, así que este valor se actualiza a mano
+			en el paso 13 (identidad definitiva) — no se olvida de tocarlo junto con tokens.css.
+		-->
 		<meta name="theme-color" content="#f3f1ec" />
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 		<link rel="icon" href="/favicon.ico" />
@@ -55,6 +64,7 @@ const urlImagenOG = new URL('/og-image.png', Astro.site ?? 'https://surenruta.uy
 	</head>
 	<body>
 		<a href="#contenido-principal" class="skip-link">Saltar al contenido principal</a>
+		<HiloRuta />
 		<slot />
 	</body>
 </html>
