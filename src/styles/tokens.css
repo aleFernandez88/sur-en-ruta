@@ -61,18 +61,24 @@
   --color-ruta-patrimonial: #8b5a9e;
   --color-ruta-naturaleza: #2f9e7a;
 
-  /* === Color de pavimento (HiloRuta) ===
-   * Representan asfalto/demarcación real, no paleta de marca — por eso no llevan la marca
-   * PROVISORIO de arriba (no dependen de docs/decisiones/identidad-visual.md). Viven acá igual,
-   * y no como hex sueltos en el componente, por la misma regla de "un solo lugar para tocar".
+  /* === Color de pavimento y cartel de ruta (HiloRuta) ===
+   * Representan asfalto/demarcación/señalización real, no paleta de marca — por eso no llevan la
+   * marca PROVISORIO de arriba (no dependen de docs/decisiones/identidad-visual.md). Viven acá
+   * igual, y no como hex sueltos en el componente, por la misma regla de "un solo lugar para
+   * tocar". `--color-linea-borde` (líneas blancas de los laterales) se sacó del componente el
+   * 2026-08-24 y quedó sin usar — no se vuelve a agregar acá salvo que el diseño la traiga de
+   * vuelta.
    */
   --color-asfalto: #4a4a4a;
   --color-linea-central: #ffc82c;
-  --color-linea-borde: #ffffff;
+  --color-cartel-fondo: #1b4d8f;
+  --color-cartel-texto: #ffffff;
 
   /* Alto de HiloRuta (src/components/HiloRuta.astro): un solo valor para el componente y para el
    * padding-top que le deja lugar en src/styles/base.css, así no se desincroniza uno del otro.
-   * Tiene que coincidir con el alto del viewBox del SVG adentro del componente (hoy 45), porque
-   * el offset vertical de las líneas blancas se calcula asumiendo esa correspondencia 1 a 1. */
-  --alto-hilo-ruta: 45px;
+   * Tiene que coincidir con el alto del viewBox del SVG adentro del componente (hoy 68), porque
+   * la geometría del componente (curva, cartelitos con poste) se calcula asumiendo esa
+   * correspondencia 1 a 1. Subió de 45 a 68 el 2026-08-24 para que entrara el cartelito con poste
+   * arriba de la ruta sin recortarse contra el borde del contenedor. */
+  --alto-hilo-ruta: 68px;
 }
