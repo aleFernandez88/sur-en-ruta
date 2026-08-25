@@ -10,12 +10,11 @@
  * de inversion.ts — nunca se imprime un `$` sin la moneda al lado. No se hardcodea el símbolo
  * suelto en ningún lugar de este archivo.
  *
- * CartelSeccion (2026-08-24): mismo poste indicador que Hero, con el nombre "La Inversión" — ver
- * comentario de cabecera de src/components/CartelSeccion.astro para el porqué de la forma.
+ * 2026-08-25: el cartel de sección ("La Inversión") se sacó de acá — ahora vive en la ruta del
+ * header (HiloRuta), sin poste, como nav link. Ver HiloRuta.astro.
  */
 import { etapas } from '../data/etapas';
 import { rubrosInversion, totalEtapa1UYU, equivalenteUSDEtapa1 } from '../data/inversion';
-import CartelSeccion from './CartelSeccion.astro';
 
 const formatoUYU = new Intl.NumberFormat('es-UY');
 const formatoPorcentaje = (valor: number) => valor.toLocaleString('es-UY', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
@@ -32,7 +31,6 @@ const indicadoresCierre = [
 ---
 
 <section id="inversion" aria-labelledby="inversion-titulo">
-	<CartelSeccion numero={5} nombre="La Inversión" />
 	<h2 id="inversion-titulo">Etapa 1: validar el sistema en 90 días.</h2>
 
 	<ol class="inversion-timeline">

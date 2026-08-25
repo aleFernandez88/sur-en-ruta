@@ -2,11 +2,19 @@
 /**
  * HiloRuta.astro — barra fija arriba de TODA la pantalla, hecha para leerse como una ruta real
  * vista desde arriba: asfalto gris con 2-3 ondulaciones suaves y línea central amarilla punteada
- * (estática, sin movimiento propio). La ruta se va DIBUJANDO con el scroll de toda la página
- * (vacía arriba del todo, completa al llegar a Inversión) y a medida que se dibuja van apareciendo
- * 5 cartelitos de ruta numerados (1 a 5, uno por sección de la landing) a un lado de la ruta, cada
- * uno con su poste — estética de cartel indicador uruguayo: rectángulo azul apaisado, borde
- * blanco, número blanco — ver memoria del proyecto (RENAMU / animaciones, 2026-08-24).
+ * (estática, sin movimiento propio). La ruta se va DIBUJANDO con el scroll (vacía al arrancar,
+ * completa al llegar a Inversión) y a medida que se dibuja van apareciendo 5 señales de ruta, una
+ * por sección de la landing.
+ *
+ * 2026-08-25 — reorganización de los cartelitos: hasta acá cada sección tenía su propio
+ * `CartelSeccion` (poste + 2 placas, "N° Destino" arriba y el nombre abajo) en su propio
+ * contenido, y esta barra mostraba nada más que el número, colgado de un poste corto. Se
+ * retiraron esos `CartelSeccion` de las 5 secciones (componente borrado, no queda nadie que lo
+ * use) y las 2 placas pasan a vivir ACÁ, sueltas — sin poste que las une, mucho más chicas — y
+ * ahora son un link de navegación (`<a href="#id-de-la-sección">`) a la sección correspondiente,
+ * no solo un indicador de progreso. Por eso el wrapper ya no es `aria-hidden` entero: la curva y
+ * el pavimento siguen siendo decorativos (aria-hidden puntual en esos `<use>`), pero las señales
+ * son navegación real y tienen que quedar expuestas a lectores de pantalla y al teclado.
  *
  * Sexta vuelta de diseño (2026-08-24): la v7 tenía un emoji de camper (🚐) como marcador de
  * posición, siguiendo la curva con `offset-path`. Ale lo sacó ("no suma mucho") y pidió algo con
@@ -57,18 +65,32 @@ const curva =
 // que se las agregamos acá para que `path(var(--curvaOffsetPath))` compile.
 const curvaOffsetPath = `"${curva}"`;
 
-// Un cartelito por sección de la landing (Hero, Problema, Sistema, Rutas, Inversión), repartidos
-// parejo a lo largo de la curva — ver nota sobre posiciones aproximadas en el comentario de arriba.
+// Una señal por sección de la landing (Hero, Problema, Sistema, Rutas, Inversión), repartidas
+// parejo a lo largo de la curva — ver nota sobre posiciones aproximadas en el comentario de
+// arriba. `id` apunta al HzSlide correspondiente (src/pages/index.astro) para el nav link.
+//
+// OJO — esto sigue calibrado para 5 SECCIONES, no para las 7 SLIDES que existen desde la
+// migración a slide horizontal (Sistema y Rutas se partieron en dos, ver ese mismo archivo): las
+// señales 3 y 4 apuntan a la primera mitad de cada una ("sistema-a", "rutas-a") como
+// simplificación temporal. Recalcular posiciones para 7 paradas es un paso aparte, todavía
+// pendiente — no confundir con este cambio, que es solo la reorganización visual del cartel.
 const senales = [
-	{ numero: 1, distancia: '4%' },
-	{ numero: 2, distancia: '24%' },
-	{ numero: 3, distancia: '44%' },
-	{ numero: 4, distancia: '64%' },
-	{ numero: 5, distancia: '84%' },
+	{ numero: 1, distancia: '4%', nombre: 'La Red', id: 'hero' },
+	{ numero: 2, distancia: '24%', nombre: 'La Oportunidad', id: 'problema' },
+	{ numero: 3, distancia: '44%', nombre: 'El Sistema', id: 'sistema-a' },
+	{ numero: 4, distancia: '64%', nombre: 'Las Rutas', id: 'rutas-a' },
+	{ numero: 5, distancia: '84%', nombre: 'La Inversión', id: 'inversion' },
 ];
+
+// El sitio carga ya "parado" en la Parada 1 (Hero es la sección 1), así que el tramo hasta ahí
+// tiene que verse dibujado desde el arranque, sin depender de scroll — no arranca en 1 (nada
+// dibujado) sino en 1 menos la distancia del cartelito 1. De paso evita el límite exacto
+// dash/gap en dashoffset:1 que dejaba filtrar un pedacito de asfalto en la punta de la curva
+// (ver memoria del proyecto, gotcha de pathLength + stroke-dasharray).
+const dashoffsetInicial = 1 - parseFloat(senales[0].distancia) / 100;
 ---
 
-<div class="hilo-ruta" aria-hidden="true">
+<div class="hilo-ruta">
 	<svg
 		class="hilo-ruta-svg"
 		viewBox="0 0 1536 68"
@@ -83,23 +105,42 @@ const senales = [
 		</defs>
 
 		<g mask="url(#hilo-ruta-mascara)">
-			<use href="#hilo-ruta-curva" class="hilo-ruta-pavimento"></use>
-			<use href="#hilo-ruta-curva" class="hilo-ruta-linea-central"></use>
+			<use href="#hilo-ruta-curva" class="hilo-ruta-pavimento" aria-hidden="true"></use>
+			<use href="#hilo-ruta-curva" class="hilo-ruta-linea-central" aria-hidden="true"></use>
 
 			{senales.map((senal) => (
-				<g class="hilo-ruta-senal" style={`offset-distance: ${senal.distancia}`}>
-					{/* Poste: baja desde el cartel (y=-18) hasta la ruta (y=0). */}
-					<line class="hilo-ruta-senal-poste" x1="0" y1="0" x2="0" y2="-18"></line>
-					{/* Cartel apaisado, apoyado en la punta del poste. */}
-					<rect x="-13" y="-32" width="26" height="14" rx="2"></rect>
-					<text x="0" y="-25" text-anchor="middle" dominant-baseline="central">{senal.numero}</text>
-				</g>
+				<a
+					href={`#${senal.id}`}
+					class="hilo-ruta-senal"
+					style={`offset-distance: ${senal.distancia}`}
+					aria-label={`Ir a la sección ${senal.nombre}`}
+				>
+					{/* Placa de número: la misma que antes, ahora suelta (sin poste). */}
+					<rect class="hilo-ruta-senal-numero" x="-8" y="-31" width="16" height="13" rx="2"></rect>
+					<text
+						class="hilo-ruta-senal-numero-texto"
+						x="0"
+						y="-24.5"
+						text-anchor="middle"
+						dominant-baseline="central"
+					>{senal.numero}</text>
+
+					{/* Placa de nombre: lo que antes era la placa grande del poste, acá mucho más chica. */}
+					<rect class="hilo-ruta-senal-nombre" x="-24" y="-16" width="48" height="13" rx="2"></rect>
+					<text
+						class="hilo-ruta-senal-nombre-texto"
+						x="0"
+						y="-9.5"
+						text-anchor="middle"
+						dominant-baseline="central"
+					>{senal.nombre}</text>
+				</a>
 			))}
 		</g>
 	</svg>
 </div>
 
-<style define:vars={{ curvaOffsetPath }}>
+<style define:vars={{ curvaOffsetPath, dashoffsetInicial }}>
 	.hilo-ruta {
 		position: fixed;
 		top: 0;
@@ -155,54 +196,65 @@ const senales = [
 		stroke-dashoffset: 0;
 	}
 
+	/* 2026-08-25 — migración a slide horizontal: la página en sí ya no scrollea (solo .hz-track,
+	 * ver base.css), así que scroll(root) ya no sirve — un scroll-timeline con nombre no necesita
+	 * que este elemento sea descendiente de .hz-track, alcanza con que .hz-track lo declare
+	 * (`scroll-timeline-name: --hz-progreso` en base.css). El @supports sigue probando
+	 * scroll(root) a propósito: es la misma familia de feature (scroll-driven animations), los
+	 * navegadores que soportan uno soportan el otro — no hace falta duplicar el gate. */
 	@supports (animation-timeline: scroll(root)) {
 		.hilo-ruta-mascara-trazo {
-			stroke-dashoffset: 1;
+			stroke-dashoffset: var(--dashoffsetInicial);
 			animation: hilo-ruta-dibujar linear both;
-			animation-timeline: scroll(root);
+			animation-timeline: --hz-progreso;
 		}
 	}
 
 	@keyframes hilo-ruta-dibujar {
 		from {
-			stroke-dashoffset: 1;
+			stroke-dashoffset: var(--dashoffsetInicial);
 		}
 		to {
 			stroke-dashoffset: 0;
 		}
 	}
 
-	/* Cartelitos de ruta: posición fija sobre la curva (no animan solos, la <mask> del padre es lo
-	 * que los revela a medida que el dibujado los alcanza). offset-rotate: 0deg a propósito — un
-	 * cartel real queda derecho en su poste, no se inclina con la curva de la ruta. */
+	/* Señales de ruta: posición fija sobre la curva (no animan solas, la <mask> del padre es lo
+	 * que las revela a medida que el dibujado las alcanza). offset-rotate: 0deg a propósito — una
+	 * placa real queda derecha, no se inclina con la curva de la ruta. Ahora son <a>, no <g>: el
+	 * wrapper (.hilo-ruta) tiene pointer-events:none porque la curva/pavimento son decorativos,
+	 * así que cada señal recupera pointer-events acá para ser clickeable. */
 	.hilo-ruta-senal {
 		offset-path: path(var(--curvaOffsetPath));
-		/* Sin offset-anchor a propósito: en un <g> (sin caja CSS propia, a diferencia de <text>)
-		 * `offset-anchor: center` calculó mal y tiraba el cartelito lejísimos de la curva. El poste
-		 * y el cartel están dibujados con coordenadas locales relativas al (0,0) del <g> —que es el
-		 * punto sobre la curva—, así que el ancla por defecto (el origen del elemento) cae
-		 * exactamente donde hace falta: al pie del poste, sobre la ruta. */
 		offset-rotate: 0deg;
+		pointer-events: auto;
+		cursor: pointer;
 	}
 
-	.hilo-ruta-senal-poste {
-		/* Reutiliza el gris del asfalto: un poste metálico no es un color de marca tampoco. */
-		stroke: var(--color-asfalto);
-		stroke-width: 2.5;
-		stroke-linecap: round;
-	}
-
-	.hilo-ruta-senal rect {
+	.hilo-ruta-senal-numero,
+	.hilo-ruta-senal-nombre {
 		fill: var(--color-cartel-fondo);
 		stroke: var(--color-cartel-texto);
 		stroke-width: 1.5;
 	}
 
-	.hilo-ruta-senal text {
+	.hilo-ruta-senal-numero-texto,
+	.hilo-ruta-senal-nombre-texto {
 		fill: var(--color-cartel-texto);
 		font-family: var(--fuente-texto);
 		font-weight: 700;
-		font-size: 10px;
+	}
+
+	.hilo-ruta-senal-numero-texto {
+		font-size: 9px;
+	}
+
+	/* Más chica que la del número: la placa de nombre es angosta (48 unidades) y el texto varía de
+	 * largo por sección ("La Oportunidad" es el más largo de los 5) — medido con getBBox contra
+	 * las 5 señales reales en el navegador, no a ojo (mismo método que CartelSeccion en su
+	 * momento, ver memoria del proyecto). */
+	.hilo-ruta-senal-nombre-texto {
+		font-size: 5.3px;
 	}
 
 	@media (prefers-reduced-motion: reduce) {
@@ -212,3 +264,32 @@ const senales = [
 		}
 	}
 </style>
+
+<script>
+	// 2026-08-25 — primer JS del proyecto: navegación de las señales, no animación (sigue sin
+	// GSAP/Framer, eso no cambia). El scroll-hasta-el-ancla nativo del navegador (un <a href="#id">
+	// normal) no funciona acá: el destino vive dentro de .hz-track, rotado -90° por el truco de
+	// slide horizontal (ver base.css), y el algoritmo nativo de "llevar el elemento a la vista" no
+	// calcula bien el scroll necesario contra ese transform — probado en vivo, cambia el hash de la
+	// URL pero no mueve el scroll real. Se resuelve leyendo el offsetTop del slide destino DENTRO
+	// de .hz-track (que sí es correcto, es la posición en el espacio LOCAL sin rotar) y llevando el
+	// scroll ahí a mano.
+	const track = document.querySelector<HTMLElement>('.hz-track');
+
+	document.querySelectorAll<HTMLAnchorElement>('.hilo-ruta-senal').forEach((señal) => {
+		señal.addEventListener('click', (evento) => {
+			const id = señal.getAttribute('href')?.slice(1);
+			const destino = id && document.getElementById(id);
+			if (!track || !destino) return;
+
+			evento.preventDefault();
+			// behavior:'smooth' (probado, con y sin scroll-behavior:smooth de base.css) no anima
+			// nada acá: se queda clavado en 0 y nunca arranca. Sospecha: .hz-track es a la vez el
+			// contenedor que scrollea Y el que lleva transform:rotate(-90deg) (ver base.css) — la
+			// rueda del mouse SÍ anima suave entre paradas (usa el snap nativo, no este método),
+			// así que el problema es puntual del scroll programático animado sobre un elemento
+			// transformado, no del CSS en general. 'instant' no tiene ese problema.
+			track.scrollTo({ top: destino.offsetTop, behavior: 'instant' });
+		});
+	});
+</script>

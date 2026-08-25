@@ -4,8 +4,15 @@
  *
  * Sin analytics de terceros en la v1 (ver docs/planes/2026-08-20-landing-inversores.md, paso 10).
  *
- * Incluye HiloRuta, el trazo fijo que se dibuja con el scroll de toda la página (no de una
- * sección): vive acá y no en Hero.astro porque es un elemento persistente, no de una sección.
+ * Incluye HiloRuta, el trazo fijo que se dibuja con el scroll (no de una sección): vive acá y no
+ * en Hero.astro porque es un elemento persistente, no de una sección.
+ *
+ * 2026-08-25 — migración a slide horizontal: .hz-viewport/.hz-track (ver base.css) envuelven el
+ * <slot/> con el truco de rotación CSS que hace que el scroll vertical real se vea como un
+ * avance horizontal — ver el comentario largo en base.css para la mecánica completa. HiloRuta
+ * queda AFUERA de ese wrapper (sigue siendo un elemento fijo de toda la pantalla, no rotado) y
+ * su timeline pasa de `scroll(root)` a un scroll-timeline con nombre anclado a .hz-track, porque
+ * la página en sí ya no scrollea — ver HiloRuta.astro.
  */
 import '../styles/tokens.css';
 import '../styles/base.css';
@@ -65,6 +72,10 @@ const urlImagenOG = new URL('/og-image.png', Astro.site ?? 'https://surenruta.uy
 	<body>
 		<a href="#contenido-principal" class="skip-link">Saltar al contenido principal</a>
 		<HiloRuta />
-		<slot />
+		<div class="hz-viewport">
+			<div class="hz-track">
+				<slot />
+			</div>
+		</div>
 	</body>
 </html>

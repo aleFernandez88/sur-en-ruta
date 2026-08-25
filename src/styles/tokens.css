@@ -97,4 +97,12 @@
    * si alguna de las 4 paletas pide un blanco con matiz en vez de uno puro.
    */
   --color-texto-sobre-foto: #ffffff;
+
+  /* === Velo de contraste sobre foto (Hero) ===
+   * Capa oscura translúcida adicional al tinte de --hero-overlay, independiente de --color-tinta
+   * a propósito: si la identidad definitiva cambia --color-tinta a un tono que no sea oscuro, esta
+   * capa tiene que seguir garantizando contraste para el texto claro de encima. Negro liso, no
+   * depende de marca — mismo criterio que --color-texto-sobre-foto.
+   */
+  --color-velo-foto: #000000;
 }

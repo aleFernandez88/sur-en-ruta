@@ -25,14 +25,16 @@
  * todo bien. Vuelve a la versión de foto + overlay + chips vidrio de acá abajo.
  *
  * Tercera vuelta (mismo día): `CartelSeccion.astro` — un poste indicador de dos placas (arriba,
- * flecha, "N° Destino"; abajo, cuadrada, el nombre de la sección), ya replicado en las otras 4
- * secciones (ver comentario de cabecera de ese componente). Reemplaza a la franja de eyebrow que
- * decía "Proyecto RENAMU" — ese texto no queda reubicado en ningún lado (decisión explícita de
- * Ale, no un olvido).
+ * flecha, "N° Destino"; abajo, cuadrada, el nombre de la sección) — reemplazaba a la franja de
+ * eyebrow que decía "Proyecto RENAMU".
+ *
+ * 2026-08-25 — CartelSeccion se retira de acá (y de las otras 4 secciones): las dos placas pasan
+ * a vivir directo en la ruta del header (HiloRuta), más chicas y sin el poste que las unía, y ahí
+ * funcionan como nav link a cada sección — ver HiloRuta.astro. CartelSeccion.astro se borró, ya
+ * no lo usa nadie.
  */
 import { Image } from 'astro:assets';
 import heroFoto from '../assets/hero/ruta-placeholder.jpg';
-import CartelSeccion from './CartelSeccion.astro';
 
 const datosAncla = [
 	'Piloto: Maldonado · 90 días',
@@ -54,7 +56,6 @@ const datosAncla = [
 	<div class="hero-overlay" aria-hidden="true"></div>
 
 	<div class="hero-contenido">
-		<CartelSeccion numero={1} nombre="La Red" />
 		<h1 id="hero-titulo">El país entero, en una sola red.</h1>
 		<p class="hero-bajada">
 			Paradas habilitadas, comercios adheridos y rutas temáticas para el turismo itinerante
@@ -75,7 +76,13 @@ const datosAncla = [
 <style>
 	.hero {
 		position: relative;
-		min-height: 100vh;
+		/* 2026-08-25 — migración a slide horizontal: HzSlide (ver ese componente) ya fija esta
+		 * sección a exactamente una pantalla — height:100% de ese contenedor, no min-height:100vh
+		 * de la página (que ya no aplica, la página no scrollea más de forma normal). El truco de
+		 * margen negativo que existía acá para que la foto arrancara detrás de HiloRuta ya no hace
+		 * falta: nada empuja el Hero hacia abajo en este layout, HiloRuta queda superpuesto arriba
+		 * de cualquier slide por igual (es fijo, vive afuera de .hz-track). */
+		height: 100%;
 		display: grid;
 		align-content: center;
 		overflow: hidden;
@@ -91,6 +98,19 @@ const datosAncla = [
 		/* La escena interesante (ruta + horizonte) está en la mitad inferior de la foto original;
 		 * con el hero a 100vh, "center" recortaba justo la franja de cielo más chata de arriba. */
 		object-position: center 75%;
+		/* Zoom lento y continuo (Ken Burns): sugiere movimiento/viaje sin ser un efecto suelto,
+		 * coherente con el resto de la landing (ver HiloRuta). prefers-reduced-motion ya apaga
+		 * cualquier animación a nivel global (base.css), no hace falta repetirlo acá. */
+		animation: hero-zoom 20s ease-in-out infinite alternate;
+	}
+
+	@keyframes hero-zoom {
+		from {
+			transform: scale(1);
+		}
+		to {
+			transform: scale(1.13);
+		}
 	}
 
 	/* Oscurece la foto lo justo para que el texto claro de encima siempre tenga contraste, más
@@ -101,11 +121,16 @@ const datosAncla = [
 		position: absolute;
 		inset: 0;
 		z-index: 1;
-		background: linear-gradient(
-			180deg,
-			color-mix(in srgb, var(--color-tinta) 10%, transparent) 0%,
-			color-mix(in srgb, var(--color-tinta) 45%, transparent) 100%
-		);
+		/* Dos capas: el degradé de --color-tinta de siempre (tono de marca, más fuerte abajo donde
+		 * caen los CTAs) más un velo parejo de --color-velo-foto encima, sutil, dedicado solo a
+		 * contraste — ver el token en tokens.css para por qué está separado de --color-tinta. */
+		background:
+			linear-gradient(
+				180deg,
+				color-mix(in srgb, var(--color-tinta) 10%, transparent) 0%,
+				color-mix(in srgb, var(--color-tinta) 45%, transparent) 100%
+			),
+			color-mix(in srgb, var(--color-velo-foto) 25%, transparent);
 	}
 
 	.hero-contenido {

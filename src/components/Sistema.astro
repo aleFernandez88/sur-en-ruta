@@ -9,16 +9,14 @@
  * Pendiente, fuera de este paso: iconografía SVG propia por componente (hoy un placeholder
  * discreto) y el revelado escalonado al entrar en viewport, que es comportamiento (paso 12).
  *
- * CartelSeccion (2026-08-24): mismo poste indicador que Hero, con el nombre "El Sistema" — ver
- * comentario de cabecera de src/components/CartelSeccion.astro para el porqué de la forma.
+ * 2026-08-25: el cartel de sección ("El Sistema") se sacó de acá — ahora vive en la ruta del
+ * header (HiloRuta), sin poste, como nav link. Ver HiloRuta.astro.
  */
 import { componentes } from '../data/componentes';
 import { nivelesPunto } from '../data/niveles-punto';
-import CartelSeccion from './CartelSeccion.astro';
 ---
 
 <section id="sistema" aria-labelledby="sistema-titulo">
-	<CartelSeccion numero={3} nombre="El Sistema" />
 	<h2 id="sistema-titulo">RENAMU ordena el territorio. Sur en Ruta lo conecta.</h2>
 
 	<div class="sistema-diagrama">

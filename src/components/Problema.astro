@@ -10,11 +10,10 @@
  * MapaPlaceholder cuando exista, y la transformación por scroll entre los dos estados es
  * comportamiento (paso 12), no estructura.
  *
- * CartelSeccion (2026-08-24): mismo poste indicador que Hero, con el nombre "La Oportunidad" —
- * ver comentario de cabecera de src/components/CartelSeccion.astro para el porqué de la forma.
+ * 2026-08-25: el cartel de sección ("La Oportunidad") se sacó de acá — ahora vive en la ruta del
+ * header (HiloRuta), sin poste, como nav link. Ver HiloRuta.astro.
  */
 import MapaPlaceholder from './MapaPlaceholder.astro';
-import CartelSeccion from './CartelSeccion.astro';
 
 const friccion = [
 	'El viajero no sabe dónde parar ni qué normas rigen.',
@@ -25,7 +24,6 @@ const friccion = [
 ---
 
 <section id="problema" aria-labelledby="problema-titulo">
-	<CartelSeccion numero={2} nombre="La Oportunidad" />
 	<h2 id="problema-titulo">La actividad ya existe. Lo que falta es el sistema.</h2>
 
 	<p class="problema-tesis">

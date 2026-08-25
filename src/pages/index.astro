@@ -6,21 +6,47 @@
  * Copy real cargado el 2026-08-24 (ver el comentario de cabecera de cada componente en
  * src/components/). Pendiente: el SVG real del mapa (paso 9), la identidad definitiva (paso 13) y
  * el cableado del selector de rutas (paso 12) — todo lo demás sale del documento de propuesta.
+ *
+ * 2026-08-25 — migración a slide horizontal, EN CURSO: cada sección pasa a vivir dentro de un
+ * <HzSlide> (ver src/components/HzSlide.astro), que la fuerza a entrar en una sola pantalla sin
+ * desbordar. Hero ya migró con contenido real y se validó en vivo. Las 6 slides restantes (Sistema
+ * y Rutas parten en dos cada una, ver memoria del proyecto) están armadas como el ESQUELETO
+ * completo con <SlidePlaceholder> — así el recorrido de HiloRuta ya navega las 7 paradas de punta
+ * a punta, y se van reemplazando una por una por el contenido real recortado a una pantalla, sin
+ * volver a tocar la estructura de index.astro en cada paso.
  */
 import Base from '../layouts/Base.astro';
 import Hero from '../components/Hero.astro';
-import Problema from '../components/Problema.astro';
-import Sistema from '../components/Sistema.astro';
-import Rutas from '../components/Rutas.astro';
-import Inversion from '../components/Inversion.astro';
+import HzSlide from '../components/HzSlide.astro';
+import SlidePlaceholder from '../components/SlidePlaceholder.astro';
+// import Problema from '../components/Problema.astro';
+// import Sistema from '../components/Sistema.astro';
+// import Rutas from '../components/Rutas.astro';
+// import Inversion from '../components/Inversion.astro';
 ---
 
 <Base>
 	<main id="contenido-principal">
-		<Hero />
-		<Problema />
-		<Sistema />
-		<Rutas />
-		<Inversion />
+		<HzSlide id="hero">
+			<Hero />
+		</HzSlide>
+		<HzSlide id="problema">
+			<SlidePlaceholder color="var(--color-ruta-vino)" etiqueta="2 — Problema" />
+		</HzSlide>
+		<HzSlide id="sistema-a">
+			<SlidePlaceholder color="var(--color-ruta-oceanica)" etiqueta="3a — Sistema (niveles)" />
+		</HzSlide>
+		<HzSlide id="sistema-b">
+			<SlidePlaceholder color="var(--color-ruta-termal)" etiqueta="3b — Sistema (componentes)" />
+		</HzSlide>
+		<HzSlide id="rutas-a">
+			<SlidePlaceholder color="var(--color-ruta-rural)" etiqueta="4a — Rutas (temáticas)" />
+		</HzSlide>
+		<HzSlide id="rutas-b">
+			<SlidePlaceholder color="var(--color-ruta-patrimonial)" etiqueta="4b — Rutas (hub regional)" />
+		</HzSlide>
+		<HzSlide id="inversion">
+			<SlidePlaceholder color="var(--color-ruta-naturaleza)" etiqueta="5 — Inversión" />
+		</HzSlide>
 	</main>
 </Base>

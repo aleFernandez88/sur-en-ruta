@@ -16,11 +16,19 @@ html {
   scroll-behavior: smooth;
 }
 
+html,
+body {
+  height: 100%;
+}
+
 body {
   margin: 0;
-  /* Deja lugar a HiloRuta (src/components/HiloRuta.astro), fija arriba de toda la pantalla, para
-   * que no tape el arranque del Hero. Mismo valor que --alto-hilo-ruta a propósito. */
-  padding-top: var(--alto-hilo-ruta);
+  overflow: hidden;
+  /* Un scroll-timeline con nombre (--hz-progreso, declarado en .hz-track más abajo) solo es
+   * visible por defecto para los DESCENDIENTES de quien lo declara. HiloRuta es hermano de
+   * .hz-viewport, no descendiente de .hz-track — sin esto, su animación no encuentra el
+   * timeline y queda con el progreso mal resuelto. body es el ancestro común más cercano. */
+  timeline-scope: --hz-progreso;
   background-color: var(--color-fondo);
   color: var(--color-tinta);
   font-family: var(--fuente-texto);
@@ -28,6 +36,58 @@ body {
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+}
+
+/* === Slide horizontal (HzSlide.astro) ===
+ * Truco 100% CSS, sin JS: .hz-track es el elemento que de verdad scrollea (overflow-y: scroll),
+ * pero rotado -90°, así que su eje de scroll vertical se ve en pantalla como horizontal — rueda
+ * del mouse, trackpad, touch y teclado siguen andando nativos, porque el navegador hace
+ * hit-testing sobre la caja YA rotada. Cada HzSlide contrarrota +90° su contenido para que se lea
+ * derecho — ver el comentario de cabecera de ese componente para la mecánica completa y por qué
+ * las medidas (100vh de ancho x 100vw de alto acá, al revés en HzSlide) encajan exactas.
+ *
+ * `scroll-timeline-name` acá es lo que le permite a HiloRuta (fijo, AFUERA de este wrapper)
+ * seguir el progreso del recorrido: un scroll-timeline con nombre no necesita que el elemento
+ * animado sea descendiente del que scrollea, a diferencia de scroll(root)/scroll(nearest) — ver
+ * HiloRuta.astro.
+ */
+.hz-viewport {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.hz-track {
+  position: absolute;
+  top: 100vh;
+  left: 0;
+  width: 100vh;
+  height: 100vw;
+  transform-origin: top left;
+  transform: rotate(-90deg);
+  overflow-y: scroll;
+  overflow-x: hidden;
+  scroll-snap-type: y mandatory;
+  scroll-behavior: smooth;
+  scroll-timeline-name: --hz-progreso;
+  scroll-timeline-axis: y;
+  /* Barra de scroll nativa oculta a propósito (confirmado con Ale en el prototipo): el scroll
+   * real sigue funcionando, pero sin cromo de navegador encima del efecto. */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.hz-track::-webkit-scrollbar {
+  display: none;
+}
+
+/* <main id="contenido-principal"> (src/pages/index.astro) es el ancla del skip-link, pero no
+ * puede aportar su propia caja acá: la mecánica de arriba necesita que cada HzSlide sea hijo
+ * DIRECTO de .hz-track (con las medidas locales 100vh x 100vw) — display:contents saca a <main>
+ * del layout sin sacarlo del DOM ni del árbol de accesibilidad como landmark. */
+main {
+  display: contents;
 }
 
 h1,

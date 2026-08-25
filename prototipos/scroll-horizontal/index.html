@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="es-UY">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Prueba — scroll horizontal (rotation hack, sin JS)</title>
+<style>
+  /*
+   * Prototipo descartable — NO es parte de la landing, no se referencia desde src/.
+   * Prueba solo la MECÁNICA del efecto "slide horizontal" pedido: scroll real vertical
+   * (rueda, trackpad, touch, teclado, todo nativo) pero visualmente la página avanza hacia
+   * la derecha y retrocede hacia la izquierda. Técnica: "rotation hack" 100% CSS, sin JS.
+   *
+   * Cómo funciona, en corto:
+   * 1. .hz-track es el elemento que de verdad scrollea (overflow-y: scroll), pero está
+   *    rotado -90°. Eso hace que su eje de scroll vertical se vea, en pantalla, como
+   *    horizontal — y como los navegadores hacen hit-testing sobre la caja YA rotada, la
+   *    rueda del mouse sigue funcionando en cualquier punto del viewport.
+   * 2. Cada .hz-slide es una "página" de scroll dentro de ese eje rotado.
+   * 3. Adentro de cada .hz-slide, .hz-slide__contenido se rota +90° para cancelar la
+   *    rotación del padre — el contenido se lee normal, derecho, sin inclinación.
+   *
+   * Matemática de por qué encajan las medidas (ver conversación): .hz-track mide
+   * 100vh de ancho x 100vw de alto ANTES de rotar (los ejes se intercambian a propósito),
+   * cada .hz-slide mide igual de ancho y 100vw de alto (= un "avance" de una pantalla
+   * completa), y .hz-slide__contenido mide 100vw x 100vh (una pantalla normal) centrado y
+   * rotado — el tamaño rotado de esa caja encaja exacto en el tamaño del .hz-slide padre.
+   */
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    height: 100%;
+    background: #111;
+    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
+  }
+
+  .hz-viewport {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  .hz-track {
+    position: absolute;
+    top: 100vh;
+    left: 0;
+    width: 100vh;
+    height: 100vw;
+    transform-origin: top left;
+    transform: rotate(-90deg);
+    overflow-y: scroll;
+    overflow-x: hidden;
+    scroll-snap-type: y mandatory;
+    scroll-behavior: smooth;
+    /* Barra de scroll nativa oculta a propósito: el scroll real sigue funcionando (rueda,
+     * trackpad, touch, teclado), pero visualmente queda como un "slide" sin cromo de
+     * navegador — no imita una barra propia, directamente no se ve ninguna. */
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .hz-track::-webkit-scrollbar {
+    display: none;
+  }
+
+  .hz-slide {
+    width: 100vh;
+    height: 100vw;
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+    position: relative;
+  }
+
+  .hz-slide__contenido {
+    position: absolute;
+    width: 100vw;
+    height: 100vh;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(90deg);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1.5rem;
+    padding: 3rem;
+    text-align: center;
+    color: #fff;
+  }
+
+  .hz-slide__numero {
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    opacity: 0.7;
+  }
+
+  .hz-slide__titulo {
+    font-size: clamp(2rem, 5vw, 4rem);
+    font-weight: 800;
+    margin: 0;
+    max-width: 30ch;
+  }
+
+  .hz-slide__nota {
+    max-width: 45ch;
+    font-size: 1.1rem;
+    opacity: 0.85;
+    line-height: 1.5;
+  }
+
+  .hz-slide__relleno {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    justify-content: center;
+    max-width: 60ch;
+  }
+
+  .hz-slide__relleno span {
+    padding: 0.5rem 1rem;
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    border-radius: 999px;
+    font-size: 0.9rem;
+  }
+
+  /* Colores solo para distinguir cada slide a simple vista durante la prueba. */
+  .hz-slide:nth-child(1) { background: #163fbf; }
+  .hz-slide:nth-child(2) { background: #7b2d43; }
+  .hz-slide:nth-child(3) { background: #1b6fa8; }
+  .hz-slide:nth-child(4) { background: #1b4d8f; }
+  .hz-slide:nth-child(5) { background: #6b8e4e; }
+  .hz-slide:nth-child(6) { background: #2f9e7a; }
+  .hz-slide:nth-child(7) { background: #8b5a9e; }
+
+  /* Indicador de progreso, para chequear que el snap cae exacto en cada slide. */
+  .hz-progreso {
+    position: fixed;
+    bottom: 1.5rem;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 0.5rem;
+    z-index: 10;
+  }
+
+  .hz-progreso span {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.3);
+  }
+</style>
+</head>
+<body>
+  <div class="hz-viewport">
+    <div class="hz-track">
+      <section class="hz-slide">
+        <div class="hz-slide__contenido">
+          <p class="hz-slide__numero">1 — Hero</p>
+          <h1 class="hz-slide__titulo">El país entero, en una sola red.</h1>
+          <p class="hz-slide__nota">Scrolleá hacia abajo (rueda, trackpad o flechas) — el
+            contenido va a "avanzar" hacia la derecha.</p>
+        </div>
+      </section>
+
+      <section class="hz-slide">
+        <div class="hz-slide__contenido">
+          <p class="hz-slide__numero">2 — Problema</p>
+          <h1 class="hz-slide__titulo">La actividad ya existe. Lo que falta es el sistema.</h1>
+          <p class="hz-slide__nota">Sección chica, entra completa en una sola pantalla sin
+            partirse.</p>
+        </div>
+      </section>
+
+      <section class="hz-slide">
+        <div class="hz-slide__contenido">
+          <p class="hz-slide__numero">3a — Sistema</p>
+          <h1 class="hz-slide__titulo">Los 4 niveles de punto</h1>
+          <div class="hz-slide__relleno">
+            <span>Básico</span><span>De servicio</span><span>Amigo</span><span>Experiencial</span>
+          </div>
+          <p class="hz-slide__nota">Sección grande, parte 1 de 2 — la escalera de niveles.</p>
+        </div>
+      </section>
+
+      <section class="hz-slide">
+        <div class="hz-slide__contenido">
+          <p class="hz-slide__numero">3b — Sistema</p>
+          <h1 class="hz-slide__titulo">Los 6 componentes</h1>
+          <div class="hz-slide__relleno">
+            <span>Áreas habilitadas</span><span>Puntos Amigos</span><span>Sello Viajero</span>
+            <span>Rutas temáticas</span><span>Pasaporte de Ruta</span><span>App y medición</span>
+          </div>
+          <p class="hz-slide__nota">Sección grande, parte 2 de 2 — sigue siendo "Sistema".</p>
+        </div>
+      </section>
+
+      <section class="hz-slide">
+        <div class="hz-slide__contenido">
+          <p class="hz-slide__numero">4a — Rutas</p>
+          <h1 class="hz-slide__titulo">6 rutas temáticas</h1>
+          <div class="hz-slide__relleno">
+            <span>Vino</span><span>Oceánica</span><span>Termal</span><span>Rural</span>
+            <span>Patrimonial y Cultural</span><span>Naturaleza y Aventura</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="hz-slide">
+        <div class="hz-slide__contenido">
+          <p class="hz-slide__numero">4b — Rutas</p>
+          <h1 class="hz-slide__titulo">4 ferias internacionales</h1>
+          <div class="hz-slide__relleno">
+            <span>Düsseldorf</span><span>Barcelona</span><span>ExpoRodantear</span><span>Curitiba</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="hz-slide">
+        <div class="hz-slide__contenido">
+          <p class="hz-slide__numero">5 — Inversión</p>
+          <h1 class="hz-slide__titulo">Etapa 1: $U 1.050.000</h1>
+          <p class="hz-slide__nota">Última parada — acá termina el recorrido de la prueba.</p>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <div class="hz-progreso" aria-hidden="true">
+    <span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+  </div>
+</body>
+</html>

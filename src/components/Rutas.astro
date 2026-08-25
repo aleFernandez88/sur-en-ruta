@@ -13,17 +13,15 @@
  * hidratación client:visible). Esa interactividad no se cablea todavía — es comportamiento, no
  * estructura — y el selector queda deshabilitado con las 6 rutas reales como TODO de cableado.
  *
- * CartelSeccion (2026-08-24): mismo poste indicador que Hero, con el nombre "Las Rutas" — ver
- * comentario de cabecera de src/components/CartelSeccion.astro para el porqué de la forma.
+ * 2026-08-25: el cartel de sección ("Las Rutas") se sacó de acá — ahora vive en la ruta del
+ * header (HiloRuta), sin poste, como nav link. Ver HiloRuta.astro.
  */
 import MapaPlaceholder from './MapaPlaceholder.astro';
 import { rutas } from '../data/rutas';
 import { ferias } from '../data/ferias';
-import CartelSeccion from './CartelSeccion.astro';
 ---
 
 <section id="rutas" aria-labelledby="rutas-titulo">
-	<CartelSeccion numero={4} nombre="Las Rutas" />
 	<h2 id="rutas-titulo">Seis rutas. Y una posición que ningún vecino tiene.</h2>
 
 	<div class="rutas-mapa-interactivo">
