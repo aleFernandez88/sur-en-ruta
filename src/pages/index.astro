@@ -1,23 +1,22 @@
 ---
 /**
- * index.astro — landing de inversores de Sur en Ruta. Ensambla las 5 secciones fijadas por el
- * plan, en el orden Hero → Problema → Sistema → Rutas → Inversión.
+ * index.astro — landing de Sur en Ruta. Ensambla las 5 pantallas fijadas por el pivot de
+ * audiencia del 2026-08-26 (ver docs/planes/2026-08-26-pivot-audiencia-general.md y
+ * docs/landing-contenido.md): Hero → Problema/Oportunidad → Mapa y servicios → Rutas/Pasaporte →
+ * Centro Regional.
  *
- * Copy real cargado el 2026-08-24 (ver el comentario de cabecera de cada componente en
- * src/components/). Pendiente: el SVG real del mapa (paso 9), la identidad definitiva (paso 13) y
- * el cableado del selector de rutas (paso 12) — todo lo demás sale del documento de propuesta.
+ * Mecánica de transición ("cinta", ver Pantalla.astro y base.css — reemplaza a la de "hoja que
+ * tapa y descubre" probada antes el mismo día): cada pantalla es una tarjeta al 82% de la
+ * pantalla, salvo el Hero (`completa`), que pega fuerte a pantalla completa. Probada en
+ * prototipos/efecto-cinta/index.html, portada acá el 2026-08-26.
  *
- * 2026-08-25 — migración a slide horizontal, EN CURSO: cada sección pasa a vivir dentro de un
- * <HzSlide> (ver src/components/HzSlide.astro), que la fuerza a entrar en una sola pantalla sin
- * desbordar. Hero ya migró con contenido real y se validó en vivo. Las 6 slides restantes (Sistema
- * y Rutas parten en dos cada una, ver memoria del proyecto) están armadas como el ESQUELETO
- * completo con <SlidePlaceholder> — así el recorrido de HiloRuta ya navega las 7 paradas de punta
- * a punta, y se van reemplazando una por una por el contenido real recortado a una pantalla, sin
- * volver a tocar la estructura de index.astro en cada paso.
+ * Solo Hero tiene contenido real todavía — las otras 4 son SlidePlaceholder mientras se recorta
+ * el copy de docs/landing-contenido.md a una pantalla cada una (se van reemplazando una por una,
+ * sin volver a tocar este archivo en cada paso, mismo criterio que en la migración anterior).
  */
 import Base from '../layouts/Base.astro';
+import Pantalla from '../components/Pantalla.astro';
 import Hero from '../components/Hero.astro';
-import HzSlide from '../components/HzSlide.astro';
 import SlidePlaceholder from '../components/SlidePlaceholder.astro';
 // import Problema from '../components/Problema.astro';
 // import Sistema from '../components/Sistema.astro';
@@ -26,27 +25,19 @@ import SlidePlaceholder from '../components/SlidePlaceholder.astro';
 ---
 
 <Base>
-	<main id="contenido-principal">
-		<HzSlide id="hero">
-			<Hero />
-		</HzSlide>
-		<HzSlide id="problema">
-			<SlidePlaceholder color="var(--color-ruta-vino)" etiqueta="2 — Problema" />
-		</HzSlide>
-		<HzSlide id="sistema-a">
-			<SlidePlaceholder color="var(--color-ruta-oceanica)" etiqueta="3a — Sistema (niveles)" />
-		</HzSlide>
-		<HzSlide id="sistema-b">
-			<SlidePlaceholder color="var(--color-ruta-termal)" etiqueta="3b — Sistema (componentes)" />
-		</HzSlide>
-		<HzSlide id="rutas-a">
-			<SlidePlaceholder color="var(--color-ruta-rural)" etiqueta="4a — Rutas (temáticas)" />
-		</HzSlide>
-		<HzSlide id="rutas-b">
-			<SlidePlaceholder color="var(--color-ruta-patrimonial)" etiqueta="4b — Rutas (hub regional)" />
-		</HzSlide>
-		<HzSlide id="inversion">
-			<SlidePlaceholder color="var(--color-ruta-naturaleza)" etiqueta="5 — Inversión" />
-		</HzSlide>
-	</main>
+	<Pantalla id="hero" completa>
+		<Hero />
+	</Pantalla>
+	<Pantalla id="problema">
+		<SlidePlaceholder color="var(--color-ruta-vino)" etiqueta="2 — Problema/Oportunidad + Sello" />
+	</Pantalla>
+	<Pantalla id="mapa">
+		<SlidePlaceholder color="var(--color-ruta-oceanica)" etiqueta="3 — Mapa y servicios" />
+	</Pantalla>
+	<Pantalla id="rutas">
+		<SlidePlaceholder color="var(--color-ruta-rural)" etiqueta="4 — Rutas + Pasaporte" />
+	</Pantalla>
+	<Pantalla id="centro-regional">
+		<SlidePlaceholder color="var(--color-ruta-naturaleza)" etiqueta="5 — Centro Regional" />
+	</Pantalla>
 </Base>

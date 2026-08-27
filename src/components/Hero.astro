@@ -32,18 +32,19 @@
  * a vivir directo en la ruta del header (HiloRuta), más chicas y sin el poste que las unía, y ahí
  * funcionan como nav link a cada sección — ver HiloRuta.astro. CartelSeccion.astro se borró, ya
  * no lo usa nadie.
+ *
+ * 2026-08-26 — pivot de audiencia (ver docs/planes/2026-08-26-pivot-audiencia-general.md): la
+ * landing deja de ser una propuesta de inversión. Se sacan la barra de datos ancla ("Piloto:
+ * Maldonado · 90 días", "6 componentes de sistema" — detalle operativo de due diligence, no algo
+ * que un visitante general necesite en el primer vistazo) y los dos CTA (la landing queda 100%
+ * informativa, sin ningún CTA transaccional — confirmado por Ana). Se agrega un eyebrow. Copy
+ * actualizado desde docs/landing-contenido.md sección 1.
  */
 import { Image } from 'astro:assets';
 import heroFoto from '../assets/hero/ruta-placeholder.jpg';
-
-const datosAncla = [
-	'Piloto: Maldonado · 90 días',
-	'Un punto de servicio cada 90 km',
-	'6 componentes de sistema',
-];
 ---
 
-<section id="hero" class="hero" aria-labelledby="hero-titulo">
+<section class="hero" aria-labelledby="hero-titulo">
 	<Image
 		src={heroFoto}
 		alt=""
@@ -56,20 +57,12 @@ const datosAncla = [
 	<div class="hero-overlay" aria-hidden="true"></div>
 
 	<div class="hero-contenido">
+		<p class="hero-eyebrow">RENAMU · Sur en Ruta</p>
 		<h1 id="hero-titulo">El país entero, en una sola red.</h1>
 		<p class="hero-bajada">
-			Paradas habilitadas, comercios adheridos y rutas temáticas para el turismo itinerante
-			uruguayo.
+			Una red para ordenar y potenciar el turismo itinerante en Uruguay — conecta viajeros,
+			territorios, servicios y experiencias.
 		</p>
-
-		<ul class="hero-datos-ancla">
-			{datosAncla.map((dato) => <li>{dato}</li>)}
-		</ul>
-
-		<div class="hero-ctas">
-			<a href="#inversion" class="cta cta-primario">Ver el plan de inversión</a>
-			<a href="mailto:" class="cta cta-secundario">Solicitar el dossier</a>
-		</div>
 	</div>
 </section>
 
@@ -141,6 +134,15 @@ const datosAncla = [
 		padding: var(--espacio-xl) var(--espacio-md);
 	}
 
+	.hero-eyebrow {
+		font-size: var(--texto-sm);
+		font-weight: 700;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		color: var(--color-texto-sobre-foto);
+		opacity: 0.85;
+	}
+
 	h1 {
 		font-size: var(--texto-3xl);
 		color: var(--color-texto-sobre-foto);
@@ -149,50 +151,6 @@ const datosAncla = [
 	.hero-bajada {
 		font-size: var(--texto-lg);
 		max-width: 40ch;
-		color: var(--color-texto-sobre-foto);
-	}
-
-	.hero-datos-ancla {
-		display: flex;
-		flex-wrap: wrap;
-		gap: var(--espacio-md);
-		list-style: none;
-		padding: 0;
-		margin: var(--espacio-md) 0;
-	}
-
-	.hero-datos-ancla li {
-		padding: var(--espacio-xs) var(--espacio-sm);
-		border-radius: var(--radio-full);
-		background-color: color-mix(in srgb, var(--color-tinta) 45%, transparent);
-		backdrop-filter: blur(8px);
-		-webkit-backdrop-filter: blur(8px);
-		font-size: var(--texto-sm);
-		font-weight: 600;
-		color: var(--color-texto-sobre-foto);
-	}
-
-	.hero-ctas {
-		display: flex;
-		flex-wrap: wrap;
-		gap: var(--espacio-sm);
-	}
-
-	.cta {
-		display: inline-block;
-		padding: var(--espacio-xs) var(--espacio-md);
-		border-radius: var(--radio-md);
-		text-decoration: none;
-		font-weight: 700;
-	}
-
-	.cta-primario {
-		background-color: var(--color-acento);
-		color: var(--color-fondo);
-	}
-
-	.cta-secundario {
-		border: 2px solid var(--color-texto-sobre-foto);
 		color: var(--color-texto-sobre-foto);
 	}
 </style>

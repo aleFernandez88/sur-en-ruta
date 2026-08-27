@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="es-UY">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Prueba — efecto "cinta" (tarjetas que se van descubriendo, sin JS)</title>
+<style>
+  /*
+   * Prototipo descartable — NO es parte de la landing, no se referencia desde src/.
+   * Prueba un efecto DISTINTO al de "hoja que tapa y descubre" (prototipos/transicion-sweep/):
+   * en vez de pantallas completas con cortes duros, cada tarjeta ocupa MENOS que el ancho de
+   * pantalla — así el borde de la tarjeta siguiente ya se asoma mientras la actual todavía está
+   * completa, y el contenido se siente como una cinta continua que se va descubriendo de a poco,
+   * no una sucesión de pantallas que se reemplazan una a la otra de golpe.
+   *
+   * Mismo esqueleto de rotation hack que ya usa el sitio real (.hz-viewport/.hz-track rotado
+   * -90°, scroll vertical real que se ve horizontal) — la única diferencia con
+   * transicion-sweep/index.html es que ACÁ no hay hojas ni sombras ni scroll-timeline: es
+   * layout puro, el "descubrir de a poco" sale solo de que las tarjetas no llenan el ancho
+   * completo y quedan una al lado de la otra en flujo normal.
+   *
+   * `scroll-snap-type: x proximity` (suave, no `mandatory`) para que se sienta 100% atado al
+   * scroll real y solo "acomode" cerca de cada tarjeta — mismo criterio que ya se confirmó en
+   * transicion-sweep/ el 2026-08-26.
+   */
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    height: 100%;
+    background: #111;
+    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
+    color: #fff;
+  }
+
+  .hz-viewport {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  .hz-track {
+    position: absolute;
+    top: 100vh;
+    left: 0;
+    width: 100vh;
+    height: 100vw;
+    transform-origin: top left;
+    transform: rotate(-90deg);
+    overflow-y: scroll;
+    overflow-x: hidden;
+    /* Sin scroll-snap — 2026-08-26, pedido de Ale: con `proximity` + `scroll-snap-align:
+       center`, cualquier scroll corto que no llegaba a cruzar el umbral hacia la próxima
+       tarjeta volvía siempre al centro de la actual (efecto resorte, no lo que se buscaba acá).
+       La idea de "cinta" es que quede 100% libre, sin ningún tirón magnético — eso es lo que
+       la diferencia del efecto de transicion-sweep/, que sí necesita quedar fijo en cada
+       pantalla. */
+    scroll-snap-type: none;
+    scroll-behavior: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    /* Layout en fila — cada .hz-tarjeta es un hijo más, en flujo normal, sin position:absolute
+       ni transform propio. El "asomar" sale de que cada una mide MENOS que 100vw local. */
+    display: flex;
+    flex-direction: column;
+  }
+
+  .hz-track::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Cada bloque de scroll mide 100vw local (mismo "avance de una pantalla" de siempre) — lo
+     que cambia es que la TARJETA de adentro no llena ese bloque entero. */
+  .hz-bloque {
+    width: 100vh;
+    height: 100vw;
+    /* Sin esto, flexbox comprimía los 5 bloques para que entraran (casi) todos dentro del
+       alto explícito de .hz-track (100vw local) en vez de dejarlos desbordar a su alto
+       natural (5x) — encontrado midiendo scrollHeight en vivo: daba ~1.3 pantallas de
+       recorrido total en vez de 5. Bug real, no solo cosmético — explicaba los dos síntomas
+       que reportó Ale (la primera se veía distinta, y scrollTop=0 no correspondía a lo que
+       se veía en pantalla). */
+    flex-shrink: 0;
+    position: relative;
+  }
+
+  .hz-tarjeta {
+    /* Mismo truco de medidas intercambiadas que ya usa .hz-slide__contenido en el sitio real
+       (HzSlide/Pantalla): un transform NO cambia cuánto espacio reserva el elemento en el
+       layout, así que sin esto la tarjeta quedaba mal recortada — 100% de alto y angosta, en
+       vez de 82% x 82% como se veía en pantalla. position:absolute + medidas ya en unidades
+       REALES de viewport (82vw de ancho, 82vh de alto — lo que se ve, no lo que mide antes de
+       rotar) + centrado con translate(-50%,-50%) antes de rotar 90° para leerse derecho. */
+    position: absolute;
+    width: 82vw;
+    height: 82vh;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(90deg);
+    border-radius: 18px;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+  }
+
+  /* No todas las tarjetas tienen que medir lo mismo — 2026-08-26, pedido de Ale: el Hero
+     (tarjeta 1) pega fuerte a pantalla completa, sin bordes ni esquinas redondeadas, y recién
+     de ahí en adelante arranca el formato "cinta" más chico. */
+  .hz-tarjeta--completa {
+    width: 100vw;
+    height: 100vh;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .hz-tarjeta__num {
+    position: absolute;
+    top: 2rem;
+    left: 2rem;
+    font-size: 0.9rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    opacity: 0.75;
+    z-index: 2;
+  }
+
+  .hz-tarjeta__contenido {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1.25rem;
+    padding: 3rem;
+    text-align: center;
+  }
+
+  .hz-tarjeta__titulo {
+    font-size: clamp(1.6rem, 4vw, 3rem);
+    font-weight: 800;
+    margin: 0;
+    max-width: 26ch;
+  }
+
+  .hz-tarjeta__nota {
+    max-width: 40ch;
+    font-size: 1rem;
+    opacity: 0.85;
+    line-height: 1.5;
+  }
+
+  /* Colores solo para distinguir cada tarjeta a simple vista durante la prueba. */
+  .hz-bloque:nth-child(1) .hz-tarjeta { background: #163fbf; }
+  .hz-bloque:nth-child(2) .hz-tarjeta { background: #7b2d43; }
+  .hz-bloque:nth-child(3) .hz-tarjeta { background: #1b6fa8; }
+  .hz-bloque:nth-child(4) .hz-tarjeta { background: #6b8e4e; }
+  .hz-bloque:nth-child(5) .hz-tarjeta { background: #2f9e7a; }
+</style>
+</head>
+<body>
+  <div class="hz-viewport">
+    <div class="hz-track">
+      <div class="hz-bloque">
+        <div class="hz-tarjeta hz-tarjeta--completa">
+          <div class="hz-tarjeta__contenido">
+            <p class="hz-tarjeta__num">1 — Hero, pantalla completa</p>
+            <h1 class="hz-tarjeta__titulo">Esta sí llena la pantalla entera.</h1>
+            <p class="hz-tarjeta__nota">Scrolleá — de acá en adelante empieza el formato
+              "cinta", más chico.</p>
+          </div>
+        </div>
+      </div>
+      <div class="hz-bloque">
+        <div class="hz-tarjeta">
+          <div class="hz-tarjeta__contenido">
+            <p class="hz-tarjeta__num">2</p>
+            <h1 class="hz-tarjeta__titulo">Como una cinta continua.</h1>
+            <p class="hz-tarjeta__nota">Sin cortes duros de pantalla completa.</p>
+          </div>
+        </div>
+      </div>
+      <div class="hz-bloque">
+        <div class="hz-tarjeta">
+          <div class="hz-tarjeta__contenido">
+            <p class="hz-tarjeta__num">3</p>
+            <h1 class="hz-tarjeta__titulo">Contenido que se va descubriendo.</h1>
+            <p class="hz-tarjeta__nota">De a poco, atado 1 a 1 al scroll real.</p>
+          </div>
+        </div>
+      </div>
+      <div class="hz-bloque">
+        <div class="hz-tarjeta">
+          <div class="hz-tarjeta__contenido">
+            <p class="hz-tarjeta__num">4</p>
+            <h1 class="hz-tarjeta__titulo">Sin hojas, sin sombras, sin timelines.</h1>
+            <p class="hz-tarjeta__nota">Solo layout — el efecto sale de que la tarjeta mide
+              menos que la pantalla.</p>
+          </div>
+        </div>
+      </div>
+      <div class="hz-bloque">
+        <div class="hz-tarjeta">
+          <div class="hz-tarjeta__contenido">
+            <p class="hz-tarjeta__num">5</p>
+            <h1 class="hz-tarjeta__titulo">Última tarjeta de la prueba.</h1>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

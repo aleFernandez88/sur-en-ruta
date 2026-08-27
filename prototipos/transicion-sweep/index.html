@@ -1,0 +1,281 @@
+<!doctype html>
+<html lang="es-UY">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Prueba — transición "hoja que tapa y descubre" (sin JS)</title>
+<style>
+  /*
+   * Prototipo descartable — NO es parte de la landing, no se referencia desde src/.
+   * Prueba SOLO la mecánica de transición pedida por Ale (2026-08-26), sobre el mismo
+   * esqueleto de rotation hack que ya usa el slide horizontal real:
+   *
+   *   - Pantallas IMPARES (1, 3, 5): quietas, estáticas, nunca se mueven.
+   *   - Pantallas PARES (2, 4): actúan como una "hoja" que entra desde la derecha tapando
+   *     a la impar anterior, y ese mismo movimiento sigue de largo hacia la izquierda hasta
+   *     salir del todo, descubriendo a la impar siguiente — todo atado 1 a 1 al scroll.
+   *
+   * Técnica: dos capas separadas.
+   *   1. .hz-track (rotado, oculto) solo contiene "espaciadores" invisibles — no pintan
+   *      nada, existen únicamente para darle presupuesto de scroll. Declara UN SOLO
+   *      scroll-timeline con nombre (--hz-progreso) que va de 0% a 100% en todo el
+   *      recorrido — la MISMA técnica que ya usa HiloRuta.astro en el sitio real (ver
+   *      memoria del proyecto, gotcha #1), no un view-timeline por elemento (eso se probó
+   *      primero, en la versión anterior de este archivo, y no se pudo confirmar que
+   *      funcionara — mejor no arriesgar con una técnica sin probar en este repo).
+   *   2. Los paneles VISIBLES (uno por pantalla) viven AFUERA de .hz-track, en posición
+   *      fixed, derechos (sin rotación). Cada uno toma su propio TRAMO del único timeline
+   *      con `animation-range` (con 5 pantallas iguales, cada una ocupa 20% del recorrido
+   *      total): la hoja 2 anima su translateX durante el 20%-40%, la hoja 4 durante el
+   *      60%-80%; las quietas 1/3/5 solo animan su opacity durante la mitad del tramo de
+   *      la hoja vecina que las tapa o las revela.
+   *
+   * La pantalla 3 (la del medio) necesita DOS animaciones de opacity — una que la enciende
+   * (segunda mitad del tramo de la hoja 2) y otra que la apaga (primera mitad del tramo de
+   * la hoja 4). Probado primero con `animation-composition: multiply` para combinarlas —
+   * `CSS.supports('animation-composition','multiply')` da `false` en Chrome (build de este
+   * equipo), así que la propiedad se ignoraba sin avisar y ganaba silenciosamente la última
+   * animación de la lista (comportamiento por defecto "replace"). Se resuelve sin esa
+   * propiedad: cada animación mueve su PROPIA custom property numérica (`--in`, `--out`,
+   * registradas con `@property` para que se puedan animar) y el opacity final se calcula
+   * por fuera, multiplicándolas — sin conflicto porque ninguna animación toca `opacity`
+   * directamente.
+   *
+   * `timeline-scope` en <body> promueve el timeline con nombre para que los paneles fixed
+   * (hermanos de .hz-track, no descendientes) puedan referenciarlo.
+   *
+   * Sin fallback de Firefox todavía (no soporta animation-timeline sin flag) — para el
+   * prototipo alcanza, el fallback se agrega recién al portar esto a producción.
+   */
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    height: 100%;
+    background: #111;
+    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
+    color: #fff;
+    /* Promueve el timeline con nombre declarado en .hz-track para que los paneles fixed
+       (hermanos de .hz-track) puedan referenciarlo. */
+    timeline-scope: --hz-progreso;
+  }
+
+  .hz-viewport {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  /* --- Capa 1: mecanismo de scroll, invisible, solo da presupuesto + timelines --- */
+
+  .hz-track {
+    position: absolute;
+    top: 100vh;
+    left: 0;
+    width: 100vh;
+    height: 100vw;
+    transform-origin: top left;
+    transform: rotate(-90deg);
+    overflow-y: scroll;
+    overflow-x: hidden;
+    scroll-snap-type: y mandatory;
+    scroll-behavior: smooth;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    scroll-timeline-name: --hz-progreso;
+    scroll-timeline-axis: block;
+  }
+
+  .hz-track::-webkit-scrollbar {
+    display: none;
+  }
+
+  .hz-spacer {
+    width: 100vh;
+    height: 100vw;
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+  }
+
+  /* --- Capa 2: paneles visibles, derechos, fixed, AFUERA de la rotación --- */
+
+  .hz-panel {
+    position: fixed;
+    inset: 0;
+    /* Los paneles son puramente visuales — sin esto, al estar por encima de .hz-track en
+       el orden de pintado (mismo bug encontrado en vivo: "no pasa nada al scrollear"),
+       capturan la rueda del mouse y nunca llega a tocar el contenedor que scrollea de
+       verdad, que queda tapado debajo. */
+    pointer-events: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1.5rem;
+    padding: 3rem;
+    text-align: center;
+  }
+
+  .hz-panel__numero {
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    opacity: 0.75;
+  }
+
+  .hz-panel__titulo {
+    font-size: clamp(2rem, 5vw, 4rem);
+    font-weight: 800;
+    margin: 0;
+    max-width: 30ch;
+  }
+
+  .hz-panel__nota {
+    max-width: 45ch;
+    font-size: 1.05rem;
+    opacity: 0.85;
+    line-height: 1.5;
+  }
+
+  /* Impares: quietas, sin transform propio — solo su opacity está atada al scroll. */
+  .hz-panel--static { z-index: 10; }
+  #panel-1 { background: #163fbf; opacity: 1; }
+  #panel-3 { background: #1b6fa8; }
+  #panel-5 { background: #2f9e7a; }
+
+  /* Pares: la "hoja" — siempre por encima de las impares, se mueve entera. */
+  .hz-panel--sweep { z-index: 50; }
+  #panel-2 { background: #7b2d43; }
+  #panel-4 { background: #6b8e4e; }
+
+  @keyframes sweep-x {
+    0%   { transform: translateX(100%); }
+    50%  { transform: translateX(0%); }
+    100% { transform: translateX(-100%); }
+  }
+
+  /* 5 pantallas iguales = cada una ocupa 20% del único timeline --hz-progreso.
+     Límites: 1=[0,20] 2=[20,40] 3=[40,60] 4=[60,80] 5=[80,100]. */
+  #panel-2, #panel-4 {
+    animation-name: sweep-x;
+    animation-fill-mode: both;
+    animation-timing-function: linear;
+    animation-timeline: --hz-progreso;
+  }
+  #panel-2 { animation-range: 20% 40%; }
+  #panel-4 { animation-range: 60% 80%; }
+
+  /* Impar 1 (la primera): ya arranca visible, solo necesita apagarse durante la primera
+     mitad del tramo de la hoja 2 (20%-30%), cuando la va tapando. */
+  @keyframes fade-out { from { opacity: 1; } to { opacity: 0; } }
+  #panel-1 {
+    animation: fade-out linear both;
+    animation-timeline: --hz-progreso;
+    animation-range: 20% 30%;
+  }
+
+  /* Impar 3 (la del medio): se enciende durante la segunda mitad del tramo de la hoja 2
+     (30%-40%, cuando se retira) y se apaga durante la primera mitad del tramo de la hoja
+     4 (60%-70%, cuando la vuelve a tapar).
+     Probado primero con `animation-composition: multiply` para combinar las dos
+     animaciones de opacity — `CSS.supports('animation-composition','multiply')` da
+     `false` en este Chrome, así que la propiedad se ignoraba y ganaba silenciosamente la
+     última animación de la lista (comportamiento por defecto "replace"). Se resuelve sin
+     esa propiedad: cada animación mueve su PROPIA custom property numérica (`--in`,
+     `--out`, registradas con `@property` para que se puedan animar/interpolar) y el
+     opacity final se calcula por fuera, multiplicándolas — sin conflicto posible porque
+     ninguna animación toca `opacity` directamente. */
+  @property --in { syntax: '<number>'; inherits: false; initial-value: 0; }
+  @property --out { syntax: '<number>'; inherits: false; initial-value: 1; }
+  @keyframes fade-in  { from { --in: 0; } to { --in: 1; } }
+  @keyframes fade-out-var { from { --out: 1; } to { --out: 0; } }
+  #panel-3 {
+    --in: 0;
+    --out: 1;
+    animation:
+      fade-in linear both,
+      fade-out-var linear both;
+    animation-timeline: --hz-progreso, --hz-progreso;
+    animation-range: 30% 40%, 60% 70%;
+    opacity: calc(var(--in) * var(--out));
+  }
+
+  /* Impar 5 (la última): solo se enciende durante la segunda mitad del tramo de la hoja 4
+     (70%-80%), después queda visible para siempre (no hay una 6ta pantalla que la tape). */
+  #panel-5 {
+    opacity: 0;
+    animation: fade-in linear both;
+    animation-timeline: --hz-progreso;
+    animation-range: 70% 80%;
+  }
+
+  /* Indicador de progreso, para ubicarse mientras se prueba. */
+  .hz-progreso {
+    position: fixed;
+    bottom: 1.5rem;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 0.5rem;
+    z-index: 100;
+  }
+
+  .hz-progreso span {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.3);
+  }
+</style>
+</head>
+<body>
+  <div class="hz-viewport">
+    <div class="hz-track">
+      <div class="hz-spacer"></div>
+      <div class="hz-spacer"></div>
+      <div class="hz-spacer"></div>
+      <div class="hz-spacer"></div>
+      <div class="hz-spacer"></div>
+    </div>
+
+    <div class="hz-panel hz-panel--static" id="panel-1">
+      <p class="hz-panel__numero">1 — quieta</p>
+      <h1 class="hz-panel__titulo">Esta pantalla no se mueve nunca.</h1>
+      <p class="hz-panel__nota">Scrolleá hacia abajo — la hoja roja va a entrar desde la
+        derecha y taparla.</p>
+    </div>
+
+    <div class="hz-panel hz-panel--sweep" id="panel-2">
+      <p class="hz-panel__numero">2 — la hoja</p>
+      <h1 class="hz-panel__titulo">Tapo a la 1 y sigo de largo hacia la izquierda.</h1>
+      <p class="hz-panel__nota">Cuando termino de salir, dejo ver a la 3 — que también
+        está quieta, ya estaba ahí esperando.</p>
+    </div>
+
+    <div class="hz-panel hz-panel--static" id="panel-3">
+      <p class="hz-panel__numero">3 — quieta</p>
+      <h1 class="hz-panel__titulo">Tampoco me muevo — probá scrollear para atrás.</h1>
+      <p class="hz-panel__nota">Si volvés hacia arriba tengo que reaparecer igual de
+        suave, sin saltos.</p>
+    </div>
+
+    <div class="hz-panel hz-panel--sweep" id="panel-4">
+      <p class="hz-panel__numero">4 — otra hoja</p>
+      <h1 class="hz-panel__titulo">Mismo truco, ahora tapo a la 3.</h1>
+      <p class="hz-panel__nota">Y al salir dejo ver a la 5.</p>
+    </div>
+
+    <div class="hz-panel hz-panel--static" id="panel-5">
+      <p class="hz-panel__numero">5 — quieta, última</p>
+      <h1 class="hz-panel__titulo">Acá termina la prueba.</h1>
+    </div>
+  </div>
+
+  <div class="hz-progreso" aria-hidden="true">
+    <span></span><span></span><span></span><span></span><span></span>
+  </div>
+</body>
+</html>

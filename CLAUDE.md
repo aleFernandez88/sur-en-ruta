@@ -6,24 +6,45 @@
 
 ## 1. Qué es este repo
 
-La **landing informativa** de Sur en Ruta, dirigida a **posibles inversores**. Hasta 5 secciones,
-mucho show visual, comprensión inmediata. No le habla al comercio ni al viajero: le habla a quien
-tiene que decidir si invertir en la Etapa 1 del proyecto.
+La **landing informativa** de Sur en Ruta, dirigida a **público general** (no solo inversores).
+Hasta 5 secciones, mucho show visual, comprensión inmediata. Es una pieza de comunicación/
+publicidad: muestra qué se llegaría a alcanzar con la app y el sistema RENAMU. **No es una
+propuesta de inversión** — nada de negocio, presupuesto ni modelo económico se publica acá; ese
+detalle se conversa cara a cara cuando haga falta.
+
+> **Nota histórica:** hasta el 2026-08-25 este repo era una landing dirigida específicamente a
+> inversores, con una sección de presupuesto/inversión. El 2026-08-26 Ana pidió el pivot de
+> arriba tras revisar el contenido. Ver `docs/planes/2026-08-26-pivot-audiencia-general.md` para
+> el detalle completo del cambio.
 
 ## 2. Qué NO es este repo
 
 - No es la app/plataforma completa (mapa consultable, registro de viajeros y vehículos, Pasaporte
   de Ruta digital, Sello Viajero Responsable, valoraciones, reservas, panel de métricas). Eso es
   **otro repo**, de una etapa posterior.
-- No tiene alta de privados ni onboarding de comercios.
-- No es la landing de captación de viajeros (otro público, otro mensaje, otra página).
+- No tiene alta de privados ni onboarding de comercios — **sigue sin tenerlo** tras el pivot de
+  audiencia: hablarle a "todo público" es comunicación/publicidad, no un flujo transaccional de
+  registro.
+- No tiene dossier ni CTA de inversión — se eliminó con el pivot del 2026-08-26 (antes existía
+  como pieza aparte; hoy no hay dossier accesible desde la landing en esta etapa).
 
 ## 3. Stack
 
 **Astro** estático (SSG), **sin backend, sin login, sin base de datos**. CSS propio con custom
-properties, animaciones CSS nativas (sin GSAP ni Framer Motion), mapa en SVG inline propio (sin
-Leaflet ni Mapbox). Deploy = subir el contenido de `dist/` (nunca `src/`, `node_modules/`, `docs/`
-ni `prototipos/`).
+properties, mapa en SVG inline propio (sin Leaflet ni Mapbox). Deploy = subir el contenido de
+`dist/` (nunca `src/`, `node_modules/`, `docs/` ni `prototipos/`).
+
+**Animación — regla actualizada 2026-08-26:** CSS nativo sigue siendo la primera opción
+(`animation-timeline`, `@property`+`counter()`, etc. — así está hecho `HiloRuta` hoy). **JS
+vanilla está habilitado cuando sea necesario y se use de forma óptima** — sin librerías de
+animación (nada de GSAP, Framer Motion, Locomotive Scroll ni equivalentes; `IntersectionObserver`,
+`requestAnimationFrame` y la Web Animations API nativa alcanzan). Esta restricción existía porque,
+en la etapa anterior del proyecto, todavía no había una dirección de diseño concreta — ahora sí la
+hay: Ale pidió acercar el lenguaje visual de la landing al de `bertani.net` (scroll-scrub con fondo
+pineado, texto que pasa de fantasma a sólido atado al progreso del scroll, chrome fijo lateral,
+reveals por sección) sin copiarlo literalmente. Ver el análisis completo de esos efectos y qué es
+replicable en CSS puro vs. qué necesita JS en la conversación/memoria del proyecto — el plan de
+ajustes concretos se define uno a uno con Ale, no de una vez.
 
 ## 4. Regla de moneda (textual, no se resume)
 
@@ -46,8 +67,12 @@ publicarlo.**
 
 ## 6. Fuente de contenido
 
-El documento de propuesta está copiado en `docs/fuentes/`. Regla: **todo número o nombre en la
-landing sale del documento; lo que no está en el documento no se inventa.**
+Dos documentos son fuente válida de contenido (ninguno vive en este repo, ambos en `Downloads` —
+ver `docs/planes/` y la memoria del proyecto para el detalle): el documento de propuesta original
+(`Activa turismo propuesta.pdf`) y, desde el pivot de audiencia del 2026-08-26 (ver
+`docs/planes/2026-08-26-pivot-audiencia-general.md`), el mazo de referencia que armó Ana
+(`Presentacion Sur en Ruta RENAMU.pdf`). Regla: **todo número o nombre en la landing sale de
+alguno de estos dos documentos; lo que no está en ninguno de los dos no se inventa.**
 
 ## 7. Regla de honestidad sobre tracción
 
