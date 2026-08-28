@@ -1,216 +1,431 @@
 ---
 /**
- * HiloRuta.astro — barra fija arriba de TODA la pantalla, hecha para leerse como una ruta real
- * vista desde arriba: asfalto gris con 2-3 ondulaciones suaves y línea central amarilla punteada
- * (estática, sin movimiento propio). La ruta se va DIBUJANDO con el scroll (vacía al arrancar,
- * completa al llegar a Inversión) y a medida que se dibuja van apareciendo 5 señales de ruta, una
- * por sección de la landing.
+ * HiloRuta.astro — barra de navegación general del sitio, fija al borde IZQUIERDO de toda la
+ * pantalla (rediseño 2026-08-28, reemplaza a la versión anterior: barra horizontal arriba, con
+ * asfalto/línea central/cartelitos numerados — ver la memoria del proyecto para ese historial,
+ * `--color-asfalto`/`--color-linea-central`/`--color-cartel-*` quedan sin uso en tokens.css).
  *
- * 2026-08-25 — reorganización de los cartelitos: hasta acá cada sección tenía su propio
- * `CartelSeccion` (poste + 2 placas, "N° Destino" arriba y el nombre abajo) en su propio
- * contenido, y esta barra mostraba nada más que el número, colgado de un poste corto. Se
- * retiraron esos `CartelSeccion` de las 5 secciones (componente borrado, no queda nadie que lo
- * use) y las 2 placas pasan a vivir ACÁ, sueltas — sin poste que las une, mucho más chicas — y
- * ahora son un link de navegación (`<a href="#id-de-la-sección">`) a la sección correspondiente,
- * no solo un indicador de progreso. Por eso el wrapper ya no es `aria-hidden` entero: la curva y
- * el pavimento siguen siendo decorativos (aria-hidden puntual en esos `<use>`), pero las señales
- * son navegación real y tienen que quedar expuestas a lectores de pantalla y al teclado.
+ * Pedido de Ale (2026-08-28), inspirado en el sidebar de bertani.net + el motivo real del footer
+ * de la página 4 del mazo de Ana (línea punteada ondulada con nodos, ver
+ * `docs/landing-contenido.md` § "Sistema visual del mazo"):
+ *   - Arriba: ícono de menú (3 líneas), togglea un panel con el nombre de cada parada.
+ *   - Abajo: UNA sola línea vertical con un par de ondas suaves (no recta), uniendo nodos — un
+ *     nodo por parada (pantalla) del recorrido.
+ *   - Colores: la línea/nodos arrancan en marino oscuro (`--color-marino`) y se van "pintando" de
+ *     celeste (`--color-celeste`, referencia bandera uruguaya) a medida que avanza el scroll.
  *
- * Sexta vuelta de diseño (2026-08-24): la v7 tenía un emoji de camper (🚐) como marcador de
- * posición, siguiendo la curva con `offset-path`. Ale lo sacó ("no suma mucho") y pidió algo con
- * más sentido para el contenido: cartelitos de ruta numerados que marquen en qué sección está
- * parado el visitante, apareciendo con el mismo avance que dibuja la ruta.
+ * Técnica de "pintado" (misma familia que el dibujado de la versión anterior, ver esa memoria):
+ * DOS copias superpuestas de la misma curva+nodos — una marino, SIEMPRE dibujada entera (capa de
+ * base, "todavía no recorrido"); otra celeste, adentro de un `<g mask="...">` cuyo trazo de
+ * máscara se revela con el scroll (misma técnica pathLength=1 + stroke-dasharray/dashoffset +
+ * `animation-timeline: --hz-progreso`, con `timeline-scope` ya declarado en `body`, ver
+ * base.css). La celeste tapa a la marino a medida que el scroll "la alcanza" — no hace falta
+ * lógica aparte por nodo, el mismo trazo de máscara cubre línea Y nodos porque ambos viven dentro
+ * del mismo `<g>` enmascarado.
  *
- * Séptima vuelta (mismo día): el cartelito v8 quedaba ENCIMA de la ruta, como si fuera parte del
- * pavimento. Ale pidió que se vea al costado, sostenido por un poste, y más apaisado (ancho >
- * alto, antes era al revés). El poste + cartel se dibujan con coordenadas locales fijas por
- * ENCIMA del punto de la curva (y negativa = "arriba" en SVG) — no hace falta un `transform`
- * aparte, ya está codificado en el `d` de cada `<rect>`/`<line>`. Para que esto no se recorte
- * contra el borde del contenedor, `--alto-hilo-ruta` subió de 45 a 68 (ver tokens.css) y la curva
- * bajó su línea base de 22.5 a 46 dentro del viewBox más alto, dejando aire arriba para el cartel.
+ * Nodos posicionados con `offset-path` + `offset-distance` sobre la curva (misma técnica que la
+ * versión anterior) — a propósito SIN `offset-anchor` explícito: cada `<circle>`/`<a>` tiene su
+ * geometría centrada en el origen local (cx=0, cy=0), así el anchor por defecto ya cae bien. Fijar
+ * `offset-anchor: center` a mano en un elemento contenedor (`<g>`/`<a>`) rompió el posicionamiento
+ * en la versión anterior (ver memoria del proyecto, gotcha v8) — no repetir eso acá.
  *
- * Posiciones APROXIMADAS, no exactas: cada cartelito vive en un punto fijo de la curva
- * (`offset-distance` fijo, sin animar) elegido para repartirse parejo a lo largo de las 5
- * secciones, pero no está atado a dónde arranca cada sección en el scroll real — eso cambia con
- * el contenido (más o menos texto) y solo se puede calcular con JS midiendo el layout, que este
- * componente no usa a propósito (ver nota de `preserveAspectRatio` más abajo). Si más adelante
- * hace falta que calcen exacto, es un cambio de alcance (agregar JS), no un ajuste de números.
- *
- * Cómo se resuelve el dibujado sobre una curva con varias capas (asfalto + línea central + 5
- * cartelitos, todos dentro del mismo <g mask="...">): la técnica de "dibujar un trazo"
- * (pathLength="1" + stroke-dasharray/dashoffset) no se le puede aplicar directo a la línea
- * central, porque esta YA usa stroke-dasharray para su propio patrón de puntos — poner encima
- * un segundo dashoffset rompería ese patrón. Se resuelve con una <mask>: una copia (invisible) de
- * la curva, con un trazo ancho y su propio dashoffset animado, agrupando las capas visibles
- * adentro de un <g mask="...">. La máscara revela el tramo ya "recorrido" sin tocar el patrón de
- * cada capa — y de paso, revela cada cartelito recién cuando el dibujado lo alcanza.
- *
- * Simplificación conocida, no un bug: el `viewBox` usa un ancho de referencia (1536, ronda un
- * desktop típico) con `preserveAspectRatio="none"` para estirarse al 100% del viewport — el alto
- * mapea 1 a 1 (siempre 68), así que la curva nunca se deforma verticalmente, pero en pantallas
- * mucho más angostas (mobile) las ondulaciones se comprimen horizontalmente en vez de mantener su
- * proporción exacta. Es decorativo y aria-hidden, así que es una simplificación aceptable — no
- * vale la pena recalcular la geometría por JS para esto.
- *
- * Decorativo (aria-hidden): no da información que el scroll nativo de la página no dé ya.
- * - Con `prefers-reduced-motion: reduce`, se apaga todo movimiento y queda la ruta completa con
- *   los 5 cartelitos visibles.
- * - En navegadores sin `animation-timeline: scroll()` (Firefox estable a mediados de 2026, ver
- *   memoria del proyecto), el fallback también es la ruta completa — nunca vacía ni rota.
+ * Posiciones de paradas APROXIMADAS, no exactas — mismo criterio que la versión anterior: calcar
+ * la posición real de cada sección en el scroll necesitaría JS midiendo layout, fuera de alcance
+ * a propósito. Repartidas ~parejo. Hoy son 5 (Hero + 4), coincide con el esqueleto actual de
+ * `index.astro` — el plan de fondo sigue siendo ~10 pantallas siguiendo el mazo (ver
+ * `docs/landing-contenido.md`); cuando el contenido real crezca, esta lista crece con él.
  */
 
-const curva =
-	'M0,46 C128,30.5 256,30.5 384,46 S640,61.5 768,46 S1024,30.5 1152,46 S1408,61.5 1536,46';
-// CSS `path()` exige un <string> entre comillas — Astro serializa `define:vars` sin ellas, así
-// que se las agregamos acá para que `path(var(--curvaOffsetPath))` compile.
-const curvaOffsetPath = `"${curva}"`;
+interface Parada {
+	numero: number;
+	nombre: string;
+	id: string;
+	distancia: number; // % a lo largo de la curva
+}
 
-// Una señal por sección de la landing (Hero, Problema, Sistema, Rutas, Inversión), repartidas
-// parejo a lo largo de la curva — ver nota sobre posiciones aproximadas en el comentario de
-// arriba. `id` apunta al HzSlide correspondiente (src/pages/index.astro) para el nav link.
-//
-// OJO — esto sigue calibrado para 5 SECCIONES, no para las 7 SLIDES que existen desde la
-// migración a slide horizontal (Sistema y Rutas se partieron en dos, ver ese mismo archivo): las
-// señales 3 y 4 apuntan a la primera mitad de cada una ("sistema-a", "rutas-a") como
-// simplificación temporal. Recalcular posiciones para 7 paradas es un paso aparte, todavía
-// pendiente — no confundir con este cambio, que es solo la reorganización visual del cartel.
-const senales = [
-	{ numero: 1, distancia: '4%', nombre: 'La Red', id: 'hero' },
-	{ numero: 2, distancia: '24%', nombre: 'La Oportunidad', id: 'problema' },
-	{ numero: 3, distancia: '44%', nombre: 'El Sistema', id: 'sistema-a' },
-	{ numero: 4, distancia: '64%', nombre: 'Las Rutas', id: 'rutas-a' },
-	{ numero: 5, distancia: '84%', nombre: 'La Inversión', id: 'inversion' },
+const paradas: Parada[] = [
+	{ numero: 0, nombre: 'Portada', id: 'hero', distancia: 3 },
+	{ numero: 1, nombre: 'La Oportunidad', id: 'oportunidad', distancia: 26 },
+	{ numero: 2, nombre: 'Mapa y servicios', id: 'mapa', distancia: 50 },
+	{ numero: 3, nombre: 'Rutas + Pasaporte', id: 'rutas', distancia: 74 },
+	{ numero: 4, nombre: 'Centro Regional', id: 'centro-regional', distancia: 97 },
 ];
 
-// El sitio carga ya "parado" en la Parada 1 (Hero es la sección 1), así que el tramo hasta ahí
-// tiene que verse dibujado desde el arranque, sin depender de scroll — no arranca en 1 (nada
-// dibujado) sino en 1 menos la distancia del cartelito 1. De paso evita el límite exacto
-// dash/gap en dashoffset:1 que dejaba filtrar un pedacito de asfalto en la punta de la curva
-// (ver memoria del proyecto, gotcha de pathLength + stroke-dasharray).
-const dashoffsetInicial = 1 - parseFloat(senales[0].distancia) / 100;
+// Ventana de "llegada" de cada nodo (el latido + anillo, ver estilos más abajo): rango angosto
+// del scroll-timeline compartido (--hz-progreso) centrado en la distancia exacta del nodo. No
+// hace falta clampear a [0,100] — el nodo más cercano a cada borde (3% / 97%) ya deja margen.
+const VENTANA = 1.5;
+
+// Entrada del menú (2026-08-28, pedido de Ale): cada LÍNEA arranca con un pequeño desfase
+// sucesivo (arriba→abajo), y DENTRO de cada línea, cada LETRA arranca con su propio desfase más
+// chico (izquierda→derecha) — se calcula acá, en build time (el contenido es estático), no con
+// JS en el cliente: cada letra ya sale con su `animation-delay` puesto.
+const LINE_STAGGER_MS = 90;
+const LETTER_STAGGER_MS = 20;
+// Duración de la animación de cada letra/número (entrada Y salida, ver @keyframes
+// hilo-ruta-menu-entra) — un solo lugar para el valor: se pasa al CSS vía define:vars y el
+// script de más abajo lo repite a mano (los <script> de Astro no tienen acceso directo al
+// frontmatter) para calcular cuánto esperar antes de cerrar el fondo del todo.
+const DURACION_LETRA_MS = 520;
+
+// Curva vertical, un par de ondas suaves (2 ciclos completos) alrededor del eje central x=32.
+// El viewBox/d de acá abajo son el valor de ARRANQUE (SSR, sin JS) sobre una referencia de 900 —
+// el script al final del componente los recalcula contra el alto REAL del contenedor apenas
+// carga (y en cada resize): sin eso, los nodos (círculos) salen ovalados, no redondos, porque
+// `preserveAspectRatio="none"` estira ancho y alto por separado, y el alto real del viewport casi
+// nunca coincide exacto con la referencia de 900 (ver comentario del script).
+const ALTO_REFERENCIA = 900;
+function generarCurva(alto: number): string {
+	const BASE = 32;
+	const AMP = 16;
+	const seg = alto / 4;
+	const o1 = seg / 3;
+	const o2 = (2 * seg) / 3;
+	const y1 = seg;
+	const y2 = seg * 2;
+	const y3 = seg * 3;
+	const y4 = seg * 4;
+	return (
+		`M${BASE},0 ` +
+		`C${BASE - AMP},${o1.toFixed(2)} ${BASE - AMP},${o2.toFixed(2)} ${BASE},${y1.toFixed(2)} ` +
+		`S${BASE + AMP},${(y1 + o2).toFixed(2)} ${BASE},${y2.toFixed(2)} ` +
+		`S${BASE - AMP},${(y2 + o2).toFixed(2)} ${BASE},${y3.toFixed(2)} ` +
+		`S${BASE + AMP},${(y3 + o2).toFixed(2)} ${BASE},${y4.toFixed(2)}`
+	);
+}
+const curva = generarCurva(ALTO_REFERENCIA);
+// CSS `path()` exige un <string> citado — Astro serializa `define:vars` sin comillas.
+const curvaOffsetPath = `"${curva}"`;
+
+// OJO — --curva-offset-path NO va en `define:vars` (ver más abajo, esto costó un bug real): Astro
+// copia cada variable de `define:vars` como estilo inline en TODOS los elementos que ya traen un
+// atributo `style` propio (no solo en la raíz del componente). Como el script de acá abajo
+// actualiza esta variable al cargar (para que los nodos calcen con la curva real, no la de
+// referencia de 900), esa copia duplicada en cada `<circle>` quedaba pisando el valor nuevo con
+// el viejo — solo el nodo más cercano al arranque de la curva (offset-distance chico) coincidía,
+// porque ahí la curva vieja y la nueva casi no difieren. Se resuelve declarando esta variable a
+// mano SOLO en el wrapper `.hilo-ruta` (una única fuente de verdad) y refiriéndola por CSS
+// (`offset-path: path(var(--curva-offset-path))` en el `<style>` de abajo, no inline por nodo) —
+// así los descendientes la heredan de verdad, y actualizarla en el wrapper alcanza para todos.
+
+// El sitio carga ya "parado" en la parada 0 (Hero, la primera pantalla, visible sin scrollear),
+// así que ese tramo tiene que verse ya pintado de celeste desde el arranque — mismo cálculo que
+// la versión anterior (ver memoria del proyecto).
+const dashoffsetInicial = 1 - paradas[0].distancia / 100;
+const duracionLetra = `${DURACION_LETRA_MS}ms`;
 ---
 
-<div class="hilo-ruta">
+<div class="hilo-ruta" style={`--curva-offset-path: ${curvaOffsetPath}`}>
+	<button
+		type="button"
+		class="hilo-ruta-menu-boton"
+		aria-expanded="false"
+		aria-controls="hilo-ruta-menu"
+		aria-label="Abrir menú de secciones"
+	>
+		<span class="hilo-ruta-menu-linea"></span>
+		<span class="hilo-ruta-menu-linea"></span>
+		<span class="hilo-ruta-menu-linea"></span>
+	</button>
+
 	<svg
 		class="hilo-ruta-svg"
-		viewBox="0 0 1536 68"
+		viewBox={`0 0 64 ${ALTO_REFERENCIA}`}
 		preserveAspectRatio="none"
 		xmlns="http://www.w3.org/2000/svg"
 	>
 		<defs>
 			<path id="hilo-ruta-curva" d={curva} pathLength="1" fill="none"></path>
-			<mask id="hilo-ruta-mascara" maskUnits="userSpaceOnUse" x="0" y="0" width="1536" height="68">
+			<mask
+				id="hilo-ruta-mascara"
+				maskUnits="userSpaceOnUse"
+				x="0"
+				y="0"
+				width="64"
+				height={ALTO_REFERENCIA}
+			>
 				<use href="#hilo-ruta-curva" class="hilo-ruta-mascara-trazo"></use>
 			</mask>
 		</defs>
 
-		<g mask="url(#hilo-ruta-mascara)">
-			<use href="#hilo-ruta-curva" class="hilo-ruta-pavimento" aria-hidden="true"></use>
-			<use href="#hilo-ruta-curva" class="hilo-ruta-linea-central" aria-hidden="true"></use>
+		<!-- Capa de base: marino, SIEMPRE dibujada entera ("todavía no recorrido"). -->
+		<use href="#hilo-ruta-curva" class="hilo-ruta-linea-base" aria-hidden="true"></use>
+		{paradas.map((parada) => (
+			<circle
+				class="hilo-ruta-nodo-base"
+				r="7"
+				aria-hidden="true"
+				style={`offset-distance: ${parada.distancia}%`}
+			></circle>
+		))}
 
-			{senales.map((senal) => (
-				<a
-					href={`#${senal.id}`}
-					class="hilo-ruta-senal"
-					style={`offset-distance: ${senal.distancia}`}
-					aria-label={`Ir a la sección ${senal.nombre}`}
-				>
-					{/* Placa de número: la misma que antes, ahora suelta (sin poste). */}
-					<rect class="hilo-ruta-senal-numero" x="-8" y="-31" width="16" height="13" rx="2"></rect>
-					<text
-						class="hilo-ruta-senal-numero-texto"
-						x="0"
-						y="-24.5"
-						text-anchor="middle"
-						dominant-baseline="central"
-					>{senal.numero}</text>
-
-					{/* Placa de nombre: lo que antes era la placa grande del poste, acá mucho más chica. */}
-					<rect class="hilo-ruta-senal-nombre" x="-24" y="-16" width="48" height="13" rx="2"></rect>
-					<text
-						class="hilo-ruta-senal-nombre-texto"
-						x="0"
-						y="-9.5"
-						text-anchor="middle"
-						dominant-baseline="central"
-					>{senal.nombre}</text>
-				</a>
+		<!-- Capa de progreso: celeste, revelada por scroll a través de la máscara. Cada nodo trae
+		     además su propio anillo (aparece + el nodo "late" una vez al llegar, ver @keyframes
+		     hilo-ruta-latido/hilo-ruta-anillo) acotado a una ventana angosta alrededor de su
+		     distancia exacta vía --nodo-desde/--nodo-hasta. -->
+		<g mask="url(#hilo-ruta-mascara)" aria-hidden="true">
+			<use href="#hilo-ruta-curva" class="hilo-ruta-linea-progreso"></use>
+			{paradas.map((parada) => (
+				<>
+					<circle
+						class="hilo-ruta-nodo-anillo"
+						r="11"
+						style={`offset-distance: ${parada.distancia}%; --nodo-desde: ${parada.distancia - VENTANA}%; --nodo-hasta: ${parada.distancia + VENTANA}%`}
+					></circle>
+					<circle
+						class="hilo-ruta-nodo-progreso"
+						r="7"
+						style={`offset-distance: ${parada.distancia}%; --nodo-desde: ${parada.distancia - VENTANA}%; --nodo-hasta: ${parada.distancia + VENTANA}%`}
+					></circle>
+				</>
 			))}
 		</g>
+
+		<!-- Links de navegación reales, encima de todo, con área de click más grande que el nodo
+		     visual — misma <svg>, así se superponen exacto sin trucos de stacking aparte. -->
+		{paradas.map((parada) => (
+			<a
+				href={`#${parada.id}`}
+				class="hilo-ruta-parada-link"
+				style={`offset-distance: ${parada.distancia}%`}
+				aria-label={`Ir a ${parada.nombre}`}
+			>
+				<circle r="14" fill="transparent"></circle>
+			</a>
+		))}
 	</svg>
+
+	<nav id="hilo-ruta-menu" class="hilo-ruta-menu" aria-hidden="true">
+		<ul>
+			{paradas.map((parada, indice) => {
+				const delayLinea = indice * LINE_STAGGER_MS;
+				const letras = parada.nombre.split('');
+				const delayNumero = delayLinea + letras.length * LETTER_STAGGER_MS;
+				return (
+					<li>
+						<a href={`#${parada.id}`}>
+							{/* aria-label lleva el nombre completo — las letras sueltas de abajo son
+							    puramente visuales (aria-hidden), si no un lector de pantalla las
+							    leería una por una. */}
+							<span class="hilo-ruta-menu-nombre" aria-hidden="true">
+								{letras.map((letra, j) => (
+									<span
+										class="hilo-ruta-menu-letra"
+										style={`animation-delay: ${delayLinea + j * LETTER_STAGGER_MS}ms`}
+									>
+										{letra === ' ' ? ' ' : letra}
+									</span>
+								))}
+							</span>
+							<span
+								class="hilo-ruta-menu-numero"
+								aria-hidden="true"
+								style={`animation-delay: ${delayNumero}ms`}
+							>
+								{String(parada.numero).padStart(2, '0')}
+							</span>
+							<span class="hilo-ruta-menu-solo-lectura">{parada.numero}. {parada.nombre}</span>
+						</a>
+					</li>
+				);
+			})}
+		</ul>
+	</nav>
 </div>
 
-<style define:vars={{ curvaOffsetPath, dashoffsetInicial }}>
+<style define:vars={{ dashoffsetInicial, duracionLetra }}>
 	.hilo-ruta {
 		position: fixed;
 		top: 0;
 		left: 0;
-		right: 0;
-		height: var(--alto-hilo-ruta);
+		bottom: 0;
+		width: var(--ancho-hilo-ruta);
 		z-index: 60;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+	}
+
+	/* --curva-offset-path se declara a mano en el wrapper (ver el div de arriba), no vía
+	 * `define:vars` — el JS de más abajo la actualiza en runtime y necesita UNA sola fuente de
+	 * verdad heredada, no una copia por elemento (ver el comentario largo en el frontmatter). Acá
+	 * se referencia por CSS (no inline) para que cada nodo/link la herede de verdad. */
+	.hilo-ruta-nodo-base,
+	.hilo-ruta-nodo-progreso,
+	.hilo-ruta-nodo-anillo,
+	.hilo-ruta-parada-link {
+		offset-path: path(var(--curva-offset-path));
+	}
+
+	/* === Ícono de menú (3 líneas → X al abrir) ===
+	 * Más grande que la v1 (32px → 44px, líneas 22px → 30px) — pedido de Ale. z-index propio y por
+	 * encima del panel (70) para que el botón siga siendo clickeable (para cerrar) aun con el
+	 * panel de pantalla completa abierto encima del resto de la barra. */
+	.hilo-ruta-menu-boton {
+		position: relative;
+		z-index: 80;
+		flex-shrink: 0;
+		margin-top: var(--espacio-lg);
+		width: 44px;
+		height: 44px;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		gap: 7px;
+		background: none;
+		border: none;
+		padding: 0;
+		cursor: pointer;
+		pointer-events: auto;
+	}
+
+	.hilo-ruta-menu-linea {
+		width: 30px;
+		height: 3px;
+		border-radius: 1.5px;
+		background: var(--color-marino);
+		transition:
+			transform 280ms cubic-bezier(0.65, 0, 0.35, 1),
+			opacity 180ms ease,
+			background-color 200ms ease;
+	}
+
+	/* Panel oscuro de fondo: las líneas (dark navy) quedan sobre sí mismas, mejor pasarlas a
+	 * celeste apenas se abre para que se lean sobre el navy del panel. */
+	.hilo-ruta-menu-boton[aria-expanded='true'] .hilo-ruta-menu-linea {
+		background: var(--color-celeste);
+	}
+
+	/* Morphing a X: la de arriba baja y rota, la del medio desaparece, la de abajo sube y rota. */
+	.hilo-ruta-menu-boton[aria-expanded='true'] .hilo-ruta-menu-linea:nth-child(1) {
+		transform: translateY(10px) rotate(45deg);
+	}
+
+	.hilo-ruta-menu-boton[aria-expanded='true'] .hilo-ruta-menu-linea:nth-child(2) {
+		opacity: 0;
+	}
+
+	.hilo-ruta-menu-boton[aria-expanded='true'] .hilo-ruta-menu-linea:nth-child(3) {
+		transform: translateY(-10px) rotate(-45deg);
+	}
+
+	/* === Línea + nodos === */
+	.hilo-ruta-svg {
+		flex: 1;
+		width: 100%;
+		display: block;
+		/* El <svg> en sí no captura clicks (así se ve "a través" hacia el contenido de atrás donde
+		 * no hay nada dibujado) — cada elemento interactivo recupera pointer-events por su cuenta. */
 		pointer-events: none;
 	}
 
-	.hilo-ruta-svg {
-		display: block;
-		width: 100%;
-		height: 100%;
-	}
+	/* El path maestro (#hilo-ruta-curva) es solo geometría: sin stroke/fill propio, no se ve. OJO:
+	 * no ponerle `visibility:hidden` — un <use> clona el id completo, esa regla apagaría también
+	 * los <use> que lo pintan (gotcha ya documentado en la versión anterior). */
 
-	/* El path maestro (#hilo-ruta-curva) es solo geometría: no lleva stroke/fill propios, así que
-	 * no se ve. OJO: no ponerle `visibility: hidden` acá — un <use> clona el id junto con el
-	 * contenido, así que esa regla también apagaría los <use> que lo pintan (ya pasó una vez). */
-
-	.hilo-ruta-pavimento {
-		fill: none;
-		stroke: var(--color-asfalto);
-		stroke-width: 20;
-	}
-
-	.hilo-ruta-linea-central {
-		fill: none;
-		stroke: var(--color-linea-central);
-		stroke-width: 1.6;
+	.hilo-ruta-linea-base {
+		stroke: var(--color-marino);
+		stroke-width: 3;
 		stroke-linecap: round;
-		/* Trazos estáticos, sin animación propia — el "dibujado" de la ruta con el scroll lo hace
-		 * la <mask>, no este dasharray.
-		 * OJO con las unidades: el <path> maestro tiene pathLength="1", y eso recalibra CUALQUIER
-		 * stroke-dasharray de sus <use> a esa escala normalizada (1 == el largo real de toda la
-		 * curva, ~1540 unidades) — hay que pensar en fracciones de 1, no en píxeles sueltos. Con
-		 * cabo redondeado, el largo visual real de cada trazo es aprox. dash + stroke-width; acá
-		 * (0.003 ≈ 4,6px de dash) da un trazo de ~6,3px, sin tocar el gap (0.012 ≈ 18,5px). */
-		stroke-dasharray: 0.003 0.012;
+		fill: none;
 	}
 
-	/* Trazo de la máscara: ancho de sobra para tapar, en cualquier punto de la curva, tanto el
-	 * pavimento (10 hacia cada lado) como el cartelito con poste completo (llega a y=-32 desde la
-	 * curva) — como el trazo es simétrico, tiene que cubrir el doble de la distancia más larga
-	 * (32), no la suma de las dos. Invisible en sí (vive en <mask>, no se pinta). */
+	.hilo-ruta-linea-progreso {
+		stroke: var(--color-celeste);
+		stroke-width: 3;
+		stroke-linecap: round;
+		fill: none;
+		/* De trazos, no sólida — pedido de Ale 2026-08-28. OJO: el <path> maestro que este <use>
+		 * clona tiene pathLength="1" (para el dashoffset del "pintado", ver .hilo-ruta-mascara-
+		 * trazo más abajo), así que CUALQUIER stroke-dasharray acá se normaliza a esa escala — hay
+		 * que pensar en fracciones de 1, no en píxeles (mismo gotcha ya documentado en la versión
+		 * horizontal de este componente, ver memoria del proyecto). 0.014/0.01 ≈ trazo de 12-13px
+		 * con hueco de 9px sobre esta curva. */
+		stroke-dasharray: 0.014 0.01;
+		/* Sombra sutil doble: da la sensación de que el tramo ya recorrido es más GRUESO que la
+		 * ruta apagada, sin cambiar el stroke-width real (que tiene que seguir calzando con el
+		 * trazo de la máscara). */
+		filter:
+			drop-shadow(0 0 2px color-mix(in srgb, var(--color-celeste) 75%, transparent))
+			drop-shadow(0 0 5px color-mix(in srgb, var(--color-celeste) 45%, transparent));
+	}
+
+	.hilo-ruta-nodo-base,
+	.hilo-ruta-nodo-progreso {
+		fill: var(--color-fondo);
+		stroke-width: 3;
+	}
+
+	.hilo-ruta-nodo-base {
+		stroke: var(--color-marino);
+	}
+
+	.hilo-ruta-nodo-progreso {
+		stroke: var(--color-celeste);
+		transform-box: fill-box;
+		transform-origin: center;
+		/* Estado de reposo fuera de @supports/sin scroll-timeline: ya "llegado", un poco más
+		 * grande — ver @keyframes hilo-ruta-latido, que arranca desde scale(1) y decanta acá. */
+		transform: scale(1.08);
+	}
+
+	/* Anillo que aparece alrededor del nodo al llegar — separado del nodo por 2px de aire (radio
+	 * 11 contra el radio visual del nodo, ~8.5 con su stroke). Sin relleno, solo contorno. */
+	.hilo-ruta-nodo-anillo {
+		fill: none;
+		stroke: var(--color-celeste);
+		stroke-width: 1.5;
+		transform-box: fill-box;
+		transform-origin: center;
+		opacity: 1;
+	}
+
+	/* Trazo de la máscara: ancho de sobra para tapar, en cualquier punto de la curva, tanto la
+	 * línea (3) como el nodo completo (radio 7 + su stroke) — simétrico a cada lado del centro,
+	 * por eso el valor es el doble del radio visual más margen, no la suma de las dos capas. */
 	.hilo-ruta-mascara-trazo {
 		fill: none;
 		stroke: #fff;
-		stroke-width: 70;
+		stroke-width: 24;
 		stroke-linecap: round;
 		stroke-dasharray: 1;
-		/* Fallback y sin soporte de scroll-timeline: máscara abierta del todo, ruta completa. */
+		/* Fallback sin soporte de scroll-timeline: máscara abierta del todo, todo el recorrido ya
+		 * "pintado" de celeste — mismo criterio que la versión anterior (mostrar el estado final
+		 * completo, nunca vacío ni a medio dibujar). */
 		stroke-dashoffset: 0;
 	}
 
-	/* 2026-08-25 — migración a slide horizontal: la página en sí ya no scrollea (solo .hz-track,
-	 * ver base.css), así que scroll(root) ya no sirve — un scroll-timeline con nombre no necesita
-	 * que este elemento sea descendiente de .hz-track, alcanza con que .hz-track lo declare
-	 * (`scroll-timeline-name: --hz-progreso` en base.css). El @supports sigue probando
-	 * scroll(root) a propósito: es la misma familia de feature (scroll-driven animations), los
-	 * navegadores que soportan uno soportan el otro — no hace falta duplicar el gate. */
 	@supports (animation-timeline: scroll(root)) {
 		.hilo-ruta-mascara-trazo {
 			stroke-dashoffset: var(--dashoffsetInicial);
-			animation: hilo-ruta-dibujar linear both;
+			animation: hilo-ruta-pintar linear both;
 			animation-timeline: --hz-progreso;
+		}
+
+		/* Antes de su ventana, el nodo/anillo tienen que arrancar en su estado "todavía no
+		 * llegué" (nodo tamaño normal, anillo invisible) — sin esto, el transform:scale(1.08) /
+		 * opacity:1 de reposo (arriba) se vería ANTES de tiempo, ya que esas reglas no dependen
+		 * del scroll. `animation-fill-mode: both` (parte de "both" en el shorthand) ya cubre el
+		 * extremo final; el inicial lo fija el propio 0% del keyframe una vez que la animación
+		 * está activa — pero mientras el scroll no entró en el rango, el navegador todavía no
+		 * aplicó ningún frame, así que hace falta el estado "before" explícito acá. */
+		.hilo-ruta-nodo-progreso {
+			transform: scale(1);
+			animation: hilo-ruta-latido linear both;
+			animation-timeline: --hz-progreso;
+			animation-range: var(--nodo-desde) var(--nodo-hasta);
+		}
+
+		.hilo-ruta-nodo-anillo {
+			opacity: 0;
+			animation: hilo-ruta-anillo linear both;
+			animation-timeline: --hz-progreso;
+			animation-range: var(--nodo-desde) var(--nodo-hasta);
 		}
 	}
 
-	@keyframes hilo-ruta-dibujar {
+	@keyframes hilo-ruta-pintar {
 		from {
 			stroke-dashoffset: var(--dashoffsetInicial);
 		}
@@ -219,42 +434,38 @@ const dashoffsetInicial = 1 - parseFloat(senales[0].distancia) / 100;
 		}
 	}
 
-	/* Señales de ruta: posición fija sobre la curva (no animan solas, la <mask> del padre es lo
-	 * que las revela a medida que el dibujado las alcanza). offset-rotate: 0deg a propósito — una
-	 * placa real queda derecha, no se inclina con la curva de la ruta. Ahora son <a>, no <g>: el
-	 * wrapper (.hilo-ruta) tiene pointer-events:none porque la curva/pavimento son decorativos,
-	 * así que cada señal recupera pointer-events acá para ser clickeable. */
-	.hilo-ruta-senal {
-		offset-path: path(var(--curvaOffsetPath));
-		offset-rotate: 0deg;
-		pointer-events: auto;
-		cursor: pointer;
+	/* Latido pronunciado, una sola vez, al llegar al nodo: sube fuerte, rebota corto y decanta
+	 * en un tamaño de reposo apenas más grande (1.08) — no un crecimiento monótono. */
+	@keyframes hilo-ruta-latido {
+		0% {
+			transform: scale(1);
+		}
+		35% {
+			transform: scale(1.4);
+		}
+		55% {
+			transform: scale(0.92);
+		}
+		75% {
+			transform: scale(1.15);
+		}
+		100% {
+			transform: scale(1.08);
+		}
 	}
 
-	.hilo-ruta-senal-numero,
-	.hilo-ruta-senal-nombre {
-		fill: var(--color-cartel-fondo);
-		stroke: var(--color-cartel-texto);
-		stroke-width: 1.5;
-	}
-
-	.hilo-ruta-senal-numero-texto,
-	.hilo-ruta-senal-nombre-texto {
-		fill: var(--color-cartel-texto);
-		font-family: var(--fuente-texto);
-		font-weight: 700;
-	}
-
-	.hilo-ruta-senal-numero-texto {
-		font-size: 9px;
-	}
-
-	/* Más chica que la del número: la placa de nombre es angosta (48 unidades) y el texto varía de
-	 * largo por sección ("La Oportunidad" es el más largo de los 5) — medido con getBBox contra
-	 * las 5 señales reales en el navegador, no a ojo (mismo método que CartelSeccion en su
-	 * momento, ver memoria del proyecto). */
-	.hilo-ruta-senal-nombre-texto {
-		font-size: 5.3px;
+	@keyframes hilo-ruta-anillo {
+		0% {
+			opacity: 0;
+			transform: scale(0.6);
+		}
+		45% {
+			opacity: 1;
+		}
+		100% {
+			opacity: 1;
+			transform: scale(1);
+		}
 	}
 
 	@media (prefers-reduced-motion: reduce) {
@@ -262,34 +473,356 @@ const dashoffsetInicial = 1 - parseFloat(senales[0].distancia) / 100;
 			animation: none !important;
 			stroke-dashoffset: 0;
 		}
+
+		.hilo-ruta-nodo-progreso,
+		.hilo-ruta-nodo-anillo {
+			animation: none !important;
+		}
+
+		.hilo-ruta-nodo-progreso {
+			transform: scale(1.08);
+		}
+
+		.hilo-ruta-nodo-anillo {
+			opacity: 1;
+		}
+	}
+
+	/* Los links son la única parte de los dos <svg> con pointer-events activo. */
+	.hilo-ruta-parada-link {
+		pointer-events: auto;
+		cursor: pointer;
+	}
+
+	/* === Panel del menú — pantalla completa, estilo bertani.net (pedido de Ale 2026-08-28) ===
+	 * Antes era un panelito angosto a la derecha del ícono; ahora toma TODO el viewport (fixed,
+	 * inset:0) con el marino de marca de fondo y los links a tamaño grande. Se togglea con una
+	 * clase (no el atributo `hidden`) porque `hidden` no puede transicionar — `visibility` +
+	 * `opacity` sí, con el `transition-delay` en `visibility` para que el panel deje de capturar
+	 * clicks/tab recién cuando la transición de salida terminó, no de golpe. */
+	.hilo-ruta-menu {
+		position: fixed;
+		inset: 0;
+		z-index: 70;
+		display: flex;
+		align-items: center;
+		justify-content: flex-start;
+		padding-left: calc(var(--ancho-hilo-ruta) + clamp(2rem, 8vw, 6rem));
+		background: var(--color-marino);
+		opacity: 0;
+		visibility: hidden;
+		pointer-events: none;
+		transition:
+			opacity 320ms ease,
+			visibility 0s linear 320ms;
+	}
+
+	.hilo-ruta-menu--abierta {
+		opacity: 1;
+		visibility: visible;
+		pointer-events: auto;
+		transition: opacity 320ms ease;
+	}
+
+	.hilo-ruta-menu ul {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+		display: flex;
+		flex-direction: column;
+		gap: var(--espacio-md);
+		width: min(90vw, 40rem);
+	}
+
+	/* Fila justificada: nombre a la izquierda, número al lado derecho — pedido de Ale 2026-08-28
+	 * (antes el número iba primero, chico, a la izquierda). Línea de renglón MUY fina debajo de
+	 * cada link, separada del texto por el padding. */
+	.hilo-ruta-menu a {
+		position: relative;
+		display: flex;
+		align-items: baseline;
+		justify-content: space-between;
+		gap: var(--espacio-md);
+		padding: var(--espacio-xs) 0 var(--espacio-sm);
+		border-bottom: 1px solid color-mix(in srgb, var(--color-texto-sobre-foto) 22%, transparent);
+		color: var(--color-texto-sobre-foto);
+		text-decoration: none;
+	}
+
+	/* Texto real para lectores de pantalla — las letras/número sueltos de arriba son aria-hidden
+	 * (puramente visuales, la animación letra por letra los separa en spans individuales, que un
+	 * lector de pantalla leería mal). Oculto visualmente, no de la lectura. */
+	.hilo-ruta-menu-solo-lectura {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		overflow: hidden;
+		clip: rect(0 0 0 0);
+		white-space: nowrap;
+	}
+
+	.hilo-ruta-menu-nombre {
+		/* Space Grotesk 300 (Light) — pedido de Ale 2026-08-28: una grotesca FINA que complemente a
+		 * Archivo (--fuente-display, el Hero) sin ser la misma familia. Reemplaza a Lora acá (Lora
+		 * sigue siendo --fuente-titular para el resto del sitio, esto es un uso puntual). */
+		font-family: var(--fuente-fina);
+		font-weight: 300;
+		font-size: clamp(1.75rem, 1.1rem + 3.2vw, 3.75rem);
+		line-height: 1.15;
+	}
+
+	/* Cada letra es su propia caja (inline-block, hace falta para poder animarle transform) —
+	 * generadas en build time en el frontmatter (el contenido es estático), cada una con su propio
+	 * animation-delay ya calculado: línea N arranca con LINE_STAGGER_MS·N, y dentro de la línea,
+	 * la letra J arranca LETTER_STAGGER_MS·J después — cascada arriba→abajo entre líneas,
+	 * izquierda→derecha dentro de cada una. */
+	.hilo-ruta-menu-letra {
+		display: inline-block;
+		opacity: 0;
+		transform: translateY(-10px);
+	}
+
+	.hilo-ruta-menu-numero {
+		font-family: var(--fuente-texto);
+		font-weight: 600;
+		/* Agrandado — pedido de Ale 2026-08-28 (antes var(--texto-base), quedaba chico al lado del
+		 * nombre). Todavía notablemente menor que el nombre, para que siga leyéndose como índice. */
+		font-size: clamp(1.5rem, 1rem + 2.5vw, 2.75rem);
+		color: var(--color-celeste);
+		flex-shrink: 0;
+		opacity: 0;
+		transform: translateY(-10px);
+	}
+
+	.hilo-ruta-menu a:hover .hilo-ruta-menu-nombre,
+	.hilo-ruta-menu a:focus-visible .hilo-ruta-menu-nombre {
+		color: var(--color-celeste);
+	}
+
+	.hilo-ruta-menu a:hover,
+	.hilo-ruta-menu a:focus-visible {
+		border-bottom-color: var(--color-celeste);
+	}
+
+	/* La animación se activa recién con la clase --abierta: si se declarara siempre, el navegador
+	 * la reproduciría una sola vez al cargar la página (con el panel todavía cerrado) y no
+	 * quedaría nada para reproducir cuando el menú realmente se abre. */
+	.hilo-ruta-menu--abierta .hilo-ruta-menu-letra,
+	.hilo-ruta-menu--abierta .hilo-ruta-menu-numero {
+		animation: hilo-ruta-menu-entra var(--duracionLetra) cubic-bezier(0.16, 1, 0.3, 1) both;
+	}
+
+	/* Cierre — pedido de Ale 2026-08-28: al cerrar, las letras hacen la MISMA animación pero al
+	 * revés (mismos delays — así la letra que entró primero también empieza a irse primero) y el
+	 * fondo/box recién se cierra cuando termina esa secuencia. Esta clase la agrega el script
+	 * ANTES de sacar --abierta (ver más abajo). El fondo (.hilo-ruta-menu--abierta, sin
+	 * transition-delay propio) se mantiene opaco mientras tanto porque --abierta sigue puesta.
+	 *
+	 * OJO — un @keyframes PROPIO (`hilo-ruta-menu-sale`), NO `animation-direction: reverse` sobre
+	 * el mismo `hilo-ruta-menu-entra`: se probó con `reverse` primero y no se veía nada al cerrar.
+	 * La animación de entrada ya había TERMINADO (fill:both la deja en su estado final) — cuando
+	 * solo cambia el sub-valor `animation-direction` de una animación que el navegador sigue
+	 * considerando "la misma" (mismo animation-name), no hay garantía de que la reinicie desde el
+	 * principio; en la práctica se quedaba en el estado final sin reproducir nada. Con un
+	 * animation-name DISTINTO, el navegador sí reconoce una animación nueva y la reproduce desde
+	 * cero — se llega exactamente al mismo lugar (los keyframes son el espejo de los de entrada). */
+	.hilo-ruta-menu--cerrando .hilo-ruta-menu-letra,
+	.hilo-ruta-menu--cerrando .hilo-ruta-menu-numero {
+		animation: hilo-ruta-menu-sale var(--duracionLetra) cubic-bezier(0.16, 1, 0.3, 1) both;
+	}
+
+	/* "Efecto smooth" (pedido de Ale) — el blur se suma a opacity+translateY, como un enfoque
+	 * suave entrando (o desenfocándose al salir). */
+	@keyframes hilo-ruta-menu-entra {
+		from {
+			opacity: 0;
+			transform: translateY(-10px);
+			filter: blur(6px);
+		}
+		to {
+			opacity: 1;
+			transform: translateY(0);
+			filter: blur(0);
+		}
+	}
+
+	@keyframes hilo-ruta-menu-sale {
+		from {
+			opacity: 1;
+			transform: translateY(0);
+			filter: blur(0);
+		}
+		to {
+			opacity: 0;
+			transform: translateY(-10px);
+			filter: blur(6px);
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.hilo-ruta-menu,
+		.hilo-ruta-menu-linea {
+			transition: none !important;
+		}
+
+		.hilo-ruta-menu-letra,
+		.hilo-ruta-menu-numero {
+			animation: none !important;
+			opacity: 1;
+			transform: none;
+		}
 	}
 </style>
 
 <script>
-	// 2026-08-25 — primer JS del proyecto: navegación de las señales, no animación (sigue sin
-	// GSAP/Framer, eso no cambia). El scroll-hasta-el-ancla nativo del navegador (un <a href="#id">
-	// normal) no funciona acá: el destino vive dentro de .hz-track, rotado -90° por el truco de
-	// slide horizontal (ver base.css), y el algoritmo nativo de "llevar el elemento a la vista" no
-	// calcula bien el scroll necesario contra ese transform — probado en vivo, cambia el hash de la
-	// URL pero no mueve el scroll real. Se resuelve leyendo el offsetTop del slide destino DENTRO
-	// de .hz-track (que sí es correcto, es la posición en el espacio LOCAL sin rotar) y llevando el
-	// scroll ahí a mano.
-	const track = document.querySelector<HTMLElement>('.hz-track');
+	// Redondez real de los nodos: el <svg> usa preserveAspectRatio="none" a propósito (necesita
+	// estirar ANCHO y ALTO por separado — ver comentario del frontmatter), pero eso significa que
+	// 1 unidad de viewBox no mide lo mismo en X que en Y salvo que el viewBox tenga EXACTAMENTE la
+	// proporción del contenedor real. La referencia fija (900 de alto) casi nunca coincide con el
+	// alto real del viewport → los <circle> (que sí son geometría "redonda" en unidades locales,
+	// donde X e Y valen lo mismo) salen ovalados. Se corrige midiendo el alto real ya renderizado y
+	// regenerando el viewBox + la curva (misma fórmula, alto real) para que 1 unidad = 1px en las
+	// dos direcciones — recién ahí un <circle r="7"> es un círculo de verdad.
+	function generarCurva(alto: number): string {
+		const BASE = 32;
+		const AMP = 16;
+		const seg = alto / 4;
+		const o1 = seg / 3;
+		const o2 = (2 * seg) / 3;
+		const y1 = seg;
+		const y2 = seg * 2;
+		const y3 = seg * 3;
+		const y4 = seg * 4;
+		return (
+			`M${BASE},0 ` +
+			`C${BASE - AMP},${o1.toFixed(2)} ${BASE - AMP},${o2.toFixed(2)} ${BASE},${y1.toFixed(2)} ` +
+			`S${BASE + AMP},${(y1 + o2).toFixed(2)} ${BASE},${y2.toFixed(2)} ` +
+			`S${BASE - AMP},${(y2 + o2).toFixed(2)} ${BASE},${y3.toFixed(2)} ` +
+			`S${BASE + AMP},${(y3 + o2).toFixed(2)} ${BASE},${y4.toFixed(2)}`
+		);
+	}
 
-	document.querySelectorAll<HTMLAnchorElement>('.hilo-ruta-senal').forEach((señal) => {
-		señal.addEventListener('click', (evento) => {
-			const id = señal.getAttribute('href')?.slice(1);
-			const destino = id && document.getElementById(id);
-			if (!track || !destino) return;
+	function ajustarCurva() {
+		const wrapper = document.querySelector<HTMLElement>('.hilo-ruta');
+		const svg = document.querySelector<SVGSVGElement>('.hilo-ruta-svg');
+		const pathEl = document.querySelector<SVGPathElement>('#hilo-ruta-curva');
+		const mascara = document.querySelector<SVGMaskElement>('#hilo-ruta-mascara');
+		if (!wrapper || !svg || !pathEl || !mascara) return;
 
-			evento.preventDefault();
-			// behavior:'smooth' (probado, con y sin scroll-behavior:smooth de base.css) no anima
-			// nada acá: se queda clavado en 0 y nunca arranca. Sospecha: .hz-track es a la vez el
-			// contenedor que scrollea Y el que lleva transform:rotate(-90deg) (ver base.css) — la
-			// rueda del mouse SÍ anima suave entre paradas (usa el snap nativo, no este método),
-			// así que el problema es puntual del scroll programático animado sobre un elemento
-			// transformado, no del CSS en general. 'instant' no tiene ese problema.
-			track.scrollTo({ top: destino.offsetTop, behavior: 'instant' });
-		});
+		const alto = Math.round(svg.getBoundingClientRect().height);
+		if (alto <= 0) return;
+
+		svg.setAttribute('viewBox', `0 0 64 ${alto}`);
+		mascara.setAttribute('height', String(alto));
+		const d = generarCurva(alto);
+		pathEl.setAttribute('d', d);
+		// offset-path de nodos/links lee este custom property (heredado, ver <style> de arriba) —
+		// hay que actualizarlo junto con el 'd' de arriba para que sigan glueados a la curva real,
+		// no a la de referencia (900). Una sola declaración en el wrapper, no una copia por nodo.
+		wrapper.style.setProperty('--curva-offset-path', `"${d}"`);
+	}
+
+	ajustarCurva();
+
+	let temporizadorResize: ReturnType<typeof setTimeout> | undefined;
+	window.addEventListener('resize', () => {
+		clearTimeout(temporizadorResize);
+		temporizadorResize = setTimeout(ajustarCurva, 150);
 	});
+
+	// Navegación real (click, no solo indicador de progreso) — mismo motivo que la versión
+	// anterior: el destino vive dentro de .hz-track, rotado -90° por el truco de slide horizontal
+	// (ver base.css), así que el scroll-hasta-el-ancla nativo del navegador no calcula bien el
+	// scroll necesario. Se resuelve leyendo `offsetTop` del slide destino DENTRO de .hz-track (esa
+	// posición SÍ es correcta, es el espacio local sin rotar) y llevando el scroll ahí a mano.
+	// `behavior:'instant'` a propósito — 'smooth' se queda clavado en 0 sobre este elemento
+	// transformado (gotcha ya documentado, ver memoria del proyecto).
+	const track = document.querySelector<HTMLElement>('.hz-track');
+	const boton = document.querySelector<HTMLButtonElement>('.hilo-ruta-menu-boton');
+	const menu = document.querySelector<HTMLElement>('#hilo-ruta-menu');
+
+	// El panel ahora es pantalla completa (ver <style>): se togglea con clases, no con el atributo
+	// `hidden` — `hidden` fuerza display:none de golpe, sin dejar animar la transición de
+	// opacity/transform. `aria-hidden` refleja el estado para lectores de pantalla.
+	const CLASE_ABIERTA = 'hilo-ruta-menu--abierta';
+	// Cierre en dos tiempos (pedido de Ale 2026-08-28): al cerrar, las letras hacen la MISMA
+	// animación de entrada pero al revés (ver CSS, .hilo-ruta-menu--cerrando) y el fondo recién se
+	// apaga cuando esa secuencia termina — no de un fade abrupto. Esta clase se agrega ANTES de
+	// sacar --abierta; --abierta se saca recién al final del timeout de abajo.
+	const CLASE_CERRANDO = 'hilo-ruta-menu--cerrando';
+	// Debe coincidir con --duracionLetra (ver define:vars arriba) — un <script> de Astro no tiene
+	// acceso directo al frontmatter, así que se repite el valor a mano acá.
+	const DURACION_LETRA_MS = 520;
+
+	const estaAbierto = () => menu?.classList.contains(CLASE_ABIERTA) ?? false;
+
+	// Cuánto esperar antes de cerrar el fondo del todo: el delay más largo entre todas las
+	// letras/números (el último en aparecer, que en el cierre es también el último en
+	// desaparecer, ya que --cerrando solo invierte la animación, no el orden de los delays) más
+	// la duración de su propia animación.
+	function calcularEsperaCierre(): number {
+		// Con reduced-motion la animación letra por letra está apagada del todo (ver <style>,
+		// bloque @media) — esperar igual sería un cierre artificialmente lento sin nada que
+		// justifique la espera.
+		if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return 0;
+
+		let maxDelayMs = 0;
+		document
+			.querySelectorAll<HTMLElement>('.hilo-ruta-menu-letra, .hilo-ruta-menu-numero')
+			.forEach((elemento) => {
+				const valor = getComputedStyle(elemento).animationDelay;
+				const numero = parseFloat(valor) || 0;
+				const ms = valor.trim().endsWith('ms') ? numero : numero * 1000;
+				if (ms > maxDelayMs) maxDelayMs = ms;
+			});
+		return maxDelayMs + DURACION_LETRA_MS;
+	}
+
+	let temporizadorCierre: ReturnType<typeof setTimeout> | undefined;
+
+	const cerrarMenu = () => {
+		if (!menu || !boton || !estaAbierto()) return;
+		clearTimeout(temporizadorCierre);
+		menu.classList.add(CLASE_CERRANDO);
+		menu.setAttribute('aria-hidden', 'true');
+		boton.setAttribute('aria-expanded', 'false');
+
+		temporizadorCierre = setTimeout(() => {
+			menu.classList.remove(CLASE_ABIERTA, CLASE_CERRANDO);
+		}, calcularEsperaCierre());
+	};
+
+	boton?.addEventListener('click', () => {
+		if (!menu || !boton) return;
+
+		if (estaAbierto()) {
+			cerrarMenu();
+			return;
+		}
+
+		// Reabrir a mitad de un cierre en curso: cancelar el timeout pendiente y arrancar limpio.
+		clearTimeout(temporizadorCierre);
+		menu.classList.remove(CLASE_CERRANDO);
+		menu.classList.add(CLASE_ABIERTA);
+		menu.setAttribute('aria-hidden', 'false');
+		boton.setAttribute('aria-expanded', 'true');
+	});
+
+	document.addEventListener('keydown', (evento) => {
+		if (evento.key === 'Escape') cerrarMenu();
+	});
+
+	document
+		.querySelectorAll<HTMLAnchorElement>('.hilo-ruta-parada-link, .hilo-ruta-menu a')
+		.forEach((enlace) => {
+			enlace.addEventListener('click', (evento) => {
+				const id = enlace.getAttribute('href')?.slice(1);
+				const destino = id && document.getElementById(id);
+				if (!track || !destino) return;
+
+				evento.preventDefault();
+				track.scrollTo({ top: destino.offsetTop, behavior: 'instant' });
+				cerrarMenu();
+			});
+		});
 </script>

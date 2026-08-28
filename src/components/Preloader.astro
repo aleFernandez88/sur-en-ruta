@@ -1,0 +1,191 @@
+---
+/**
+ * Preloader.astro — cortina de carga de Sur en Ruta.
+ *
+ * Inspirado en el de benjamincreative.me (ver docs/analisis/2026-08-27-preloader-benjamincreative.md),
+ * adaptado con dos ajustes que pidió Ale (2026-08-27):
+ *  1. La salida NO es un slide único: el fondo se parte en DOS BANDAS horizontales — la de arriba
+ *     sube y sale por el borde superior, la de abajo baja y sale por el inferior (cortina que se
+ *     abre en vertical), descubriendo el Hero (Sección 0).
+ *  2. El texto va partido por la costura: el TÍTULO ("SUR EN RUTA") vive en la banda de arriba y
+ *     se va con ella hacia arriba; el ESLOGAN vive en la banda de abajo y se va con ella hacia
+ *     abajo. Sin "RENAMU".
+ *
+ * Fondo: --color-marino (2026-08-27, Ale pidió probar el azul de la paleta en vez de la terracota).
+ * Eslogan: "Conecta. Ordena. Potencia." — textual del mazo de Ana (fuente válida, CLAUDE.md § 6).
+ * Cambiar la constante `ESLOGAN` de abajo si Ana define otra cosa.
+ *
+ * Todo CSS para la animación + ~15 líneas de JS vanilla para el retiro. Cero dependencias.
+ *
+ * Robustez:
+ *  - Visible por HTML/CSS desde el primer frame (no hay FOUC del panel).
+ *  - El retiro lo dispara el JS con `window.load` + `document.fonts.ready` + un mínimo de 1,5 s
+ *    (MIN_MS) para que se lea el nombre antes de abrir la cortina.
+ *  - Red de seguridad: un @keyframes apaga todo a los 5 s aunque el JS falle.
+ *  - prefers-reduced-motion: sin escala ni cortina, solo un fade corto.
+ */
+const TITULO = 'Sur en Ruta';
+const ESLOGAN = 'Conecta. Ordena. Potencia.';
+---
+
+<div id="preloader" class="preloader" aria-hidden="true">
+	<div class="preloader__banda preloader__banda--arriba">
+		<p class="preloader__titulo">{TITULO}</p>
+	</div>
+	<div class="preloader__banda preloader__banda--abajo">
+		<p class="preloader__eslogan">{ESLOGAN}</p>
+	</div>
+</div>
+
+<style>
+	.preloader {
+		position: fixed;
+		inset: 0;
+		z-index: 9999;
+		color: #fff;
+		/* Red de seguridad: si el JS no lo retira, a los 5 s se apaga solo. */
+		animation: preloader-failsafe 0.4s ease 5s forwards;
+	}
+
+	.preloader__banda {
+		position: absolute;
+		left: 0;
+		width: 100%;
+		height: 50%;
+		background-color: var(--color-marino);
+		display: flex;
+		justify-content: center;
+		/* Cada banda anima su propio transform en la salida. */
+		transition: transform 0.72s cubic-bezier(0.7, 0, 0.2, 1);
+	}
+
+	.preloader__banda--arriba {
+		top: 0;
+		align-items: flex-end;
+		padding-bottom: clamp(0.75rem, 2.5vh, 1.75rem);
+	}
+
+	.preloader__banda--abajo {
+		bottom: 0;
+		align-items: flex-start;
+		padding-top: clamp(0.75rem, 2.5vh, 1.75rem);
+	}
+
+	/* Salida: la banda de arriba se va por arriba, la de abajo por abajo. El texto va de arribo
+	 * (es hijo de cada banda). */
+	.preloader.is-fuera .preloader__banda--arriba {
+		transform: translateY(-100%);
+	}
+	.preloader.is-fuera .preloader__banda--abajo {
+		transform: translateY(100%);
+	}
+
+	.preloader.is-oculto {
+		display: none;
+	}
+
+	.preloader__titulo {
+		margin: 0;
+		font-family: var(--fuente-marca);
+		font-weight: 400;
+		font-size: clamp(2.4rem, 1.4rem + 4.4vw, 4.75rem);
+		line-height: 1;
+		text-transform: uppercase;
+		letter-spacing: 0.06em;
+		transform: scale(2.3);
+		opacity: 0.15;
+		animation: preloader-titulo 0.95s cubic-bezier(0.2, 0.7, 0.2, 1) forwards;
+	}
+
+	.preloader__eslogan {
+		margin: 0;
+		font-family: var(--fuente-texto);
+		font-size: var(--texto-sm);
+		font-weight: 600;
+		letter-spacing: 0.16em;
+		text-transform: uppercase;
+		opacity: 0;
+		transform: translateY(10px);
+		animation: preloader-eslogan 0.6s ease 0.25s forwards;
+	}
+
+	@keyframes preloader-titulo {
+		to {
+			transform: scale(1);
+			opacity: 1;
+		}
+	}
+
+	@keyframes preloader-eslogan {
+		to {
+			opacity: 0.85;
+			transform: translateY(0);
+		}
+	}
+
+	@keyframes preloader-failsafe {
+		to {
+			opacity: 0;
+			visibility: hidden;
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.preloader__titulo,
+		.preloader__eslogan {
+			animation: none;
+			opacity: 1;
+			transform: none;
+		}
+		.preloader__eslogan {
+			opacity: 0.85;
+		}
+		.preloader.is-fuera .preloader__banda {
+			transform: none;
+		}
+		.preloader.is-fuera {
+			opacity: 0;
+			transition: opacity 0.3s ease;
+		}
+	}
+</style>
+
+<script>
+	/**
+	 * Retiro del preloader. Espera a que la página esté realmente lista (recursos + fuentes) con
+	 * un piso de tiempo para que no "parpadee", y después abre la cortina.
+	 */
+	const panel = document.getElementById('preloader');
+	if (panel) {
+		const MIN_MS = 1500; // el preloader se ve al menos 1,5 s (fondo + letras) antes de abrirse
+		const arranque = performance.now();
+
+		const cargaLista = new Promise<void>((resolve) => {
+			if (document.readyState === 'complete') resolve();
+			else window.addEventListener('load', () => resolve(), { once: true });
+		});
+		const fuentesListas = (document as Document & { fonts?: FontFaceSet }).fonts
+			? (document as Document & { fonts: FontFaceSet }).fonts.ready.then(() => undefined)
+			: Promise.resolve();
+
+		Promise.all([cargaLista, fuentesListas]).then(() => {
+			const restante = Math.max(0, MIN_MS - (performance.now() - arranque));
+			window.setTimeout(retirar, restante);
+		});
+
+		function retirar() {
+			if (!panel || panel.classList.contains('is-fuera')) return;
+			panel.classList.add('is-fuera');
+			/* Dispara la entrada escalonada del Hero después de que la cortina se abrió: hay una
+			 * pausa deliberada (~1,25 s) con la foto sola antes de que suba el texto. */
+			window.setTimeout(() => document.documentElement.classList.add('entrada'), 1250);
+			const banda = panel.querySelector('.preloader__banda');
+			banda?.addEventListener(
+				'transitionend',
+				() => panel.classList.add('is-oculto'),
+				{ once: true },
+			);
+			window.setTimeout(() => panel.classList.add('is-oculto'), 1400);
+		}
+	}
+</script>

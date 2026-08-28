@@ -1,0 +1,101 @@
+---
+/**
+ * Icono.astro — set de íconos de línea propio de Sur en Ruta.
+ *
+ * Dibujados a mano (SVG inline, sin librería) tomando como GUÍA los 4 boards de identidad que
+ * pasó Ale el 2026-08-27 (concept boards en Downloads — no se copian literal, ver
+ * docs/decisiones/identidad-visual.md). Estilo del sistema:
+ *   - grilla 24×24, trazo 1.7, `stroke-linecap/linejoin: round`, `fill: none`
+ *   - una sola tinta: `stroke: currentColor` — el color lo pone quien lo usa (marino para
+ *     estructura, oliva para acento). Para "2 tintas" como en los boards, envolver y pintar el
+ *     contenedor de un color y pasar `acento` para las piezas marcadas con `data-acento`.
+ *
+ * Uso:
+ *   <Icono nombre="sello" />
+ *   <Icono nombre="ruta" tamano={40} />
+ *   <span style="color: var(--color-marino)"><Icono nombre="app" acento="var(--color-verde)" /></span>
+ */
+
+interface Props {
+  /** Clave del ícono (ver objeto `iconos` más abajo). */
+  nombre: keyof typeof iconos;
+  /** Lado del cuadro en px. Default 24. */
+  tamano?: number;
+  /** Color de las piezas marcadas `data-acento` (2ª tinta). Default: hereda `currentColor`. */
+  acento?: string;
+  /** Texto accesible. Si se omite, el ícono queda decorativo (`aria-hidden`). */
+  titulo?: string;
+}
+
+const { nombre, tamano = 24, acento, titulo } = Astro.props;
+
+// Cada entrada es el interior del <svg> (viewBox 0 0 24 24). Piezas con la 2ª tinta llevan
+// data-acento; el resto usa currentColor.
+const iconos = {
+  // ── Sección 2 · Problema / Oportunidad ─────────────────────────────────────
+  area: `<circle cx="12" cy="11" r="8.4" stroke-dasharray="2 2.4"/><path d="M12 6.6c-2 0-3.6 1.6-3.6 3.5 0 2.5 3.6 6.4 3.6 6.4s3.6-3.9 3.6-6.4c0-1.9-1.6-3.5-3.6-3.5Z"/><circle cx="12" cy="10" r="1.1" data-acento/>`,
+  'puntos-amigos': `<circle cx="9" cy="8" r="2.6"/><path d="M3.8 19c0-3.1 2.3-5.3 5.2-5.3s5.2 2.2 5.2 5.3"/><circle cx="16.6" cy="9" r="2.1" data-acento/><path d="M14.7 18.4c.2-2.9 2.1-4.8 4.4-4.8 1.2 0 2.3.5 3.1 1.4" data-acento/>`,
+  sello: `<circle cx="12" cy="9.4" r="5.2"/><path d="m9.7 9.5 1.7 1.7 3.1-3.3" data-acento/><path d="M9 13.7 7.3 21l4.7-2.6L16.7 21l-1.7-7.3"/>`,
+
+  // ── Sección 3 · Mapa y servicios (herramientas de la app) ──────────────────
+  app: `<rect x="6.5" y="2.5" width="11" height="19" rx="2.4"/><path d="M12 8.2c-1.7 0-3 1.3-3 2.9 0 2.1 3 5.1 3 5.1s3-3 3-5.1c0-1.6-1.3-2.9-3-2.9Z" data-acento/><circle cx="12" cy="11" r="1"/>`,
+  pasaporte: `<rect x="6" y="2.5" width="12" height="19" rx="1.6"/><path d="M9 2.5v19"/><circle cx="13.4" cy="10" r="3.1" data-acento/><path d="M13.4 6.9c-1.6 1.9-1.6 4.3 0 6.2m0-6.2c1.6 1.9 1.6 4.3 0 6.2M10.5 10h5.8" data-acento/><path d="M11 16.6h5"/>`,
+  senaletica: `<path d="M12 3v18"/><path d="M12 6h6.6l2 2-2 2H12Z" data-acento/><path d="M12 12.5H5.4l-2 2 2 2H12Z"/>`,
+  medicion: `<path d="M4 20h16"/><path d="M6.6 20v-4.4M11 20v-8M15.4 20v-5.8"/><path d="m5.6 10.2 4-3 3 2 5.4-4.4" data-acento/><path d="M18 4.8h-3m3 0v3" data-acento/>`,
+
+  // ── Sección 4 · Rutas temáticas (glifo por ruta) ──────────────────────────
+  ruta: `<path d="M6.6 21C6.6 14 13 14 13 9.5 13 5 9.6 3.4 9.6 3.4"/><path d="M11.4 21C11.4 15.4 18 15 18 9.5 18 4 13.6 3 13.6 3"/><path d="M9 20.4C9 15 15.4 14.7 15.4 9.6" stroke-dasharray="0.4 2.6" data-acento/>`,
+  uva: `<path d="M13 3.2c0 2-1.6 3-1.6 4.8" data-acento/><path d="M15.6 7.2c1.5 0 2.4 1 2.4 2.4" data-acento/><circle cx="9" cy="11" r="2"/><circle cx="13" cy="11" r="2"/><circle cx="11" cy="14.4" r="2"/><circle cx="15" cy="14.4" r="2"/><circle cx="13" cy="17.8" r="2"/>`,
+  ola: `<path d="M3 12c3-4 6-4 9 0s6 4 9 0"/><path d="M3 17c3-4 6-4 9 0s6 4 9 0" data-acento/>`,
+  termal: `<path d="M4 19.5c2-2 4-2 6 0s4 2 6 0 4-2 4 0" data-acento/><path d="M9 15c-1.2-1.6.6-2.6-.6-4.5M13 15c-1.2-1.6.6-2.6-.6-4.5M16 13.6c-1-1.3.5-2.2-.5-3.8"/>`,
+  granja: `<path d="M4 12 12 5l8 7"/><path d="M6 11v9h12v-9"/><rect x="10" y="14.6" width="4" height="5.4" data-acento/>`,
+  columnas: `<path d="M3.5 8 12 3l8.5 5Z"/><path d="M4 8h16"/><path d="M6.6 8v9M12 8v9M17.4 8v9"/><path d="M4 17.6h16"/>`,
+  montana: `<path d="M2.6 19 9 7l4 6.4 2.6-3.6L21.4 19Z"/><path d="m7.3 10.2 1.7-1 1.6 1.4" data-acento/>`,
+
+  // ── Sección 5 · Centro regional (3 pilares) ───────────────────────────────
+  ubicacion: `<path d="M12 21.4s7-7.6 7-12.3A7 7 0 0 0 5 9.1c0 4.7 7 12.3 7 12.3Z"/><circle cx="12" cy="9" r="2.6" data-acento/>`,
+  'base-conectada': `<circle cx="6" cy="7" r="2.2"/><circle cx="18" cy="7" r="2.2"/><circle cx="12" cy="18" r="2.2" data-acento/><path d="m7.7 8.7 3 7.2M16.3 8.7l-3 7.2M8.2 7h7.6"/>`,
+  servicios: `<path d="M15.1 6.5a3.8 3.8 0 0 0-5 4.9l-6 6a1.8 1.8 0 0 0 2.5 2.5l6-6a3.8 3.8 0 0 0 4.9-5l-2.6 2.6-1.9-1.9Z"/>`,
+
+  // ── Transversales / marca ─────────────────────────────────────────────────
+  camper: `<path d="M2.5 8.5h13.5V17H2.5Z"/><path d="M16 17v-6l3.6 3v3M16 14h3.6"/><circle cx="6.6" cy="17.4" r="1.7" data-acento/><circle cx="14.8" cy="17.4" r="1.7" data-acento/><rect x="4.4" y="10.6" width="4" height="3.2"/>`,
+  acampada: `<path d="M12 4 3.5 20h17Z"/><path d="M12 4v16M12 10l-4.5 10M12 10l4.5 10" data-acento/>`,
+  agua: `<path d="M12 3.2s-6.2 7-6.2 11.1a6.2 6.2 0 0 0 12.4 0C18.2 10.2 12 3.2 12 3.2Z"/>`,
+  confiable: `<path d="M12 3 19.5 5.7v5.1c0 5-3.4 8.7-7.5 10.1-4.1-1.4-7.5-5.1-7.5-10.1V5.7Z"/><path d="m8.8 11.7 2.2 2.2 4.2-4.6" data-acento/>`,
+  institucional: `<path d="M3.5 8 12 3l8.5 5Z"/><path d="M4 8h16"/><path d="M6.6 8v9M12 8v9M17.4 8v9"/><path d="M4 17.6h16"/>`,
+} as const;
+
+const contenido = iconos[nombre];
+const decorativo = !titulo;
+---
+
+<svg
+  class="icono"
+  viewBox="0 0 24 24"
+  width={tamano}
+  height={tamano}
+  fill="none"
+  stroke="currentColor"
+  stroke-width="1.7"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  role={decorativo ? undefined : 'img'}
+  aria-hidden={decorativo ? 'true' : undefined}
+  aria-label={titulo}
+  style={acento ? `--icono-acento: ${acento}` : undefined}
+  set:html={titulo ? `<title>${titulo}</title>${contenido}` : contenido}
+/>
+
+<style>
+  .icono {
+    display: inline-block;
+    vertical-align: middle;
+    flex-shrink: 0;
+  }
+
+  /* 2ª tinta: las piezas marcadas data-acento toman --icono-acento si se pasó `acento`,
+   * o siguen en currentColor si no (ícono monocromo por defecto). */
+  .icono :global([data-acento]) {
+    stroke: var(--icono-acento, currentColor);
+  }
+</style>

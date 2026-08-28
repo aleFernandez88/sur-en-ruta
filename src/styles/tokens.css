@@ -1,27 +1,100 @@
 /*
- * tokens.css — sistema de diseño de Sur en Ruta (landing de inversores)
+ * tokens.css — sistema de diseño de Sur en Ruta
  *
- * Nombres semánticos, nunca el nombre de la paleta: cuando exista
- * docs/decisiones/identidad-visual.md (paso 13 del plan de la landing), adoptar la paleta elegida
- * es cambiar los valores de esta capa, no repasar la landing entera. Son los mismos nombres de
- * token que usa prototipos/identidad/index.html, para que la decisión se traslade sin traducción.
+ * Nombres semánticos, nunca el nombre de la paleta: adoptar/ajustar la identidad es cambiar los
+ * valores de esta capa, no repasar la landing entera. Son los mismos nombres de token que usa
+ * prototipos/identidad/index.html, para que la decisión se traslade sin traducción.
+ *
+ * === IDENTIDAD DE COLOR — DEFINIDA 2026-08-27 ===
+ * Paleta adoptada de los 4 boards de identidad que pasó Ale (concept boards, "BRANDING SUR EN
+ * RUTA" y "SELLO VIAJERO RESPONSABLE" — no viven en el repo, están en Downloads). Ale confirmó
+ * el 2026-08-27 que estos boards mandan sobre el mazo de Ana para el color (el navy coincide en
+ * ambos; los boards traen verde OLIVA en vez del verde bosque del mazo, y suben terracota + arena
+ * a roles plenos de paleta). Sistema nombrado de 5 colores: azul institucional, verde territorio,
+ * terracota acento, arena, blanco. Ver docs/decisiones/identidad-visual.md para el detalle.
+ * Ya no es PROVISORIO. Pendiente aparte (copy, no color): el eslogan de los boards es "Uruguay
+ * en movimiento", el del mazo es "Conecta. Ordena. Potencia." — lo define Ana, no se toca acá.
  */
 
 :root {
-  /* === Color — PROVISORIO — reemplazar con docs/decisiones/identidad-visual.md === */
-  --color-fondo: #f3f1ec;
-  --color-tinta: #1e1d1b;
-  --color-acento: #163fbf;
-  --color-superficie: #e8e4d9;
+  /* ---------------------------------------------------------------------------
+   * FONDO Y SUPERFICIES
+   * El fondo NO es blanco puro: es un off-white cálido de tono arena diluido
+   * ("blanco manchado"), coherente con el ground de los boards de identidad.
+   * Cubre la mayor parte de la página. Las tarjetas que van encima SÍ son blanco
+   * puro (los boards listan Blanco #FFFFFF como color de superficie) — el
+   * contraste tarjeta-blanca / fondo-cálido es parte del look.
+   * ------------------------------------------------------------------------- */
+  --color-fondo: #f7f3ec;
+  /* Un punto más claro que --color-fondo: lo usa base.css para una viñeta radial
+   * muy sutil (los boards tienen ese degradé, más claro al centro-arriba). */
+  --color-fondo-halo: #fdfbf6;
+  --color-superficie: #ffffff;
+  /* Borde/separador apenas perceptible para tarjetas — hairline con matiz arena. */
+  --color-superficie-borde: #e8e1d2;
 
-  /* === Tipografía ===
-   * PROVISORIO — el paso 7 (tipografías self-hosted) depende de la decisión de identidad
-   * (paso 13), que todavía no existe. Mientras tanto se usa una pila de sistema/fallback
-   * genérica: no se embebe ninguna fuente real todavía.
+  /* ---------------------------------------------------------------------------
+   * TINTA (texto)
+   * Negro con matiz azul marino, nunca negro puro — coherente con la marca.
+   * ------------------------------------------------------------------------- */
+  --color-tinta: #1e2a38;
+  --color-tinta-suave: #59636e;
+
+  /* ---------------------------------------------------------------------------
+   * COLORES DE MARCA — sistema nombrado de 5 (de los boards de identidad)
+   *   Azul institucional · Verde territorio · Terracota acento · Arena · Blanco
+   * El azul es el primario (estructura, títulos, franjas macizas). El verde es
+   * el acento vivo (wordmark "SUR EN RUTA", segundo color de títulos, palabras
+   * resaltadas, dots). Terracota y arena YA NO son "uso mínimo": son roles
+   * plenos de la paleta (marcadores de mapa, categorías, superficies tintadas).
+   * ------------------------------------------------------------------------- */
+  --color-marino: #0f2b4d;
+  /* Variante oscura: círculos de ícono macizos, franjas inferiores. */
+  --color-marino-profundo: #0a2036;
+  /* Verde territorio: OLIVA, no verde bosque (esa es la diferencia con el mazo). */
+  --color-verde: #5a6b2e;
+  /* Verde oliva levantado, para acentos SOBRE fondo oscuro (donde el oliva se
+   * empasta) y para resaltar palabras sueltas. Derivado, no está en los boards. */
+  --color-verde-vivo: #8c9c50;
+
+  /* Terracota acento: marcadores de mapa "territorial", detalles, el pin del logo. */
+  --color-terracota: #c55a3a;
+  /* Arena: superficies tintadas, marcadores "moderna"/"áreas de servicio", el
+   * "sol" del isotipo. Es tinte, no color de texto. */
+  --color-arena: #e7dfc9;
+
+  /* Alias de compatibilidad: varios componentes ya escritos consumen
+   * --color-acento (skip-link, foco visible, destacados de Sistema/Inversión).
+   * El acento principal de la marca es el marino. */
+  --color-acento: var(--color-marino);
+  --color-acento-verde: var(--color-verde);
+
+  /* === Tipografía — DEFINIDA 2026-08-27 ===
+   * Self-hosted, cargadas en src/styles/fuentes.css. Elegidas para acercarse a lo que muestran
+   * los boards de identidad ("serif institucional para títulos" + "sans limpia para textos" —
+   * no nombran familias). Ver docs/decisiones/identidad-visual.md § Tipografía.
+   *   - Lora          → títulos, wordmark, cifras destacadas
+   *   - Source Sans 3 → cuerpos, bajadas, UI, labels
+   * Las fallback están elegidas para parecerse en métricas y bajar el layout shift del swap.
    */
-  --fuente-titular: ui-serif, Georgia, "Times New Roman", serif;
-  --fuente-texto: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
+  --fuente-titular: 'Lora', ui-serif, Georgia, 'Times New Roman', serif;
+  --fuente-texto: 'Source Sans 3', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Arial, sans-serif;
+  /* Enunciados a tamaño display (hoy: la frase de la Portada). Archivo — elegida el 2026-08-28
+   * en reemplazo de Work Sans, tras comparar contra Schibsted Grotesk / Public Sans, buscando
+   * acercarse a la referencia "Neue Haas Grotesk Text Pro" (Monotype, de pago) que trajo Ale. */
+  --fuente-display: 'Archivo', var(--fuente-texto);
   --escala-titular: 1;
+
+  /* Fuente del LOGOTIPO — solo donde aparece "Sur en Ruta" como marca (preloader, eyebrow del
+   * Hero). Italiana: Didone delicada de alto contraste, un solo peso. NO usarla para texto ni
+   * títulos de sección (a tamaño chico las astas finas se pierden). Ale la eligió el 2026-08-27
+   * en reemplazo de la aproximación a la fuente comercial del logo (Passenger Display, de pago). */
+  --fuente-marca: 'Italiana', 'Lora', ui-serif, Georgia, serif;
+
+  /* Grotesca FINA (peso 300) que complementa a Archivo (--fuente-display) sin ser la misma
+   * familia — elegida el 2026-08-28 para los nombres de sección del menú de HiloRuta (panel de
+   * pantalla completa). Uso puntual, no reemplaza ningún rol de los 4 cerrados el 27/8. */
+  --fuente-fina: 'Space Grotesk', var(--fuente-texto);
 
   /* Escala tipográfica fluida */
   --texto-xs: clamp(0.75rem, 0.71rem + 0.2vw, 0.85rem);
@@ -47,31 +120,34 @@
   --radio-lg: 1rem;
   --radio-full: 999px;
 
-  /* === Color de rutas temáticas — PROVISORIO ===
-   * 6 colores distinguibles para las 6 rutas de la sección 4 (src/data/rutas.ts). No son parte
-   * de la paleta core (fondo/tinta/acento/superficie) que decide Ana en el prototipo de
-   * identidad — es una asignación propia, a revisar junto con la identidad definitiva (paso 13).
-   * Viven acá y no como hex sueltos en el dato para que reemplazarlos sea editar este archivo,
-   * no recorrer componentes.
+  /* === Color de rutas temáticas ===
+   * 6 colores distinguibles para las 6 rutas de la sección 4 (src/data/rutas.ts). Ni el mazo ni
+   * los boards asignan un color por ruta: es una asignación propia. Retuneada el 2026-08-27
+   * para armonizar con el sistema de 5 (marino + oliva + terracota + arena) — tonos terrosos y
+   * apagados, ninguno fluor. Si Ana define colores oficiales por ruta, se reemplazan acá.
    */
-  --color-ruta-vino: #7b2d43;
-  --color-ruta-oceanica: #1b6fa8;
-  --color-ruta-termal: #c1653c;
-  --color-ruta-rural: #6b8e4e;
-  --color-ruta-patrimonial: #8b5a9e;
-  --color-ruta-naturaleza: #2f9e7a;
+  --color-ruta-vino: #7a3540;
+  --color-ruta-oceanica: #2f5d78;
+  --color-ruta-termal: #bf6b3a;
+  --color-ruta-rural: #6b7d3a;
+  --color-ruta-patrimonial: #75607f;
+  --color-ruta-naturaleza: #3d7a5c;
 
-  /* === Color de pavimento y cartel de ruta (HiloRuta) ===
-   * Representan asfalto/demarcación/señalización real, no paleta de marca — por eso no llevan la
-   * marca PROVISORIO de arriba (no dependen de docs/decisiones/identidad-visual.md). Viven acá
-   * igual, y no como hex sueltos en el componente, por la misma regla de "un solo lugar para
-   * tocar". `--color-linea-borde` (líneas blancas de los laterales) se sacó del componente el
-   * 2026-08-24 y quedó sin usar — no se vuelve a agregar acá salvo que el diseño la traiga de
-   * vuelta.
+  /* === Celeste de bandera (HiloRuta, barra lateral) ===
+   * Referencia Pantone 279 C, el celeste más citado para la franja de la bandera uruguaya
+   * (misma familia que la argentina, herencia de Belgrano) — punto de partida, ajustable en vivo.
+   * Uso: color de "progreso ya recorrido" de la línea/nodos de HiloRuta, sobre el marino de base.
+   */
+  --color-celeste: #6cace4;
+
+  /* === Color de pavimento y cartel de ruta (HiloRuta, versión horizontal vieja) ===
+   * Representan asfalto/demarcación real. Sin uso desde el 2026-08-28 (HiloRuta se rediseñó como
+   * barra lateral vertical, ver --ancho-hilo-ruta abajo) — se dejan por si algún día se retoma la
+   * estética de "ruta vista desde arriba" en otra parte del sitio.
    */
   --color-asfalto: #4a4a4a;
   --color-linea-central: #ffc82c;
-  --color-cartel-fondo: #1b4d8f;
+  --color-cartel-fondo: var(--color-marino);
   --color-cartel-texto: #ffffff;
   /* Poste de CartelSeccion.astro: gris clarito, un solo color, sin textura — a propósito
    * distinto del asfalto (más oscuro, es pavimento, no un poste). */
@@ -80,29 +156,22 @@
    * es nada más que --color-poste oscurecido. */
   --color-poste-sombra: #a3a3a3;
 
-  /* Alto de HiloRuta (src/components/HiloRuta.astro): un solo valor para el componente y para el
-   * padding-top que le deja lugar en src/styles/base.css, así no se desincroniza uno del otro.
-   * Tiene que coincidir con el alto del viewBox del SVG adentro del componente (hoy 68), porque
-   * la geometría del componente (curva, cartelitos con poste) se calcula asumiendo esa
-   * correspondencia 1 a 1. Subió de 45 a 68 el 2026-08-24 para que entrara el cartelito con poste
-   * arriba de la ruta sin recortarse contra el borde del contenedor. */
-  --alto-hilo-ruta: 68px;
+  /* Ancho de HiloRuta (src/components/HiloRuta.astro), rediseñada el 2026-08-28 como barra
+   * lateral izquierda fija (antes: barra horizontal arriba, token se llamaba --alto-hilo-ruta).
+   * Un solo valor para el componente y para cualquier padding-left que otros componentes necesiten
+   * dejarle (ej. Hero.astro), así no se desincronizan. */
+  --ancho-hilo-ruta: 64px;
 
   /* === Color de texto sobre foto (Hero) ===
    * El resto de la landing usa texto oscuro (--color-tinta) sobre fondo claro. Encima de la foto
-   * del Hero eso no funciona: hace falta texto claro con buen contraste. No es exactamente una
-   * decisión de marca (es una necesidad de legibilidad que depende de la foto de fondo, no de la
-   * paleta), pero igual queda como token — mismo criterio de "un solo lugar para tocar" que el
-   * resto de este archivo. Blanco liso por ahora; se revisa junto con la identidad definitiva por
-   * si alguna de las 4 paletas pide un blanco con matiz en vez de uno puro.
+   * del Hero eso no funciona: hace falta texto claro con buen contraste. Blanco liso.
    */
   --color-texto-sobre-foto: #ffffff;
 
   /* === Velo de contraste sobre foto (Hero) ===
-   * Capa oscura translúcida adicional al tinte de --hero-overlay, independiente de --color-tinta
-   * a propósito: si la identidad definitiva cambia --color-tinta a un tono que no sea oscuro, esta
-   * capa tiene que seguir garantizando contraste para el texto claro de encima. Negro liso, no
-   * depende de marca — mismo criterio que --color-texto-sobre-foto.
+   * Capa oscura translúcida adicional al tinte de --hero-overlay. Se dejó negro liso a propósito,
+   * independiente de --color-tinta: su trabajo es garantizar contraste para el texto claro de
+   * encima, no seguir la marca.
    */
   --color-velo-foto: #000000;
 }

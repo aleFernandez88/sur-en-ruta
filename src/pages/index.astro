@@ -1,43 +1,46 @@
 ---
 /**
- * index.astro — landing de Sur en Ruta. Ensambla las 5 pantallas fijadas por el pivot de
- * audiencia del 2026-08-26 (ver docs/planes/2026-08-26-pivot-audiencia-general.md y
- * docs/landing-contenido.md): Hero → Problema/Oportunidad → Mapa y servicios → Rutas/Pasaporte →
- * Centro Regional.
+ * index.astro — landing de Sur en Ruta. Ensambla el recorrido definido por el pivot de audiencia
+ * del 2026-08-26 (ver docs/planes/2026-08-26-pivot-audiencia-general.md y
+ * docs/landing-contenido.md): Portada (Sección 0) → 1 Problema/Oportunidad → 2 Mapa y servicios →
+ * 3 Rutas/Pasaporte → 4 Centro Regional.
  *
- * Mecánica de transición ("cinta", ver Pantalla.astro y base.css — reemplaza a la de "hoja que
- * tapa y descubre" probada antes el mismo día): cada pantalla es una tarjeta al 82% de la
- * pantalla, salvo el Hero (`completa`), que pega fuerte a pantalla completa. Probada en
- * prototipos/efecto-cinta/index.html, portada acá el 2026-08-26.
+ * 2026-08-27: se levantó la regla de "exactamente 5 pantallas, sin partir ninguna". Cada sección
+ * de contenido puede ocupar 1 o más <Pantalla> de la "cinta" (se decide al implementarla) — la
+ * mecánica no tiene tope de cantidad.
  *
- * Solo Hero tiene contenido real todavía — las otras 4 son SlidePlaceholder mientras se recorta
- * el copy de docs/landing-contenido.md a una pantalla cada una (se van reemplazando una por una,
- * sin volver a tocar este archivo en cada paso, mismo criterio que en la migración anterior).
+ * 2026-08-27 (noche): se decidió seguir el mazo de Ana (10 páginas) 1:1 — ver
+ * docs/landing-contenido.md. Se armará pantalla por pantalla, guiado por Ale, no todo de una vez.
+ * Por ahora solo la Portada (Pantalla 0) tiene contenido real; el resto son SlidePlaceholder.
+ *
+ * Mecánica de transición ("cinta", ver Pantalla.astro y base.css): cada pantalla es una tarjeta
+ * al 82% del viewport, salvo el Hero (`completa`), que pega fuerte a pantalla completa.
  */
 import Base from '../layouts/Base.astro';
 import Pantalla from '../components/Pantalla.astro';
 import Hero from '../components/Hero.astro';
+import Lamina from '../components/Lamina.astro';
 import SlidePlaceholder from '../components/SlidePlaceholder.astro';
-// import Problema from '../components/Problema.astro';
-// import Sistema from '../components/Sistema.astro';
-// import Rutas from '../components/Rutas.astro';
-// import Inversion from '../components/Inversion.astro';
 ---
 
 <Base>
 	<Pantalla id="hero" completa>
 		<Hero />
 	</Pantalla>
-	<Pantalla id="problema">
-		<SlidePlaceholder color="var(--color-ruta-vino)" etiqueta="2 — Problema/Oportunidad + Sello" />
+	<Pantalla id="oportunidad" completa>
+		<Lamina indice={0}>
+			<p style="font-family: var(--fuente-texto); color: var(--color-tinta-suave)">
+				Pantalla 1 — shell (fondo claro + footer navy con borde ondulado continuo).
+			</p>
+		</Lamina>
 	</Pantalla>
 	<Pantalla id="mapa">
-		<SlidePlaceholder color="var(--color-ruta-oceanica)" etiqueta="3 — Mapa y servicios" />
+		<SlidePlaceholder color="var(--color-ruta-oceanica)" etiqueta="2 — Mapa y servicios" />
 	</Pantalla>
 	<Pantalla id="rutas">
-		<SlidePlaceholder color="var(--color-ruta-rural)" etiqueta="4 — Rutas + Pasaporte" />
+		<SlidePlaceholder color="var(--color-ruta-rural)" etiqueta="3 — Rutas + Pasaporte" />
 	</Pantalla>
 	<Pantalla id="centro-regional">
-		<SlidePlaceholder color="var(--color-ruta-naturaleza)" etiqueta="5 — Centro Regional" />
+		<SlidePlaceholder color="var(--color-ruta-naturaleza)" etiqueta="4 — Centro Regional" />
 	</Pantalla>
 </Base>

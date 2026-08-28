@@ -1,0 +1,146 @@
+/*
+ * fuentes.css — tipografía self-hosted de Sur en Ruta (paso 7 del plan).
+ *
+ * Elegidas el 2026-08-27 para acercarse a lo que muestran los boards de identidad (ver
+ * docs/decisiones/identidad-visual.md § Tipografía): los boards no nombran familias, solo piden
+ * "serif institucional para títulos" + "sans serif limpia para textos". Se identificó el tipo por
+ * la forma de las letras en las láminas y se eligieron equivalentes libres:
+ *   - Títulos / wordmark  →  Lora        (serif de contraste moderado, serifas con bracket, cálida)
+ *   - Cuerpos / UI        →  Source Sans 3 (humanista, neutra, muy legible; combina con Lora)
+ *
+ * Los .woff2 viven en src/assets/fonts/ (bajados de Google Fonts, subsets latin + latin-ext,
+ * licencia SIL OFL — libre para uso comercial y para redistribuir). Son fuentes VARIABLES: un
+ * solo archivo por familia cubre todo el rango de peso que declaramos.
+ *
+ * `font-display: swap` — el texto se ve enseguida con la fallback y cambia a la real al cargar
+ * (coherente con prefers-reduced-motion / rendimiento; el layout shift se acota abajo con las
+ * métricas de override).
+ */
+
+/* ── Italiana (SOLO el logotipo / nombre de marca) ────────────────────────────
+ * Un solo peso (400), estática, sin itálica — así la publica Google Fonts. Es una Didone
+ * delicada de alto contraste, pensada para titulares. Se usa EXCLUSIVAMENTE donde aparece el
+ * nombre "Sur en Ruta" como marca (preloader, eyebrow del Hero) — NO como fuente de texto ni de
+ * títulos de sección: a tamaño chico las astas finas desaparecen. Subset latin (cubre español).
+ * Diseño: Santiago Orozco. Licencia SIL OFL.
+ */
+@font-face {
+  font-family: 'Italiana';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('../assets/fonts/italiana-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC,
+    U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215,
+    U+FEFF, U+FFFD;
+}
+
+/* ── Archivo (enunciado de la Portada / display) ─────────────────────────────
+ * Variable (declaramos 400–900). Elegida el 2026-08-28 en reemplazo de Work Sans: Ale trajo como
+ * referencia "Neue Haas Grotesk Text Pro" (Monotype, de pago, no self-hosteable) y se comparó en
+ * vivo contra Schibsted Grotesk y Public Sans (otras grotescas libres candidatas, descartadas).
+ * Grotesca de alto contraste, más geométrica que Work Sans. Token `--fuente-display` en
+ * tokens.css. Subsets latin + latin-ext.
+ */
+@font-face {
+  font-family: 'Archivo';
+  font-style: normal;
+  font-weight: 400 900;
+  font-display: swap;
+  src: url('../assets/fonts/archivo-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC,
+    U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215,
+    U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Archivo';
+  font-style: normal;
+  font-weight: 400 900;
+  font-display: swap;
+  src: url('../assets/fonts/archivo-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304,
+    U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0,
+    U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+/* ── Space Grotesk (menú de HiloRuta, nombres de sección) ────────────────────
+ * Elegida el 2026-08-28: Ale pidió una grotesca FINA que complemente a Archivo (Hero) sin ser la
+ * misma familia — Space Grotesk comparte linaje (grotesca) pero con personalidad propia (la "a"
+ * de un solo piso, formas más cuadradas), usada en peso 300 (Light). Variable (declaramos
+ * 300–500, por si en algún momento hace falta un peso intermedio). Token `--fuente-fina` en
+ * tokens.css, uso puntual — no reemplaza a --fuente-display ni a los otros 3 roles cerrados.
+ */
+@font-face {
+  font-family: 'Space Grotesk';
+  font-style: normal;
+  font-weight: 300 500;
+  font-display: swap;
+  src: url('../assets/fonts/space-grotesk-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC,
+    U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215,
+    U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Space Grotesk';
+  font-style: normal;
+  font-weight: 300 500;
+  font-display: swap;
+  src: url('../assets/fonts/space-grotesk-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304,
+    U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0,
+    U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+/* ── Lora (títulos) ───────────────────────────────────────────────────────── */
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url('../assets/fonts/lora-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC,
+    U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215,
+    U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url('../assets/fonts/lora-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304,
+    U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0,
+    U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: italic;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url('../assets/fonts/lora-latin-italic.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC,
+    U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215,
+    U+FEFF, U+FFFD;
+}
+
+/* ── Source Sans 3 (cuerpos / UI) ─────────────────────────────────────────── */
+@font-face {
+  font-family: 'Source Sans 3';
+  font-style: normal;
+  font-weight: 300 700;
+  font-display: swap;
+  src: url('../assets/fonts/source-sans-3-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC,
+    U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215,
+    U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Source Sans 3';
+  font-style: normal;
+  font-weight: 300 700;
+  font-display: swap;
+  src: url('../assets/fonts/source-sans-3-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304,
+    U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0,
+    U+2113, U+2C60-2C7F, U+A720-A7FF;
+}

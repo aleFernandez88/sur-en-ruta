@@ -1,0 +1,102 @@
+---
+/**
+ * Lamina.astro — shell de las pantallas que siguen el mazo de Ana (ver docs/landing-contenido.md).
+ * Se arma por partes, guiado por Ale. Estado actual (2026-08-27):
+ *   1. Fondo claro cálido (--color-fondo), a pantalla completa.
+ *   2. Footer navy (--color-marino, color plano — sin textura ni línea de ruta todavía) con el
+ *      **borde superior ondulado y CONTINUO entre pantallas**.
+ *
+ * Cómo es continuo: la onda es UNA sola función `banda(x)` definida sobre el ancho de todas las
+ * pantallas del mazo. Cada lámina recibe su `indice` y dibuja solo su tramo `[indice, indice+1]`.
+ * La pantalla vecina evalúa la misma función en el límite → la altura coincide exacto, la costura
+ * es invisible. Sin llevar cuenta a mano.
+ *
+ * Todavía NO tiene: textura topo, línea de ruta con nodos, "URUGUAY · CONECTA. ORDENA. POTENCIA.",
+ * isotipo, eyebrow de puntos, foto lateral. Se agregan en pasos siguientes.
+ *
+ * Va dentro de <Pantalla completa> en index.astro.
+ */
+interface Props {
+  /** Posición de esta pantalla entre las del mazo (0 = primera). Fija la fase de la onda. */
+  indice?: number;
+}
+const { indice = 0 } = Astro.props;
+
+/* Onda del footer — spec de Ale (2026-08-27):
+ *  - En el borde de la pantalla (la costura) el navy tiene BASE px de alto.
+ *  - De ahí sube a una cresta, después baja a un valle: UNA subida y UNA bajada por pantalla.
+ *  - Al final vuelve a subir y el borde derecho de la pantalla la corta EN LA MITAD de esa
+ *    subida — que es justo la altura BASE otra vez → engancha con la pantalla siguiente.
+ * Es un período de seno completo por pantalla con fase 0 (cruce ascendente en cada costura).
+ * Todas las pantallas dibujan la misma forma; las costuras coinciden exacto. `indice` no cambia
+ * la forma (seno entero) pero se deja por si algún día se quiere que derive. */
+const BASE = 100; // px — alto del navy en la costura
+const AMP = 42; // px — cuánto sube/baja respecto de BASE
+const AIRE = 14; // px — margen arriba de la cresta
+const ALTO = BASE + AMP + AIRE; // alto del <svg>/footer en px
+
+const alto = (t: number): number => BASE + AMP * Math.sin(2 * Math.PI * (indice + t));
+const yv = (t: number): string => (ALTO - alto(t)).toFixed(2);
+
+const N = 44;
+let d = `M 0 ${yv(0)}`;
+for (let k = 1; k <= N; k++) {
+  d += ` L ${((k / N) * 100).toFixed(2)} ${yv(k / N)}`;
+}
+d += ` L 100 ${ALTO} L 0 ${ALTO} Z`;
+---
+
+<div class="lamina" style={`--footer-alto: ${ALTO}px`}>
+  <div class="lamina__cuerpo">
+    <slot />
+  </div>
+  <footer class="lamina__footer" aria-hidden="true">
+    <svg class="lamina__onda" viewBox={`0 0 100 ${ALTO}`} preserveAspectRatio="none">
+      <path d={d} fill="var(--color-marino)"></path>
+    </svg>
+    <div class="lamina__footer-contenido"><slot name="footer" /></div>
+  </footer>
+</div>
+
+<style>
+  .lamina {
+    position: relative;
+    height: 100%;
+    background-color: var(--color-fondo);
+    color: var(--color-tinta);
+    overflow: hidden;
+  }
+
+  .lamina__cuerpo {
+    position: relative;
+    z-index: 1;
+    height: 100%;
+    /* Deja libre la zona del footer (incluida la cresta de la onda) para que el contenido no
+     * quede tapado. --footer-alto lo fija el componente (px). */
+    padding: clamp(3rem, 8vh, 5.5rem) clamp(1.5rem, 5vw, 4rem)
+      calc(var(--footer-alto) + clamp(1rem, 3vh, 2rem));
+  }
+
+  .lamina__footer {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 2;
+    height: var(--footer-alto);
+  }
+
+  .lamina__onda {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+
+  .lamina__footer-contenido {
+    position: relative;
+    z-index: 1;
+    height: 100%;
+  }
+</style>

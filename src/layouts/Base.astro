@@ -4,10 +4,10 @@
  *
  * Sin analytics de terceros en la v1 (ver docs/planes/2026-08-20-landing-inversores.md, paso 10).
  *
- * Incluye HiloRuta, el trazo fijo que se dibuja con el scroll (no de una sección): vive acá y no
- * en Hero.astro porque es un elemento persistente, no de una sección. **Oculto desde el
- * 2026-08-26** (comentado más abajo, no borrado) mientras se define su futuro con la mecánica
- * nueva de abajo — ver la memoria del proyecto.
+ * Incluye HiloRuta, la barra de navegación general fija al borde izquierdo (rediseñada el
+ * 2026-08-28 como barra lateral vertical — vive acá y no en Hero.astro porque es un elemento
+ * persistente de toda la página, no de una sección. Estuvo oculta entre el 2026-08-26 y el
+ * 2026-08-28 mientras se definía la mecánica de "cinta" de abajo — ver la memoria del proyecto.
  *
  * 2026-08-25 — migración a slide horizontal: .hz-viewport/.hz-track (ver base.css) envuelven el
  * truco de rotación CSS que hace que el scroll vertical real se vea como un avance horizontal.
@@ -18,9 +18,11 @@
  * al esquema original: las 5 <Pantalla> viven DENTRO de .hz-track, en fila — por eso <main>
  * necesita `display:contents` (ver base.css) para no romper esa fila con una caja propia.
  */
+import '../styles/fuentes.css';
 import '../styles/tokens.css';
 import '../styles/base.css';
-// import HiloRuta from '../components/HiloRuta.astro'; // oculto, ver nota de arriba
+import Preloader from '../components/Preloader.astro';
+import HiloRuta from '../components/HiloRuta.astro';
 
 interface Props {
   title?: string;
@@ -41,6 +43,18 @@ const urlImagenOG = new URL('/og-image.png', Astro.site ?? 'https://surenruta.uy
 	<head>
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+		{/* Marca "JS activo" antes de pintar: sin esto, las animaciones de entrada (Hero) quedan
+		   como estado inicial oculto si el JS no corre. Con .js las anima; sin .js, todo visible. */}
+		<script is:inline>
+			document.documentElement.classList.add('js');
+			/* Red de seguridad: si el preloader no dispara `entrada` (JS roto, componente sacado),
+			   igual se revela el contenido a los 4,5 s. El camino normal lo pone Preloader.astro
+			   al abrir la cortina, mucho antes. */
+			setTimeout(function () {
+				document.documentElement.classList.add('entrada');
+			}, 4500);
+		</script>
 
 		<title>{title}</title>
 		<meta name="description" content={description} />
@@ -63,22 +77,20 @@ const urlImagenOG = new URL('/og-image.png', Astro.site ?? 'https://surenruta.uy
 		<meta name="twitter:image" content={urlImagenOG} />
 
 		<!--
-			PROVISORIO: tiene que ser el mismo hex que --color-fondo en src/styles/tokens.css. Un
-			<meta> no puede leer un custom property de CSS, así que este valor se actualiza a mano
-			en el paso 13 (identidad definitiva) — no se olvida de tocarlo junto con tokens.css.
+			Tiene que ser el mismo hex que --color-fondo en src/styles/tokens.css. Un <meta> no
+			puede leer un custom property de CSS, así que este valor se actualiza a mano cuando
+			cambie la identidad — tocarlo junto con tokens.css.
 		-->
-		<meta name="theme-color" content="#f3f1ec" />
+		<meta name="theme-color" content="#f7f3ec" />
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 		<link rel="icon" href="/favicon.ico" />
 
 		<meta name="generator" content={Astro.generator} />
 	</head>
 	<body>
+		<Preloader />
 		<a href="#contenido-principal" class="skip-link">Saltar al contenido principal</a>
-		<!-- 2026-08-26: HiloRuta oculto a pedido de Ale mientras se define el nuevo efecto de
-		     transición entre pantallas (inspirado en bertani.net / venus-story.com). El
-		     componente no se borra, solo se deja de renderizar — descomentar para restaurarlo. -->
-		<!-- <HiloRuta /> -->
+		<HiloRuta />
 		<div class="hz-viewport">
 			<div class="hz-track">
 				<main id="contenido-principal">

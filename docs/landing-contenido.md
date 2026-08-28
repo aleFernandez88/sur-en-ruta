@@ -1,222 +1,272 @@
 # Contenido de la landing — Sur en Ruta / Proyecto RENAMU
 
-**Fecha:** 2026-08-26 (reescritura completa — este archivo se llamaba
-`landing-inversores-contenido.md` y tenía la estructura vieja, orientada a inversores, con
-presupuesto y timeline de etapas. Ana pidió el pivot de audiencia el 2026-08-26: ver
-`docs/planes/2026-08-26-pivot-audiencia-general.md` para el análisis completo y las respuestas.)
+**Reescritura 2026-08-27.** Ale decidió seguir el mazo de Ana (`Presentacion Sur en Ruta
+RENAMU.pdf`, 10 páginas) **página por página**: ~10 pantallas de la "cinta" horizontal.
+El copy de cada pantalla es el **literal del mazo** (transcrito en
+`docs/comparativa-mazo-vs-landing.md` — el PDF no tiene capa de texto, transcripción a mano de los
+renders, verificar contra la imagen antes de dar por final).
 
-**Para qué es esto:** borrador de copy por sección (texto solo, sin HTML/CSS) para la landing ya
-reescrita como pieza de comunicación/publicidad de alcance general — **no** una propuesta de
-inversión. Muestra qué se llegaría a alcanzar con la app y el sistema RENAMU. Sin negocio, sin
-presupuesto, sin dossier.
+**Decisiones de Ale (2026-08-27):**
+1. 10 pantallas (mazo 1:1), no 5.
+2. Pantalla 1: los **4 chips del mazo** (Libertad · Naturaleza · Experiencias · Economía local),
+   no los elementos del sistema.
+3. **Entra** la pantalla "¿Qué es RENAMU / Sur en Ruta?" (pág. 3) — es diferenciación, no
+   explicación al detalle.
+4. **Van las frases de apoyo** por ítem (las que el mazo pone bajo cada título).
 
-**Estructura:** 5 secciones — Introducción → Problema/Oportunidad (+ Sello Viajero Responsable)
-→ Mapa y servicios (cómo funciona la app) → Rutas temáticas y Pasaporte → Centro regional para
-el viajero extranjero.
-
-**Fuente de contenido (regla del `CLAUDE.md`, sección 6):** todo sale de dos documentos —
-el PDF de propuesta original (`Activa turismo propuesta.pdf`) y el mazo de referencia que armó
-Ana (`Presentacion Sur en Ruta RENAMU.pdf`, 10 páginas) — ninguno vive en este repo. Cada bloque
-cita de cuál sale.
-
-**Regla de honestidad (sigue vigente, sección 7 del `CLAUDE.md`):** cero métricas de tracción
-inventadas. Las capturas de app que muestra el mazo de Ana (mapa con pines, rutas destacadas) se
-presentan en la landing como **concepto/visión de producto**, no como red ya cargada.
-
-**Sin CTA transaccional:** la landing es 100% informativa por ahora (confirmado por Ana,
-2026-08-26). Ninguna sección pide una acción (ni contacto, ni dossier, ni formulario).
-
-**Mecánica de transición — actualizado 2026-08-26 (tarde):** el slide horizontal cambia de
-mecánica. Ale pidió un efecto tipo "hoja que tapa y descubre" (inspirado en un sitio de
-referencia) — probado y confirmado en `prototipos/transicion-sweep/index.html`: las pantallas
-**impares quedan quietas** (1, 3, 5), las **pares actúan como una hoja** que entra desde la
-derecha tapando a la impar anterior y sigue de largo hasta salir del todo por la izquierda,
-descubriendo a la impar siguiente — todo atado 1 a 1 al scroll, sin JS (CSS puro con un
-scroll-timeline con nombre, misma técnica que ya usa `HiloRuta`). Por esta mecánica, **la
-cantidad total de pantallas tiene que ser impar** (siempre arranca y termina en una quieta).
-
-**Decisión de reparto (2026-08-26): 5 pantallas, sin partir ninguna** — se descartó la opción de
-partir Problema/Oportunidad y Mapa y servicios en 2 cada una (que hubiera dado 7). Los 5 temas de
-abajo mapean 1 a 1 a las 5 pantallas, en este rol:
-
-| # | Pantalla | Tema | Rol |
-|---|---|---|---|
-| 1 | Hero | Introducción | Quieta |
-| 2 | Problema/Oportunidad + Sello | — | Hoja |
-| 3 | Mapa y servicios | Cómo funciona la app | Quieta |
-| 4 | Rutas + Pasaporte | — | Hoja |
-| 5 | Centro Regional | — | Quieta |
-
-Esto obligó a **recortar** el contenido de la sección 2 (que antes estaba pensado como 2a/2b,
-~200 palabras entre las dos) a una sola pantalla — ver la versión recortada más abajo.
+**Reglas que se mantienen** (`CLAUDE.md`): sin CTA transaccional; regla de honestidad sobre
+tracción (los mockups de app se muestran como concepto, con rótulo tipo "Vista conceptual"); todo
+número/nombre sale del mazo o del PDF de propuesta.
 
 ---
 
-## 1. Hero — Introducción — pantalla "quieta"
+## Sistema visual del mazo (se replica, SVG inline propio)
 
-**Eyebrow:** RENAMU · Sur en Ruta
+- **Fondo claro cálido** = `--color-fondo` (`#f7f3ec`). Zona de contenido a la izquierda, con una
+  **curva orgánica** que la separa de la foto.
+- **Foto a la derecha** que sangra por el borde, con **corte en curva S**.
+- **Footer ondulado navy** de borde a borde (a veces con verde debajo, textura de curvas de
+  nivel, **línea de ruta punteada** con nodos, y una frase de cierre — a veces en pill navy).
+- **Título** bicolor: primera parte navy, resto verde; mayúsculas; **subrayado verde corto**.
+- **Eyebrow**: grilla de puntos (verde) + línea vertical punteada, arriba a la izquierda.
+- **Isotipo** (colinas + ruta S + camper) flotando arriba a la derecha en la mayoría de láminas.
+- **Foto-tarjetas**: redondeadas, blancas, sombra difusa, foto arriba + círculo de ícono + título
+  + texto.
+- Número de página abajo a la derecha (en la landing puede omitirse o volverse indicador de
+  progreso).
 
-**Titular:** El país entero, en una sola red.
-*(mazo de Ana, pág. 1 — coincide literal con el titular que ya estaba escrito antes del pivot.)*
-
-**Bajada:** Una red para ordenar y potenciar el turismo itinerante en Uruguay — conecta
-viajeros, territorios, servicios y experiencias. *(mazo, pág. 1)*
-
-**Sin barra de datos ancla ni CTA.** La versión anterior tenía una barra con "Piloto: Maldonado ·
-90 días" y "6 componentes de sistema" — eran datos pensados para due diligence de inversor. Se
-sacan: son detalle operativo, no algo que un visitante general necesite en el primer vistazo. El
-Hero queda solo con eyebrow + titular + bajada, sobre la foto real ya cargada
-(`src/assets/hero/`) — el visual no cambia, solo el texto que lo acompaña.
-
----
-
-## 2. Problema y Oportunidad (+ Sello Viajero Responsable) — pantalla "hoja"
-
-*(mazo, pág. 2 "La oportunidad", pág. 5 "Puntos que hacen funcionar la red", pág. 8 "Una red que
-beneficia a todos". Nota de Ana: "acá me parece calza lo de Viajero responsable".)*
-
-**Recortado a una sola pantalla (2026-08-26)** — la versión anterior (2a/2b, ver historial más
-abajo) tenía ~200 palabras entre dos bloques; con 5 pantallas fijas esta sección entra en una
-sola, ~90 palabras. Se sacrifican detalle: las 3 columnas "quién se beneficia" y las 4 palabras
-sueltas de "pilares" (Libertad/Naturaleza/Experiencias/Economía local) — la idea que transmitían
-queda condensada en el cuerpo.
-
-**Titular:** Una nueva forma de viajar necesita una nueva forma de organizarse.
-
-**Cuerpo:** El turismo itinerante crece porque combina libertad, flexibilidad y contacto con el
-territorio. La oportunidad está en ordenar esa experiencia: espacios habilitados, comercios
-aliados y buenas prácticas compartidas.
-
-**3 íconos cortos:** Áreas habilitadas · Puntos Amigos · Sello Viajero Responsable.
-
-**Sello Viajero Responsable (mención conceptual, no el flujo completo):** un sello que reconoce a
-quienes viajan con compromiso, respeto y buenas prácticas. *(El flujo completo de "cómo
-obtenerlo", el certificado digital y el QR — pág. 8 del mazo — quedan para la experiencia dentro
-del producto, no para la landing; a confirmar con Ana, ver pregunta 3 del plan.)*
-
-**Línea de cierre:** Sin una red organizada, la experiencia pierde claridad y confianza.
-
-<details>
-<summary>Historial: versión anterior en 2 pantallas (2a/2b), descartada el 2026-08-26</summary>
-
-**2a. La oportunidad** — Titular "Una nueva forma de viajar necesita una nueva forma de
-organizarse", cuerpo sobre libertad/flexibilidad/contacto con el territorio, 4 pilares
-(Libertad · Naturaleza · Experiencias · Economía local).
-
-**2b. Puntos que hacen funcionar la red + Sello** — Titular "La red se apoya en espacios,
-servicios y alianzas reales", 3 tarjetas (Áreas habilitadas, Puntos Amigos, Servicios clave),
-mención del Sello, y 3 columnas "quién se beneficia" (viajero / comercios / territorio, del mazo
-pág. 8).
-
-</details>
+Mecánica: cada pantalla es `<Pantalla completa>` (edge-to-edge) — el look del mazo necesita
+full-bleed (footer y foto que sangran). Se pierde el "peek" de la tarjeta al 82%.
 
 ---
 
-## 3. Mapa y servicios — cómo funciona la app — pantalla "quieta"
+## Pantalla 0 — Portada (Hero) — **YA CONSTRUIDA, se mantiene**
 
-*(mazo, pág. 7 "Herramientas que conectan la experiencia" — mockups de pantalla: mapa con
-pines, "Cerca tuyo", "Rutas destacadas".)*
+No sigue el mazo: hero propio. Foto full-bleed + Ken Burns, y **una sola frase**:
+> El país entero,
+> en una sola red
 
-**Titular:** Una experiencia simple, organizada y conectada.
-
-**4 herramientas:**
-1. **App Sur en Ruta** — mapa, puntos, servicios y rutas en un solo lugar.
-2. **Pasaporte de Ruta** — una forma de viajar por etapas y sumar historias.
-3. **Sello Viajero Responsable** — buenas prácticas y confianza dentro de la red *(ya
-   desarrollado en la sección 2 — acá va solo el ícono + una línea, sin repetir el bloque
-   completo).*
-4. **Señalética e identidad** — puntos reconocibles, información clara y presencia territorial.
-
-**5 pasos de uso (del mazo, "Cómo funciona la red"):** Encontrá puntos y rutas → Planificá tu
-recorrido → Accedé a servicios y experiencias → Sumá sellos y beneficios → Viajá de forma
-responsable.
-
-**Rótulo obligatorio en las capturas de pantalla (regla de honestidad — sección 7 del
-`CLAUDE.md`):** algo visible tipo "Vista conceptual de la app" o equivalente — los pines y rutas
-que se ven en el mockup son ejemplo de producto, no datos reales cargados. *(Redacción exacta a
-definir en implementación; el punto no negociable es que no se lea como red ya operativa.)*
-
-**Línea de cierre:** Una red que organiza el viaje y potencia los destinos.
+(Work Sans 500, ~5rem, entrada escalonada.) Flecha en círculo a media altura (derecha).
+El wordmark "RENAMU / SUR EN RUTA" y la bajada institucional del mazo **no** van acá.
 
 ---
 
-## 4. Rutas temáticas y Pasaporte — pantalla "hoja"
+## Pantalla 1 — "LA OPORTUNIDAD" (mazo pág. 2)
 
-*(mazo, pág. 6 "Rutas que cuentan Uruguay" — mismas 6 rutas que ya estaban cargadas en
-`src/data/rutas.ts`, sin cambios de fondo.)*
+**Título:** LA (navy) · OPORTUNIDAD (verde)
+**Subtítulo:** Una nueva forma de viajar necesita una nueva forma de organizarse
 
-**Titular:** Rutas que cuentan Uruguay.
+**Bloque 1** (ícono de gráfico creciente): **El turismo itinerante crece** porque combina
+libertad, flexibilidad y contacto con el territorio.
 
-**Bajada:** Experiencias temáticas para descubrir el país a otro ritmo.
+**Bloque 2** (ícono de pin): **La oportunidad** está en ordenar la experiencia con información
+clara, servicios identificados y buenas prácticas.
 
-**Las 6 rutas (sin cambios respecto al contenido anterior):**
-1. **Ruta del Vino** — bodegas, gastronomía y paisaje productivo.
-2. **Ruta Oceánica** — costa, pueblos, mar y naturaleza.
-3. **Ruta Termal** — bienestar, descanso y servicios.
-4. **Ruta Rural** — estancias, productores y vida de campo.
-5. **Ruta Patrimonial y Cultural** — historia, identidad y pueblos.
-6. **Ruta de Naturaleza y Aventura** — sierras, lagunas y aire libre.
+**4 chips** (ícono + label): Libertad · Naturaleza · Experiencias · Economía local
 
-**Rótulo obligatorio en pantalla (se mantiene de la versión anterior — sigue aplicando, mismo
-motivo):** Rutas propuestas. El relevamiento territorial es parte de las próximas etapas.
+**Cierre** (ícono ⚠): **Sin una red organizada,** la experiencia pierde claridad, seguridad y
+conexión con el destino.
 
-**Tie-in con Pasaporte de Ruta:** cada ruta se recorre por etapas, sumando sellos al Pasaporte —
-conecta esta sección con la herramienta ya presentada en la sección 3.
-
-**Línea de cierre:** Cada ruta conecta puntos, servicios, paisajes y experiencias.
+**Visual:** foto (camper en ruta costera) sangrando por la derecha con corte S · footer ondulado ·
+isotipo arriba a la derecha · stack de foto-mini a la derecha del mazo (faro, viñedo, cartel,
+feria) — opcional, evaluar si recarga.
 
 ---
 
-## 5. Centro regional para el viajero extranjero — pantalla "quieta"
+## Pantalla 2 — "¿Qué es RENAMU / Sur en Ruta?" (mazo pág. 3)
 
-*(mazo, pág. 9 "Uruguay, centro regional para el viajero itinerante extranjero" y pág. 10,
-cierre del mazo — contenido enteramente nuevo respecto a la versión de inversores, que acá tenía
-presupuesto/etapas/ferias internacionales. Reemplaza esa sección por completo.)*
+**Título:** ¿Qué es (navy) · RENAMU / (navy) Sur en Ruta? (verde)
 
-**Titular:** Uruguay, centro regional para el viajero itinerante extranjero.
+**Dos nodos:**
+- **RENAMU** (ícono de institución / frontón) — Marco territorial e institucional
+- **SUR EN RUTA** (ícono de red / personas) — Plataforma de conexión, comunicación y experiencia
+- (unidos por un ícono de eslabón)
 
-**Bajada:** Una puerta de entrada ordenada para recorrer Sudamérica.
+**6 componentes numerados:**
+1. Áreas habilitadas o recomendadas
+2. Puntos Amigos
+3. Sello Viajero Responsable
+4. Rutas temáticas
+5. Pasaporte de Ruta
+6. App y sistema de medición
 
-**3 pilares:**
-1. **Ubicación estratégica** — entre Brasil y Argentina, con distancias amigables y gran
+**Cierre:** Un sistema que conecta **viajeros, destinos, servicios y comunidad**.
+
+**Visual:** más "esquema" que foto — nodos + línea de árbol hacia las 6 tarjetas. Footer ondulado
+con "URUGUAY / CONECTA. ORDENA. POTENCIA."
+
+---
+
+## Pantalla 3 — "CÓMO FUNCIONA LA RED" (mazo pág. 4)
+
+**Título:** CÓMO (navy) · FUNCIONA LA RED (verde)
+**Subtítulo:** Una experiencia simple, organizada y conectada
+
+**5 pasos** (número en círculo, navy/verde alternado; ícono; título; frase de apoyo):
+1. **Encontrá puntos y rutas** — La red te muestra dónde parar y qué hay cerca.
+2. **Planificá tu recorrido** — Cada punto informa servicios, horarios y condiciones.
+3. **Accedé a servicios y experiencias** — El viaje se vuelve más fácil, seguro y memorable.
+4. **Sumá sellos y beneficios** — Cada parada se transforma en una experiencia con historia.
+5. **Viajá de forma responsable** — Las buenas prácticas fortalecen el cuidado y la convivencia.
+
+**Cierre:** Una red que **organiza el viaje y potencia los destinos**.
+
+**Visual:** timeline horizontal de 5 pasos (línea punteada uniéndolos) · tira de fotos abajo ·
+footer ondulado "URUGUAY / CONECTA. ORDENA. POTENCIA."
+
+---
+
+## Pantalla 4 — "PUNTOS QUE HACEN FUNCIONAR LA RED" (mazo pág. 5)
+
+**Título:** PUNTOS QUE (navy) · HACEN FUNCIONAR LA RED (verde)
+**Subtítulo:** La red se apoya en espacios, servicios y alianzas reales
+
+**3 foto-tarjetas** (foto + ícono + título + frase):
+- **Áreas habilitadas o recomendadas** — Espacios públicos o privados preparados para recibir
+  viajeros.
+- **Puntos Amigos** — Comercios y emprendimientos que suman valor al recorrido.
+- **Servicios clave** — Agua, descarga, electricidad, residuos, gastronomía, información y
+  asistencia.
+
+**Cierre** (ícono personas): No todos los puntos deben ser iguales; **lo importante es que estén
+bien identificados y conectados**.
+
+**Visual:** 3 tarjetas grandes · footer ondulado con línea de ruta punteada.
+
+---
+
+## Pantalla 5 — "RUTAS QUE CUENTAN URUGUAY" (mazo pág. 6)
+
+**Título:** RUTAS QUE (navy) · CUENTAN (verde) · URUGUAY (verde) — 3 líneas
+**Subtítulo:** Experiencias temáticas para descubrir el país a otro ritmo
+
+**6 foto-tarjetas** (foto + ícono + nombre + descripción de una línea):
+- **Ruta del Vino** — bodegas, gastronomía y paisaje productivo
+- **Ruta Oceánica** — costa, pueblos, mar y naturaleza
+- **Ruta Termal** — bienestar, descanso y servicios
+- **Ruta Rural** — estancias, productores y vida de campo
+- **Ruta Patrimonial y Cultural** — historia, identidad y pueblos
+- **Ruta de Naturaleza y Aventura** — sierras, lagunas y aire libre
+
+**Cierre:** Cada ruta **conecta** puntos, servicios, paisajes y experiencias.
+
+**Visual:** grilla 3×2 de foto-tarjetas · isotipo arriba a la derecha · footer con la frase de
+cierre.
+**Rótulo de honestidad:** "Rutas propuestas. El relevamiento territorial es parte de las próximas
+etapas." (se mantiene de la versión anterior — la idea sigue aplicando aunque no esté en el mazo).
+**Datos:** `src/data/rutas.ts` ya tiene las 6 rutas — usar las descripciones **de una línea del
+mazo** (las de arriba), no los párrafos largos del PDF de propuesta.
+
+---
+
+## Pantalla 6 — "HERRAMIENTAS QUE CONECTAN LA EXPERIENCIA" (mazo pág. 7)
+
+**Título:** HERRAMIENTAS (navy) · QUE CONECTAN / (verde) LA EXPERIENCIA (verde)
+
+**4 ítems** (ícono + título + frase):
+- **App Sur en Ruta** — mapa, puntos, servicios y rutas
+- **Pasaporte de Ruta** — una forma de viajar por etapas y sumar historias
+- **Sello Viajero Responsable** — buenas prácticas y confianza dentro de la red
+- **Señalética e identidad** — puntos reconocibles, información clara y presencia territorial
+
+**Cierre** (ícono personas): **Tecnología, comunidad y comunicación** al servicio del viaje.
+
+**Visual:** los 4 ítems a la izquierda · **mockup de app** (teléfono) + pasaporte + sticker del
+Sello a la derecha, sobre foto de fondo. El mockup lleva **rótulo "Vista conceptual de la app"**
+(regla de honestidad). Copy del mockup (del mazo): "SUR EN RUTA / Explorá. Conectá. Viví." ·
+"Cerca tuyo" (Alojamientos · Gastronomía · Servicios · Atractivos) · "Rutas destacadas" · "Ruta
+del Atlántico / Naturaleza y dunas costeras / 120 km" · nav: Explorar · Rutas · Pasaporte · Perfil.
+
+---
+
+## Pantalla 7 — "UNA RED QUE BENEFICIA A TODOS" (mazo pág. 8)
+
+**Título:** UNA RED QUE (navy) · BENEFICIA A TODOS (verde)
+
+**3 columnas** (foto + ícono + título + 3 bullets):
+- **Para el viajero** — Información clara · Paradas mejor identificadas · Más confianza y mejores
+  experiencias
+- **Para comercios y privados** — Más visibilidad · Nuevos clientes · Integración simple a una red
+  turística
+- **Para el territorio** — Circulación ordenada · Activación de economías locales · Mejor conexión
+  entre destinos
+
+**Cierre** (ícono red): La red transforma el paso del viajero en **valor para cada lugar**.
+
+**Visual:** 3 columnas con foto arriba · footer ondulado "URUGUAY / CONECTA. ORDENA. POTENCIA."
+
+---
+
+## Pantalla 8 — "URUGUAY, CENTRO REGIONAL PARA EL VIAJERO ITINERANTE EXTRANJERO" (mazo pág. 9)
+
+**Título:** URUGUAY, (navy) · CENTRO REGIONAL (verde) · PARA EL VIAJERO ITINERANTE EXTRANJERO (navy)
+**Subtítulo:** Una puerta de entrada ordenada para recorrer Sudamérica
+
+**Mapa de Sudamérica** con 3 callouts:
+- **BRASIL** — Conexión natural y cultural
+- **ARGENTINA** — Puente terrestre y cultural
+- **PATAGONIA** — Puerta a paisajes icónicos
+
+**3 tarjetas numeradas:**
+1. **UBICACIÓN ESTRATÉGICA** — Entre Brasil y Argentina, con distancias amigables y gran
    diversidad de paisajes.
-2. **Base segura y conectada** — ideal para iniciar, pausar o finalizar recorridos por el sur
-   del continente.
-3. **Servicios complementarios** — guardería, mantenimiento, equipamiento, información y
+2. **BASE SEGURA Y CONECTADA** — Ideal para iniciar, pausar o finalizar recorridos por el sur del
+   continente.
+3. **SERVICIOS COMPLEMENTARIOS** — Guardería, mantenimiento, equipamiento, información y
    experiencias locales.
 
-**Línea de cierre de la sección:** Uruguay puede pasar de ser un país de paso a un destino
-preparado y memorable.
+**Cierre** (pill navy, ícono personas): Uruguay puede pasar de ser un país de paso a un **destino
+preparado y memorable**.
 
-**Cierre general de la landing (del mazo, pág. 10 — remata el mensaje, no pide ninguna
-acción):** Una red para viajar mejor y mostrar un Uruguay más conectado.
-
----
-
-## Regla de extensión (se mantiene del plan anterior)
-
-Ninguna sección debería superar las ~120 palabras visibles por pantalla. Si un bloque no entra,
-se recorta o se separa en 2 slides (como ya pasó con Sistema/Rutas en la migración a slide
-horizontal) — no se agranda el límite.
+**Visual:** mapa de Sudamérica (SVG propio, o silueta simple) con líneas punteadas a los 3
+destinos · foto-collage con corte diagonal a la derecha · footer "URUGUAY / CONECTA. ORDENA.
+POTENCIA."
 
 ---
 
-## Resumen de lo que falta para cerrar el contenido real
+## Pantalla 9 — "URUGUAY, PREPARADO PARA UNA NUEVA FORMA DE VIAJAR" (mazo pág. 10) — cierre
 
-1. **Confirmar con Ana** cómo se muestra el Sello Viajero Responsable (mención conceptual acá
-   propuesta, vs. el flujo completo de certificado/QR del mazo) y la redacción exacta del rótulo
-   de "vista conceptual" en los mockups de app (preguntas 3 y 6 del plan, sección 6.1).
-2. **Mecánica de transición: ya resuelta.** 5 pantallas fijas (impar/quieta, par/hoja, ver tabla
-   más arriba), probada en `prototipos/transicion-sweep/index.html` — falta portarla a
-   `src/`, reemplazando el esqueleto de slide horizontal actual (`HzSlide`, snap simple).
-3. **Componentes y datos a tocar:** `src/data/inversion.ts`, `etapas.ts`, `ferias.ts` quedan sin
-   uso (o se borran); `componentes.ts` se reparte entre la sección 2 y la sección 3;
-   `Inversion.astro` se reemplaza por un componente nuevo para la sección 5 (ej.
-   `CentroRegional.astro`); `Sistema.astro` se reescribe angosto a "Mapa y servicios";
-   `HiloRuta.astro` sigue oculto (comentado en `Base.astro`) desde el 2026-08-26 mientras se
-   define esta mecánica nueva — falta decidir si vuelve, cambia de forma, o se descarta.
-4. La identidad visual (paleta + tipografía) sigue en manos del prototipo — no depende de este
-   contenido para escribirse, pero sí condiciona el diseño final de cada sección.
+**Título:** URUGUAY, (navy) · PREPARADO PARA UNA NUEVA FORMA DE VIAJAR (verde)
+**Subtítulo:** Una visión país para el turismo itinerante
 
-Ver también `docs/planes/2026-08-26-pivot-audiencia-general.md` y la memoria
-`proyecto-renamu-landing-inversores` del proyecto.
+**Cuerpo:** **RENAMU / Sur en Ruta** propone una red que le da al viajero razones para detenerse,
+recorrer, consumir, recomendar y volver.
+
+**4 íconos:** Conectar destinos · Ordenar la experiencia · Activar economías locales · Mostrar
+Uruguay desde sus rutas
+
+**Cierre general de la landing** (footer navy, ícono personas): Una red para viajar mejor y
+mostrar un Uruguay **más conectado**.
+
+**Visual:** isotipo grande dentro de un círculo a la derecha, sobre foto · footer ondulado navy
+"URUGUAY / CONECTA. ORDENA. POTENCIA." **Sin CTA.**
+
+---
+
+## Regla de extensión
+
+El techo de ~120 palabras visibles es **por pantalla**. Ninguna de las 10 lo supera con este
+reparto (el mazo ya está pensado como slides). Si al construir una no entra cómoda, se recorta
+frase de apoyo antes que partir la pantalla.
+
+---
+
+## Pendientes de implementación
+
+1. **Piezas visuales reutilizables** (SVG inline): curva orgánica del fondo, footer ondulado
+   (con línea de ruta punteada + frase), corte S de la imagen, eyebrow de puntos, isotipo.
+2. **Íconos**: `src/components/Icono.astro` ya tiene la mayoría (`medicion`, `ubicacion`,
+   `puntos-amigos`, `sello`, `app`, `pasaporte`, `senaletica`, `agua`, `acampada`, `institucional`,
+   `montana`, `uva`, `ola`, `termal`, `granja`, `columnas`, `ruta`, `servicios`, `base-conectada`,
+   `confiable`, `area`, `camper`). Falta chequear cobertura fina por pantalla y agregar los que
+   falten (ej. "gráfico creciente" para el bloque 1 de Pantalla 1, "warning" para el cierre).
+3. **Isotipo en SVG** — no existe todavía (solo el wordmark Italiana). Hace falta para el chrome
+   de las láminas. Dibujar uno simple (colinas + ruta S + camper + pin).
+4. **Imágenes** — placeholders con el corte S; se cambian cuando haya fotos reales de Verzet Group.
+5. `src/data/componentes.ts` / `inversion.ts` / `etapas.ts` / `ferias.ts` — revisar qué se reusa
+   y qué se da de baja.
+6. `Sistema.astro` / `Inversion.astro` / `Problema.astro` viejos — reemplazar por los componentes
+   de pantalla nuevos.
+
+Ver también `docs/comparativa-mazo-vs-landing.md`, `docs/decisiones/identidad-visual.md`,
+`docs/planes/2026-08-26-pivot-audiencia-general.md`.

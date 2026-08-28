@@ -7,10 +7,25 @@
 ## 1. Qué es este repo
 
 La **landing informativa** de Sur en Ruta, dirigida a **público general** (no solo inversores).
-Hasta 5 secciones, mucho show visual, comprensión inmediata. Es una pieza de comunicación/
-publicidad: muestra qué se llegaría a alcanzar con la app y el sistema RENAMU. **No es una
-propuesta de inversión** — nada de negocio, presupuesto ni modelo económico se publica acá; ese
-detalle se conversa cara a cara cuando haga falta.
+Mucho show visual, comprensión inmediata. Es una pieza de comunicación/publicidad: muestra qué se
+llegaría a alcanzar con la app y el sistema RENAMU. **No es una propuesta de inversión** — nada de
+negocio, presupuesto ni modelo económico se publica acá; ese detalle se conversa cara a cara
+cuando haga falta.
+
+**Estructura — actualizada 2026-08-27:** Ale decidió seguir el mazo de Ana (`Presentacion Sur en
+Ruta RENAMU.pdf`, 10 páginas) **página por página** — ~10 pantallas de la "cinta" horizontal, no
+5. Pantalla 0 = hero propio ("El país entero, en una sola red"); Pantallas 1–9 mapean 1:1 a las
+páginas 2–10 del mazo, con su copy literal. Ver `docs/landing-contenido.md` (spec) y
+`docs/comparativa-mazo-vs-landing.md` (transcripción + comparación). Incluye la pantalla "¿Qué es
+RENAMU / Sur en Ruta?" (pág. 3) — es una **diferenciación** RENAMU/Sur en Ruta, no una explicación
+al detalle del aparato institucional, así que no choca con el pivot de audiencia.
+
+**Libertad sobre los templates del mazo (actualizado 2026-08-28):** el mazo de Ana (y cualquier
+otro material que entregue como referencia) se sigue **como guía**, no como plantilla obligatoria.
+Tenemos libertad total para modificar cualquier aspecto de diseño/layout de esas páginas —
+tipografía, color, composición, qué elementos se replican o se descartan — si lo consideramos
+necesario para la landing. Esto no afecta la regla de contenido (§6): los números y nombres siguen
+saliendo solo de los documentos fuente, no se inventan.
 
 > **Nota histórica:** hasta el 2026-08-25 este repo era una landing dirigida específicamente a
 > inversores, con una sección de presupuesto/inversión. El 2026-08-26 Ana pidió el pivot de

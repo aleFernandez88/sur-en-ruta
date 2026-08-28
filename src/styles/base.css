@@ -29,7 +29,17 @@ body {
    * .hz-viewport, no descendiente de .hz-track — sin esto, su animación no encuentra el
    * timeline y queda con el progreso mal resuelto. body es el ancestro común más cercano. */
   timeline-scope: --hz-progreso;
+  /* Fondo "blanco manchado": el off-white cálido de tono arena diluido de la marca, con una
+   * viñeta radial muy sutil (apenas más claro hacia arriba-centro), igual que el ground de los
+   * boards de identidad. Se ve sobre todo en los márgenes que dejan las tarjetas al 82%
+   * (mecánica "cinta") y detrás de las tarjetas blancas puras. */
   background-color: var(--color-fondo);
+  background-image: radial-gradient(
+    ellipse 130% 90% at 50% 25%,
+    var(--color-fondo-halo),
+    var(--color-fondo) 68%
+  );
+  background-attachment: fixed;
   color: var(--color-tinta);
   font-family: var(--fuente-texto);
   font-size: var(--texto-base);
