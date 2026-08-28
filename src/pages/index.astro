@@ -22,6 +22,7 @@ import Hero from '../components/Hero.astro';
 import Lamina from '../components/Lamina.astro';
 import SlidePlaceholder from '../components/SlidePlaceholder.astro';
 import Icono from '../components/Icono.astro';
+import logoUrl from '../assets/logo/isotipo-original.svg?url';
 ---
 
 <Base>
@@ -51,6 +52,21 @@ import Icono from '../components/Icono.astro';
 						<strong>servicios</strong> y <strong>experiencias</strong>.
 					</p>
 					<Icono nombre="comunidad" tamano={64} acento="var(--color-verde)" />
+				</div>
+			</div>
+
+			<!-- Pie del footer (2026-08-28, guiado por Ale): logo en badge circular blanco + columna
+			     "Sur en Ruta" / eslogan (ver Preloader.astro `ESLOGAN`) al lado — el eslogan vivía
+			     suelto a la derecha, se trajo debajo del nombre. Probando la fuente de RENAMU acá. -->
+			<div slot="footer" class="pie-footer">
+				<div class="pie-marca">
+					<span class="pie-logo">
+						<img src={logoUrl} alt="" width="64" height="58" />
+					</span>
+					<div class="pie-texto">
+						<span class="pie-nombre">Sur en Ruta</span>
+						<p class="pie-eslogan">CONECTA - ORDENA - POTENCIA</p>
+					</div>
 				</div>
 			</div>
 		</Lamina>
@@ -148,5 +164,84 @@ import Icono from '../components/Icono.astro';
 	.marca-conecta strong {
 		font-weight: 700;
 		color: var(--color-verde);
+	}
+
+	/* === Pie del footer de Lamina (2026-08-28) ===
+	 * La onda tiene UN período de seno completo por pantalla (ver Lamina.astro): la cresta (más
+	 * aire, navy más alto) cae en x=25% del ancho. Posicionamos a mano con % en vez de flexbox de
+	 * ancho completo porque necesitamos calzar CON esa geometría: todo el grupo (logo + nombre +
+	 * eslogan) centrado en la cresta, ahí donde hay más aire arriba para el logo grande.
+	 * El eslogan vivía suelto a la derecha (en el valle, x=75%) — Ale pidió traerlo debajo de "Sur
+	 * en Ruta" en vez de dejarlo aparte.
+	 */
+	.pie-footer {
+		position: relative;
+		height: 100%;
+	}
+
+	.pie-marca {
+		position: absolute;
+		left: 25%;
+		bottom: clamp(0.75rem, 2vh, 1.25rem);
+		transform: translateX(-50%);
+		display: flex;
+		align-items: center;
+		gap: var(--espacio-sm);
+	}
+
+	/* Badge circular blanco — el isotipo no es circular en sí (es una insignia con colina/ruta/
+	 * camper), pero adentro de un círculo blanco se lee como un logo "de coin/sello", coherente
+	 * con el Sello Viajero Responsable que ya es circular. object-fit:contain deja aire parejo.
+	 * Al doble del primer intento (3rem → 6rem), pedido de Ale. */
+	.pie-logo {
+		flex-shrink: 0;
+		width: 6rem;
+		height: 6rem;
+		border-radius: 50%;
+		background: var(--color-superficie);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		overflow: hidden;
+	}
+
+	.pie-logo img {
+		width: 78%;
+		height: 78%;
+		object-fit: contain;
+	}
+
+	/* Columna nombre + eslogan, al lado del logo. Nudge hacia arriba (translateY negativo, pedido
+	 * de Ale "subilo un poco") relativo al centrado vertical con el logo. */
+	.pie-texto {
+		display: flex;
+		flex-direction: column;
+		gap: 0.2rem;
+		transform: translateY(-0.35rem);
+	}
+
+	/* "Sur en Ruta" — misma fuente/peso que arriba (--fuente-marca, Italiana 700), en blanco.
+	 * Agrandada casi al doble (1.15rem → 2.2rem), pedido de Ale 2026-08-28. */
+	.pie-nombre {
+		font-family: var(--fuente-marca);
+		font-weight: 700;
+		font-size: 2.2rem;
+		line-height: 1;
+		text-transform: uppercase;
+		letter-spacing: 0.02em;
+		color: var(--color-texto-sobre-foto);
+		white-space: nowrap;
+	}
+
+	/* Eslogan del mazo — probando la fuente de "RENAMU" (--fuente-display, Archivo 800). Ahora
+	 * debajo de "Sur en Ruta" (antes suelto a la derecha del footer, en el valle de la onda). */
+	.pie-eslogan {
+		margin: 0;
+		font-family: var(--fuente-display);
+		font-weight: 800;
+		font-size: 0.9rem;
+		letter-spacing: 0.08em;
+		white-space: nowrap;
+		color: var(--color-texto-sobre-foto);
 	}
 </style>
