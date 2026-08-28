@@ -21,6 +21,7 @@ import Pantalla from '../components/Pantalla.astro';
 import Hero from '../components/Hero.astro';
 import Lamina from '../components/Lamina.astro';
 import SlidePlaceholder from '../components/SlidePlaceholder.astro';
+import Icono from '../components/Icono.astro';
 ---
 
 <Base>
@@ -29,9 +30,29 @@ import SlidePlaceholder from '../components/SlidePlaceholder.astro';
 	</Pantalla>
 	<Pantalla id="oportunidad" completa>
 		<Lamina indice={0}>
-			<p style="font-family: var(--fuente-texto); color: var(--color-tinta-suave)">
-				Pantalla 1 — shell (fondo claro + footer navy con borde ondulado continuo).
-			</p>
+			<!-- Primer elemento de Pantalla 1 (2026-08-28, guiado por Ale): el wordmark + bajada de
+			     la página 1 del mazo ("RENAMU / SUR EN RUTA" + "Una red para ordenar y potenciar el
+			     turismo itinerante en Uruguay") — se había sacado del Hero (Pantalla 0) pero nunca
+			     se integró acá, ver docs/comparativa-mazo-vs-landing.md § Página 1. Todavía falta el
+			     resto de Pantalla 1 (título LA/OPORTUNIDAD, bloques, chips, cierre, foto) — se suma
+			     elemento por elemento, no todo junto (ver memoria del proyecto). -->
+			<div class="marca-institucional">
+				<p class="marca-renamu">RENAMU /</p>
+				<p class="marca-sur-en-ruta">Sur en Ruta</p>
+				<p class="marca-bajada">
+					Una red para ordenar y potenciar el turismo itinerante en Uruguay
+				</p>
+				<!-- Frase final de la página 1 del mazo, con el ícono "comunidad" a la derecha
+				     (ver docs/comparativa-mazo-vs-landing.md § Página 1 — cita textual, las 4
+				     palabras ya vienen resaltadas ahí). -->
+				<div class="marca-conecta-fila">
+					<p class="marca-conecta">
+						Una propuesta que conecta <strong>viajeros</strong>, <strong>territorios</strong>,
+						<strong>servicios</strong> y <strong>experiencias</strong>.
+					</p>
+					<Icono nombre="comunidad" tamano={64} acento="var(--color-verde)" />
+				</div>
+			</div>
 		</Lamina>
 	</Pantalla>
 	<Pantalla id="mapa">
@@ -44,3 +65,88 @@ import SlidePlaceholder from '../components/SlidePlaceholder.astro';
 		<SlidePlaceholder color="var(--color-ruta-naturaleza)" etiqueta="4 — Centro Regional" />
 	</Pantalla>
 </Base>
+
+<style>
+	/* === Marca institucional — Pantalla 1, primer elemento (2026-08-28) ===
+	 * 3 piezas separadas a propósito (no un solo bloque de texto) para poder animarlas cada una
+	 * por su cuenta más adelante, si hace falta — pedido explícito de Ale.
+	 */
+	.marca-institucional {
+		display: flex;
+		flex-direction: column;
+		gap: var(--espacio-xs);
+	}
+
+	/* "RENAMU /" — necesita una fuente GRUESA/institucional que no es --fuente-marca (Italiana es
+	 * un solo peso 400, un bold sintético del navegador se vería mal en un Didone). Se reusa
+	 * --fuente-display (Archivo, ya cargada para el Hero) — peso 800 (bajado un escalón desde 900,
+	 * pedido de Ale 2026-08-28) en vez de sumar una familia nueva solo para esta palabra. Tamaño
+	 * casi al doble del primer intento. Color celeste (2026-08-28, swap de color con "Sur en Ruta"
+	 * de abajo). */
+	.marca-renamu {
+		margin: 0;
+		font-family: var(--fuente-display);
+		font-weight: 800;
+		font-size: clamp(3.5rem, 1.8rem + 6.5vw, 7.5rem);
+		line-height: 1;
+		color: var(--color-celeste);
+	}
+
+	/* "Sur en Ruta" — misma fuente que el título del Preloader (--fuente-marca, Italiana,
+	 * mayúsculas por CSS), un toque más grande que "RENAMU". Peso 700 (bold sintético del
+	 * navegador — Italiana no tiene un corte bold real, pero probado en vivo se banca bien a este
+	 * tamaño) y color marino (swap con "RENAMU" de arriba) — pedido de Ale 2026-08-28. Tracking y
+	 * espaciado entre palabras bajados respecto del primer intento (0.06em → 0.015em, más
+	 * word-spacing negativo), quedaba demasiado abierto a este tamaño tan grande. */
+	.marca-sur-en-ruta {
+		margin: 0;
+		font-family: var(--fuente-marca);
+		font-weight: 700;
+		font-size: clamp(3.75rem, 2rem + 7vw, 8.25rem);
+		line-height: 1;
+		text-transform: uppercase;
+		letter-spacing: 0.015em;
+		word-spacing: -0.15em;
+		color: var(--color-marino);
+	}
+
+	/* Bajada — misma fuente que el Hero (--fuente-display, Archivo) pero peso 500, pedido de Ale.
+	 * Agrandada 2026-08-28 para que el renglón ocupe ~el mismo ancho que "RENAMU /" / "SUR EN
+	 * RUTA" de arriba. Tamaño fijo (pedido puntual de Ale, no clamp) — bajado de 3rem a 2.12rem. */
+	.marca-bajada {
+		margin: var(--espacio-md) 0 0;
+		font-family: var(--fuente-display);
+		font-weight: 500;
+		font-size: 2.12rem;
+		line-height: 1.25;
+		max-width: 26ch;
+		color: var(--color-tinta);
+	}
+
+	/* Frase + ícono, lado a lado — ícono a la DERECHA (pedido de Ale). */
+	.marca-conecta-fila {
+		display: flex;
+		align-items: center;
+		gap: var(--espacio-md);
+		margin-top: var(--espacio-md);
+	}
+
+	/* Cuerpo de texto (--fuente-texto, no --fuente-display) — es una cita de apoyo, no un
+	 * enunciado display como los de arriba. Más chica que --marca-bajada (3rem). Las 4 palabras
+	 * clave ya vienen resaltadas en la cita del mazo (ver docs/comparativa-mazo-vs-landing.md) —
+	 * verde/oliva es el color de "palabras resaltadas" en todo el sitio (identidad-visual.md). */
+	.marca-conecta {
+		margin: 0;
+		font-family: var(--fuente-texto);
+		font-weight: 400;
+		font-size: var(--texto-lg);
+		line-height: 1.4;
+		max-width: 36ch;
+		color: var(--color-tinta);
+	}
+
+	.marca-conecta strong {
+		font-weight: 700;
+		color: var(--color-verde);
+	}
+</style>

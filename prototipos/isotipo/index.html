@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Isotipo — 3 variantes redondas</title>
+<style>
+  body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3rem;
+    padding: 3rem 1rem;
+    background: #f7f3ec;
+    font-family: system-ui, sans-serif;
+  }
+  .fila {
+    display: flex;
+    align-items: flex-end;
+    gap: 2.5rem;
+  }
+  figure {
+    margin: 0;
+    text-align: center;
+  }
+  figcaption {
+    margin-top: 0.75rem;
+    color: #59636e;
+    font-size: 0.85rem;
+    max-width: 220px;
+  }
+  .grande svg { width: 220px; height: 220px; }
+  .chico svg { width: 56px; height: 56px; }
+  h2 {
+    font-family: Georgia, serif;
+    color: #0f2b4d;
+    margin: 0;
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ VARIANTE A — Paisaje circular (cerca de la referencia, pero redonda) ============ -->
+<div>
+  <h2>A · Paisaje circular</h2>
+  <div class="fila">
+    <figure class="grande">
+      <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <clipPath id="circA"><circle cx="100" cy="100" r="92" /></clipPath>
+        </defs>
+        <circle cx="100" cy="100" r="92" fill="#0f2b4d" />
+        <g clip-path="url(#circA)">
+          <!-- sol, se asoma detrás de la colina -->
+          <circle cx="48" cy="38" r="22" fill="#e7dfc9" />
+          <!-- gaviotas: 2 curvas simples, bien separadas (no una cadena de zigzag) -->
+          <path d="M92,26 q6,-8 12,0 q6,-8 12,0" stroke="#e7dfc9" stroke-width="3" fill="none" stroke-linecap="round" />
+          <path d="M112,44 q5,-7 10,0 q5,-7 10,0" stroke="#e7dfc9" stroke-width="3" fill="none" stroke-linecap="round" />
+          <!-- colina: domo simple -->
+          <path d="M-10,150 C0,80 40,20 90,25 C130,29 110,70 80,90 C50,110 10,130 -10,150 Z" fill="#5a6b2e" />
+          <!-- ruta con perspectiva real: ancha "adelante" (abajo), se afina hacia el horizonte
+               (arriba, detrás de la colina) — calculada por offset perpendicular a lo largo de
+               una curva (no a ojo, ver docs/decisiones/isotipo.md cuando se documente). -->
+          <path d="M81.7,178.9 L79.4,177.5 L77.4,175.6 L75.4,173.7 L73.4,171.8 L71.4,170.0 L69.5,168.2 L67.5,166.4 L65.5,164.7 L63.6,163.0 L61.6,161.2 L59.7,159.5 L57.8,157.9 L56.0,156.2 L54.2,154.6 L52.5,153.0 L50.8,151.4 L49.2,149.9 L47.7,148.4 L46.3,146.9 L44.9,145.5 L43.7,144.2 L42.6,142.9 L41.7,141.8 L40.9,140.7 L40.2,139.7 L39.7,138.9 L39.2,138.2 L38.9,137.7 L38.7,137.4 L38.5,137.2 L38.4,137.1 L38.2,137.1 L38.0,137.1 L37.9,137.0 L37.9,136.8 L38.2,136.2 L38.8,135.5 L39.8,134.6 L41.1,133.6 L42.6,132.6 L44.4,131.5 L46.4,130.4 L48.6,129.3 L51.0,128.3 L53.5,127.2 L56.2,126.1 L59.0,125.0 L61.8,123.9 L64.8,122.9 L67.9,121.8 L71.0,120.7 L74.1,119.6 L77.2,118.6 L80.4,117.5 L83.6,116.4 L86.7,115.3 L89.8,114.1 L92.9,113.0 L95.9,111.8 L98.8,110.6 L101.7,109.4 L104.4,108.1 L107.1,106.8 L109.6,105.5 L112.1,104.0 L114.3,102.5 L116.4,101.0 L118.3,99.5 L120.0,98.0 L121.7,96.5 L123.3,94.9 L124.8,93.4 L126.3,91.8 L127.6,90.2 L129.0,88.7 L130.2,87.1 L131.4,85.5 L132.5,83.9 L133.6,82.3 L134.7,80.7 L135.7,79.1 L136.6,77.5 L137.6,75.9 L138.5,74.3 L139.3,72.7 L140.2,71.1 L141.0,69.6 L141.9,68.0 L142.7,66.4 L143.5,64.9 L144.3,63.3 L145.1,61.8 L146.0,60.3 L146.8,58.8 L147.7,57.3 L148.6,55.8 L149.5,54.3 L150.4,52.8 L151.4,51.3 L152.4,49.8 L147.6,46.2 L146.4,47.6 L145.2,49.0 L144.0,50.5 L142.9,51.9 L141.8,53.4 L140.7,54.8 L139.7,56.3 L138.6,57.8 L137.6,59.2 L136.6,60.7 L135.6,62.1 L134.6,63.6 L133.6,65.0 L132.6,66.4 L131.6,67.8 L130.6,69.2 L129.5,70.6 L128.5,72.0 L127.4,73.3 L126.4,74.7 L125.2,76.0 L124.1,77.3 L122.9,78.5 L121.7,79.8 L120.5,81.0 L119.2,82.2 L117.9,83.4 L116.5,84.6 L115.1,85.8 L113.6,86.9 L112.1,88.0 L110.5,89.1 L108.8,90.1 L107.1,91.1 L105.3,92.1 L103.3,93.0 L101.1,93.9 L98.8,94.8 L96.2,95.7 L93.6,96.6 L90.8,97.5 L87.9,98.3 L85.0,99.2 L81.9,100.0 L78.8,100.8 L75.6,101.7 L72.4,102.5 L69.2,103.3 L66.0,104.1 L62.8,105.0 L59.6,105.8 L56.4,106.7 L53.2,107.5 L50.1,108.4 L47.1,109.3 L44.1,110.3 L41.2,111.3 L38.4,112.3 L35.6,113.4 L33.0,114.6 L30.4,115.9 L28.0,117.3 L25.6,118.8 L23.3,120.6 L21.1,122.7 L19.2,125.1 L17.5,127.9 L16.3,130.7 L15.5,133.7 L15.1,136.6 L15.0,139.6 L15.2,142.4 L15.7,145.1 L16.4,147.7 L17.3,150.2 L18.3,152.6 L19.4,155.0 L20.6,157.2 L21.9,159.5 L23.2,161.7 L24.7,163.9 L26.1,166.0 L27.6,168.2 L29.2,170.3 L30.8,172.4 L32.3,174.4 L33.9,176.5 L35.5,178.6 L37.0,180.6 L38.5,182.6 L40.0,184.6 L41.4,186.5 L42.7,188.4 L44.0,190.3 L45.2,192.2 L46.2,194.0 L47.1,195.7 L47.8,197.4 L48.3,199.0 L48.3,201.1 Z"
+                fill="#f7f3ec" />
+          <!-- pin -->
+          <path d="M162,58 C152,58 144,66 144,76 C144,89 162,109 162,109 C162,109 180,89 180,76 C180,66 172,58 162,58 Z" fill="#c55a3a" />
+          <circle cx="162" cy="75" r="7" fill="#f7f3ec" />
+        </g>
+      </svg>
+      <figcaption>Colina + ruta con perspectiva real (se afina hacia el horizonte) + pin + gaviotas.</figcaption>
+    </figure>
+    <figure class="chico">
+      <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"><use href="#circA-mini" /></svg>
+      <figcaption>favicon</figcaption>
+    </figure>
+  </div>
+</div>
+
+<!-- ============ VARIANTE B — Ruta + pin, geométrica y mínima ============ -->
+<div>
+  <h2>B · Ruta + pin (mínima)</h2>
+  <div class="fila">
+    <figure class="grande">
+      <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="100" cy="100" r="92" fill="#0f2b4d" />
+        <circle cx="100" cy="100" r="92" fill="none" stroke="#e7dfc9" stroke-width="3" />
+        <path d="M62,175 C90,160 78,130 55,115 C32,100 44,70 78,58 C104,48 100,25 88,10"
+              fill="none" stroke="#e7dfc9" stroke-width="12" stroke-linecap="round" />
+        <path d="M88,10 C76,10 66,19 66,30 C66,44 88,66 88,66 C88,66 110,44 110,30 C110,19 100,10 88,10 Z"
+              fill="#c55a3a" transform="translate(0,-2)" />
+        <circle cx="88" cy="26" r="6.5" fill="#0f2b4d" />
+      </svg>
+      <figcaption>Sin paisaje — solo la ruta serpenteando hacia el pin. Muy legible chica.</figcaption>
+    </figure>
+    <figure class="chico">
+      <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"><use href="#circB-mini" /></svg>
+      <figcaption>favicon</figcaption>
+    </figure>
+  </div>
+</div>
+
+<!-- ============ VARIANTE C — Monograma: la ruta como "S" de Sur ============ -->
+<div>
+  <h2>C · Monograma (la ruta = "S")</h2>
+  <div class="fila">
+    <figure class="grande">
+      <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="100" cy="100" r="92" fill="#e7dfc9" />
+        <circle cx="100" cy="100" r="92" fill="none" stroke="#0f2b4d" stroke-width="3" />
+        <path d="M132,55 C132,40 118,32 100,32 C80,32 66,42 66,58 C66,78 92,82 100,92 C112,106 132,110 132,130 C132,148 116,160 96,160 C78,160 66,150 66,136"
+              fill="none" stroke="#0f2b4d" stroke-width="15" stroke-linecap="round" />
+        <circle cx="96" cy="160" r="9" fill="#c55a3a" />
+      </svg>
+      <figcaption>Abstracto: una sola línea gruesa, ruta Y letra "S" a la vez. El punto final es el pin, reducido a un punto.</figcaption>
+    </figure>
+    <figure class="chico">
+      <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"><use href="#circC-mini" /></svg>
+      <figcaption>favicon</figcaption>
+    </figure>
+  </div>
+</div>
+
+<!-- defs reusables para los favicons (clonan el contenido grande) -->
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <clipPath id="clip-mini"><circle cx="100" cy="100" r="92" /></clipPath>
+    <g id="circA-mini">
+      <circle cx="100" cy="100" r="92" fill="#0f2b4d" />
+      <g clip-path="url(#clip-mini)">
+        <circle cx="48" cy="38" r="22" fill="#e7dfc9" />
+        <path d="M92,26 q6,-8 12,0 q6,-8 12,0" stroke="#e7dfc9" stroke-width="3" fill="none" stroke-linecap="round" />
+        <path d="M112,44 q5,-7 10,0 q5,-7 10,0" stroke="#e7dfc9" stroke-width="3" fill="none" stroke-linecap="round" />
+        <path d="M-10,150 C0,80 40,20 90,25 C130,29 110,70 80,90 C50,110 10,130 -10,150 Z" fill="#5a6b2e" />
+        <path d="M81.7,178.9 L79.4,177.5 L77.4,175.6 L75.4,173.7 L73.4,171.8 L71.4,170.0 L69.5,168.2 L67.5,166.4 L65.5,164.7 L63.6,163.0 L61.6,161.2 L59.7,159.5 L57.8,157.9 L56.0,156.2 L54.2,154.6 L52.5,153.0 L50.8,151.4 L49.2,149.9 L47.7,148.4 L46.3,146.9 L44.9,145.5 L43.7,144.2 L42.6,142.9 L41.7,141.8 L40.9,140.7 L40.2,139.7 L39.7,138.9 L39.2,138.2 L38.9,137.7 L38.7,137.4 L38.5,137.2 L38.4,137.1 L38.2,137.1 L38.0,137.1 L37.9,137.0 L37.9,136.8 L38.2,136.2 L38.8,135.5 L39.8,134.6 L41.1,133.6 L42.6,132.6 L44.4,131.5 L46.4,130.4 L48.6,129.3 L51.0,128.3 L53.5,127.2 L56.2,126.1 L59.0,125.0 L61.8,123.9 L64.8,122.9 L67.9,121.8 L71.0,120.7 L74.1,119.6 L77.2,118.6 L80.4,117.5 L83.6,116.4 L86.7,115.3 L89.8,114.1 L92.9,113.0 L95.9,111.8 L98.8,110.6 L101.7,109.4 L104.4,108.1 L107.1,106.8 L109.6,105.5 L112.1,104.0 L114.3,102.5 L116.4,101.0 L118.3,99.5 L120.0,98.0 L121.7,96.5 L123.3,94.9 L124.8,93.4 L126.3,91.8 L127.6,90.2 L129.0,88.7 L130.2,87.1 L131.4,85.5 L132.5,83.9 L133.6,82.3 L134.7,80.7 L135.7,79.1 L136.6,77.5 L137.6,75.9 L138.5,74.3 L139.3,72.7 L140.2,71.1 L141.0,69.6 L141.9,68.0 L142.7,66.4 L143.5,64.9 L144.3,63.3 L145.1,61.8 L146.0,60.3 L146.8,58.8 L147.7,57.3 L148.6,55.8 L149.5,54.3 L150.4,52.8 L151.4,51.3 L152.4,49.8 L147.6,46.2 L146.4,47.6 L145.2,49.0 L144.0,50.5 L142.9,51.9 L141.8,53.4 L140.7,54.8 L139.7,56.3 L138.6,57.8 L137.6,59.2 L136.6,60.7 L135.6,62.1 L134.6,63.6 L133.6,65.0 L132.6,66.4 L131.6,67.8 L130.6,69.2 L129.5,70.6 L128.5,72.0 L127.4,73.3 L126.4,74.7 L125.2,76.0 L124.1,77.3 L122.9,78.5 L121.7,79.8 L120.5,81.0 L119.2,82.2 L117.9,83.4 L116.5,84.6 L115.1,85.8 L113.6,86.9 L112.1,88.0 L110.5,89.1 L108.8,90.1 L107.1,91.1 L105.3,92.1 L103.3,93.0 L101.1,93.9 L98.8,94.8 L96.2,95.7 L93.6,96.6 L90.8,97.5 L87.9,98.3 L85.0,99.2 L81.9,100.0 L78.8,100.8 L75.6,101.7 L72.4,102.5 L69.2,103.3 L66.0,104.1 L62.8,105.0 L59.6,105.8 L56.4,106.7 L53.2,107.5 L50.1,108.4 L47.1,109.3 L44.1,110.3 L41.2,111.3 L38.4,112.3 L35.6,113.4 L33.0,114.6 L30.4,115.9 L28.0,117.3 L25.6,118.8 L23.3,120.6 L21.1,122.7 L19.2,125.1 L17.5,127.9 L16.3,130.7 L15.5,133.7 L15.1,136.6 L15.0,139.6 L15.2,142.4 L15.7,145.1 L16.4,147.7 L17.3,150.2 L18.3,152.6 L19.4,155.0 L20.6,157.2 L21.9,159.5 L23.2,161.7 L24.7,163.9 L26.1,166.0 L27.6,168.2 L29.2,170.3 L30.8,172.4 L32.3,174.4 L33.9,176.5 L35.5,178.6 L37.0,180.6 L38.5,182.6 L40.0,184.6 L41.4,186.5 L42.7,188.4 L44.0,190.3 L45.2,192.2 L46.2,194.0 L47.1,195.7 L47.8,197.4 L48.3,199.0 L48.3,201.1 Z" fill="#f7f3ec" />
+        <path d="M162,58 C152,58 144,66 144,76 C144,89 162,109 162,109 C162,109 180,89 180,76 C180,66 172,58 162,58 Z" fill="#c55a3a" />
+        <circle cx="162" cy="75" r="7" fill="#f7f3ec" />
+      </g>
+    </g>
+    <g id="circB-mini">
+      <circle cx="100" cy="100" r="92" fill="#0f2b4d" />
+      <path d="M62,175 C90,160 78,130 55,115 C32,100 44,70 78,58 C104,48 100,25 88,10"
+            fill="none" stroke="#e7dfc9" stroke-width="12" stroke-linecap="round" />
+      <circle cx="88" cy="26" r="9" fill="#c55a3a" />
+    </g>
+    <g id="circC-mini">
+      <circle cx="100" cy="100" r="92" fill="#e7dfc9" />
+      <path d="M132,55 C132,40 118,32 100,32 C80,32 66,42 66,58 C66,78 92,82 100,92 C112,106 132,110 132,130 C132,148 116,160 96,160 C78,160 66,150 66,136"
+            fill="none" stroke="#0f2b4d" stroke-width="15" stroke-linecap="round" />
+      <circle cx="96" cy="160" r="9" fill="#c55a3a" />
+    </g>
+  </defs>
+</svg>
+
+</body>
+</html>

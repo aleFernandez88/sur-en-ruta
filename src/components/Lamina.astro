@@ -1,10 +1,11 @@
 ---
 /**
  * Lamina.astro — shell de las pantallas que siguen el mazo de Ana (ver docs/landing-contenido.md).
- * Se arma por partes, guiado por Ale. Estado actual (2026-08-27):
+ * Se arma por partes, guiado por Ale. Estado actual (2026-08-28):
  *   1. Fondo claro cálido (--color-fondo), a pantalla completa.
- *   2. Footer navy (--color-marino, color plano — sin textura ni línea de ruta todavía) con el
- *      **borde superior ondulado y CONTINUO entre pantallas**.
+ *   2. Footer con **degradé animado** (--color-marino-noche → --color-marino → --color-celeste,
+ *      ver más abajo) con el **borde superior ondulado y CONTINUO entre pantallas**. Pedido de
+ *      Ale (2026-08-28): dinamismo en el COLOR, no en la forma de la onda (esa sigue igual).
  *
  * Cómo es continuo: la onda es UNA sola función `banda(x)` definida sobre el ancho de todas las
  * pantallas del mazo. Cada lámina recibe su `indice` y dibuja solo su tramo `[indice, indice+1]`.
@@ -52,7 +53,21 @@ d += ` L 100 ${ALTO} L 0 ${ALTO} Z`;
   </div>
   <footer class="lamina__footer" aria-hidden="true">
     <svg class="lamina__onda" viewBox={`0 0 100 ${ALTO}`} preserveAspectRatio="none">
-      <path d={d} fill="var(--color-marino)"></path>
+      <defs>
+        <linearGradient
+          id={`lamina-degrade-${indice}`}
+          gradientUnits="userSpaceOnUse"
+          x1="0"
+          y1={ALTO}
+          x2="100"
+          y2="0"
+        >
+          <stop class="lamina__stop lamina__stop--1" offset="0%" style="stop-color: var(--color-marino-noche)" />
+          <stop class="lamina__stop lamina__stop--2" offset="50%" style="stop-color: var(--color-marino)" />
+          <stop class="lamina__stop lamina__stop--3" offset="100%" style="stop-color: var(--color-celeste)" />
+        </linearGradient>
+      </defs>
+      <path d={d} fill={`url(#lamina-degrade-${indice})`}></path>
     </svg>
     <div class="lamina__footer-contenido"><slot name="footer" /></div>
   </footer>
@@ -98,5 +113,67 @@ d += ` L 100 ${ALTO} L 0 ${ALTO} Z`;
     position: relative;
     z-index: 1;
     height: 100%;
+  }
+
+  /* === Degradé animado del footer (2026-08-28, pedido de Ale) ===
+   * Dinamismo en el COLOR, no en la forma de la onda. Técnica: en vez de animar la POSICIÓN o
+   * geometría del degradé (gradientTransform sobre un <linearGradient> no es fiable vía CSS entre
+   * navegadores), se anima el `stop-color` de cada <stop> por separado — es una propiedad CSS real
+   * y animable. Los 3 stops recorren la MISMA paleta de 3 colores pero desfasados 1/3 de ciclo
+   * entre sí (-6s / -12s de animation-delay sobre un ciclo de 18s) — mientras uno pasa de oscuro a
+   * marino, otro pasa de marino a celeste, y el tercero de celeste a oscuro: da sensación de flujo
+   * continuo sin mover ningún punto en el espacio. */
+  @keyframes lamina-degrade-1 {
+    0%,
+    100% {
+      stop-color: var(--color-marino-noche);
+    }
+    50% {
+      stop-color: var(--color-marino);
+    }
+  }
+
+  @keyframes lamina-degrade-2 {
+    0%,
+    100% {
+      stop-color: var(--color-marino);
+    }
+    50% {
+      stop-color: var(--color-celeste);
+    }
+  }
+
+  @keyframes lamina-degrade-3 {
+    0%,
+    100% {
+      stop-color: var(--color-celeste);
+    }
+    50% {
+      stop-color: var(--color-marino-noche);
+    }
+  }
+
+  .lamina__stop--1 {
+    animation: lamina-degrade-1 18s ease-in-out infinite;
+  }
+
+  .lamina__stop--2 {
+    animation: lamina-degrade-2 18s ease-in-out infinite;
+    animation-delay: -6s;
+  }
+
+  .lamina__stop--3 {
+    animation: lamina-degrade-3 18s ease-in-out infinite;
+    animation-delay: -12s;
+  }
+
+  /* Reduced motion: el estado "0%" de cada keyframe YA es un degradé estático correcto (oscuro →
+   * marino → celeste), así que apagar la animación alcanza — no hace falta redeclarar colores. */
+  @media (prefers-reduced-motion: reduce) {
+    .lamina__stop--1,
+    .lamina__stop--2,
+    .lamina__stop--3 {
+      animation: none;
+    }
   }
 </style>

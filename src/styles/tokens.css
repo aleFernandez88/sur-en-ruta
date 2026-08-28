@@ -19,13 +19,15 @@
 :root {
   /* ---------------------------------------------------------------------------
    * FONDO Y SUPERFICIES
-   * El fondo NO es blanco puro: es un off-white cálido de tono arena diluido
+   * El fondo NO es blanco puro: es un off-white apenas tibio, casi blanco
    * ("blanco manchado"), coherente con el ground de los boards de identidad.
    * Cubre la mayor parte de la página. Las tarjetas que van encima SÍ son blanco
    * puro (los boards listan Blanco #FFFFFF como color de superficie) — el
    * contraste tarjeta-blanca / fondo-cálido es parte del look.
+   * Ajustado 2026-08-28 (Ale, valor puntual): el original (#f7f3ec) leía
+   * demasiado beige/arena — este queda mucho más cerca del blanco.
    * ------------------------------------------------------------------------- */
-  --color-fondo: #f7f3ec;
+  --color-fondo: #f1f0ee;
   /* Un punto más claro que --color-fondo: lo usa base.css para una viñeta radial
    * muy sutil (los boards tienen ese degradé, más claro al centro-arriba). */
   --color-fondo-halo: #fdfbf6;
@@ -51,6 +53,9 @@
   --color-marino: #0f2b4d;
   /* Variante oscura: círculos de ícono macizos, franjas inferiores. */
   --color-marino-profundo: #0a2036;
+  /* Azul casi negro — 2026-08-28, para el degradé animado del footer de Lamina (junto con
+   * --color-marino y --color-celeste). Más oscuro que --color-marino-profundo a propósito. */
+  --color-marino-noche: #050b14;
   /* Verde territorio: OLIVA, no verde bosque (esa es la diferencia con el mazo). */
   --color-verde: #5a6b2e;
   /* Verde oliva levantado, para acentos SOBRE fondo oscuro (donde el oliva se
