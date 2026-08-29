@@ -12,16 +12,44 @@
  * La pantalla vecina evalúa la misma función en el límite → la altura coincide exacto, la costura
  * es invisible. Sin llevar cuenta a mano.
  *
- * Todavía NO tiene: textura topo, línea de ruta con nodos, "URUGUAY · CONECTA. ORDENA. POTENCIA.",
- * isotipo, eyebrow de puntos, foto lateral. Se agregan en pasos siguientes.
+ * Todavía NO tiene: textura topo, línea de ruta con nodos, isotipo, eyebrow de puntos.
+ * Se agregan en pasos siguientes.
  *
  * Va dentro de <Pantalla completa> en index.astro.
+ *
+ * === Foto lateral con corte en curva S (2026-08-28) ===
+ * Slot opcional `foto` — no todas las pantallas del mazo llevan foto (la de "¿Qué es RENAMU?" es
+ * más esquema que foto, ver docs/landing-contenido.md). Si no se pasa nada al slot, no se renderiza
+ * el contenedor (Astro.slots.has, ver abajo) — así no queda un recorte vacío en las que no la usan.
+ * El corte es UNA sola curva S (pedido de Ale: "curva", no varias ondas) hecha con clip-path +
+ * <clipPath clipPathUnits="objectBoundingBox">, en fracciones 0–1 — a diferencia del viewBox de la
+ * onda del footer (que necesita userSpaceOnUse + recalculo por JS para que los círculos salgan
+ * redondos, ver HiloRuta), acá no hay nada que deba salir "redondo": una curva un poco estirada de
+ * más en un eje no se nota, así que objectBoundingBox (se adapta solo al tamaño real, sin JS) alcanza.
+ *
+ * === Parallax de la foto (2026-08-28) ===
+ * La foto se mueve más lento/rápido que el scroll mientras esta pantalla está en pantalla, usando
+ * el mismo scroll-timeline compartido `--hz-progreso` que ya usa HiloRuta (scope en `body`, ver
+ * base.css) — no uno nuevo. Como esa timeline recorre TODO el recorrido (todas las Pantallas), hay
+ * que decirle a esta lámina en qué tramo (%) vive ELLA, si no el parallax se dispara en cualquier
+ * otro momento del scroll. Prop `ventanaScroll` — OJO, gotcha real: en pantallas `completa` la
+ * mecánica "cinta" NO tiene pausa/settle, la tarjeta se desliza 1:1 con el scroll TODO el tiempo.
+ * Hay un instante EXACTO donde queda centrada (medido con getBoundingClientRect en varios %, no
+ * con la fórmula de "N bloques iguales" — esa da un punto de partida, no el real) y se mantiene
+ * sustancialmente visible (>60-80% del viewport) en un rango alrededor de ese instante. Hoy
+ * [18, 34] para Pantalla 1 (centrada en 26%, visible ~17%–35%). OJO: esto se recalcula cuando el
+ * esqueleto deje de tener 5 pantallas iguales (el plan real es ~10) — siempre en vivo, no a ojo.
  */
 interface Props {
   /** Posición de esta pantalla entre las del mazo (0 = primera). Fija la fase de la onda. */
   indice?: number;
+  /** % [inicio, fin] de --hz-progreso en que ESTA pantalla está en foco, para el parallax de la
+   * foto. Ver nota de arriba — default asume la 2ª de 5 pantallas iguales, ajustado en vivo. */
+  ventanaScroll?: [number, number];
 }
-const { indice = 0 } = Astro.props;
+const { indice = 0, ventanaScroll = [18, 34] } = Astro.props;
+const [ventanaDesde, ventanaHasta] = ventanaScroll;
+const tieneFoto = Astro.slots.has('foto');
 
 /* Onda del footer — spec de Ale (2026-08-27):
  *  - En el borde de la pantalla (la costura) el navy tiene BASE px de alto.
@@ -48,6 +76,23 @@ d += ` L 100 ${ALTO} L 0 ${ALTO} Z`;
 ---
 
 <div class="lamina" style={`--footer-alto: ${ALTO}px`}>
+  {tieneFoto && (
+    <div class="lamina__foto">
+      <svg width="0" height="0" aria-hidden="true">
+        <defs>
+          <clipPath id={`lamina-foto-recorte-${indice}`} clipPathUnits="objectBoundingBox">
+            <path d="M0.4,0 C0.05,0.33 0.65,0.67 0.3,1 L1,1 L1,0 Z" />
+          </clipPath>
+        </defs>
+      </svg>
+      <div
+        class="lamina__foto-recorte"
+        style={`clip-path: url(#lamina-foto-recorte-${indice}); --ventana-desde: ${ventanaDesde}%; --ventana-hasta: ${ventanaHasta}%`}
+      >
+        <slot name="foto" />
+      </div>
+    </div>
+  )}
   <div class="lamina__cuerpo">
     <slot />
   </div>
@@ -90,6 +135,68 @@ d += ` L 100 ${ALTO} L 0 ${ALTO} Z`;
      * quede tapado. --footer-alto lo fija el componente (px). */
     padding: clamp(3rem, 8vh, 5.5rem) clamp(1.5rem, 5vw, 4rem)
       calc(var(--footer-alto) + clamp(1rem, 3vh, 2rem));
+  }
+
+  /* Foto lateral: pegada al borde derecho/superior de LA LÁMINA entera (no de .lamina__cuerpo,
+   * que tiene su propio padding) — por eso es hermana de .lamina__cuerpo, no hija. z-index 0:
+   * siempre detrás del texto. Baja hasta el borde de ABAJO (bottom:0, no var(--footer-alto)) —
+   * pasa por detrás del footer a propósito: el footer tiene z-index 2 (más que la foto), así que
+   * donde se superponen gana el footer, sin necesidad de recortar la foto arriba de esa línea. */
+  .lamina__foto {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 50%;
+    z-index: 0;
+  }
+
+  .lamina__foto-recorte {
+    width: 100%;
+    height: 100%;
+  }
+
+  .lamina__foto-recorte :global(img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    /* scale(1.15) de base: le da a la foto margen de sobra para que la traslación del parallax
+     * (±1.5%, ver @keyframes) nunca deje ver un borde vacío dentro del recorte en curva S. */
+    transform: scale(1.15);
+  }
+
+  /* Parallax (2026-08-28): la foto se traslada dentro de su propio recorte mientras esta pantalla
+   * está en foco — usa --hz-progreso (el mismo scroll-timeline que ya comparte HiloRuta, scope en
+   * `body`, ver base.css), acotado a la ventana de ESTA pantalla vía animation-range con las
+   * variables --ventana-desde/--ventana-hasta (puestas en el wrapper, ver arriba). */
+  @supports (animation-timeline: scroll(root)) {
+    .lamina__foto-recorte :global(img) {
+      animation: lamina-foto-parallax linear both;
+      animation-timeline: --hz-progreso;
+      animation-range: var(--ventana-desde) var(--ventana-hasta);
+    }
+  }
+
+  /* Horizontal, no vertical (2026-08-28, pedido de Ale) — sigue el mismo sentido que la cinta:
+   * a medida que avanza el scroll, las pantallas se van hacia la IZQUIERDA (la nueva entra por la
+   * derecha), así que la foto también deriva de derecha a izquierda (empieza corrida a la
+   * derecha, termina corrida a la izquierda) — mismo sentido de flujo que el resto del sitio.
+   * ±1.5% (no ±6%, 2026-08-28): pedido de Ale de que la foto quede "pegada al fondo", casi fija,
+   * con apenas un roce de movimiento — no un desplazamiento notorio. */
+  @keyframes lamina-foto-parallax {
+    from {
+      transform: scale(1.15) translateX(1.5%);
+    }
+    to {
+      transform: scale(1.15) translateX(-1.5%);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .lamina__foto-recorte :global(img) {
+      animation: none !important;
+      transform: scale(1.15);
+    }
   }
 
   .lamina__footer {
