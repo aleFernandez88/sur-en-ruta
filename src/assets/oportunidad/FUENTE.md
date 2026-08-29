@@ -9,8 +9,8 @@ carpeta `Fotos Tapa y contratapa y logo` en Downloads).
 - El paisaje (niebla, montañas) **no es Uruguay** — parece Escocia o tierras altas del Reino Unido.
 
 **Por qué se usa igual, por ahora:** Ale confirmó explícitamente (2026-08-28) usarla como
-placeholder para probar el layout + el efecto parallax de Pantalla 1 mientras se consigue la foto
-real ("camper en ruta costera", ver `docs/landing-contenido.md` § Pantalla 1). **No deployar así**
+placeholder para probar el layout + la foto fija al viewport de Pantalla 1 mientras se consigue la
+foto real ("camper en ruta costera", ver `docs/landing-contenido.md` § Pantalla 1). **No deployar así**
 — mismo criterio que `src/assets/hero/ruta-placeholder.jpg`.
 
 Reemplazar por la foto final apenas esté disponible.

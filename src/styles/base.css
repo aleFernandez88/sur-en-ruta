@@ -77,12 +77,24 @@ body {
   overflow: hidden;
 }
 
+/* Capa de fondo fija (ver Base.astro). Ocupa todo el viewport, detrás de la cinta. Las tarjetas
+ * de .hz-track son opacas y la tapan salvo donde una lámina se deja transparente a propósito
+ * (Pantalla 1: fondo beige recortado a la izquierda, foto fija asomando a la derecha). */
+.fondo-fijo {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
 .hz-track {
   position: absolute;
   top: 100vh;
   left: 0;
   width: 100vh;
   height: 100vw;
+  /* Encima de .fondo-fijo (capa de fondo fija al viewport, ver arriba y Base.astro). */
+  z-index: 1;
   transform-origin: top left;
   transform: rotate(-90deg);
   overflow-y: scroll;

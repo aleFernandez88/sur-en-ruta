@@ -25,7 +25,7 @@ import Icono from '../components/Icono.astro';
 import logoUrl from '../assets/logo/isotipo-original.svg?url';
 import { Image } from 'astro:assets';
 // PLACEHOLDER, no deployar así — trae el logo de Dometic visible y no es Uruguay. Ver
-// src/assets/oportunidad/FUENTE.md. Pasada por Ale el 2026-08-28 para probar layout + parallax
+// src/assets/oportunidad/FUENTE.md. Pasada por Ale el 2026-08-28 para probar layout + la foto fija
 // mientras se consigue la foto real ("camper en ruta costera", docs/landing-contenido.md § P.1).
 import fotoOportunidad from '../assets/oportunidad/camping-placeholder.png';
 
@@ -33,14 +33,14 @@ import fotoOportunidad from '../assets/oportunidad/camping-placeholder.png';
  * Pedido de Ale: "mejores que fade in". Reveal enmascarado (overflow:hidden + translateY, ver
  * @keyframes texto-sube en el <style>) por LÍNEA para el wordmark grande (2 líneas cortas) y por
  * PALABRA para los párrafos (mismo espíritu que el "text splitting" de sitios premiados — ver
- * memoria del proyecto). Atado al mismo --hz-progreso que ya usa el parallax de la foto.
+ * memoria del proyecto). Atado al mismo --hz-progreso que ya usa la foto fija (.fondo-oportunidad).
  *
  * OJO — tres gotchas reales encontrados en vivo, en direcciones distintas:
  * 1. La tarjeta de una pantalla `completa` NO se queda quieta en ningún momento — se desliza 1:1
  *    con el scroll TODO el tiempo, sin pausa. Solo hay un INSTANTE en que queda perfectamente
  *    centrada (getBoundingClientRect a distintos %: para Pantalla 1, 26.0% exacto), pero se
  *    mantiene SUSTANCIALMENTE visible (>60-80% del viewport) en un rango bastante más amplio,
- *    medido en vivo: ~17% a ~35% (ver ventanaScroll de <Lamina> más abajo).
+ *    medido en vivo: ~17% a ~35%.
  * 2. Una ventana DEMASIADO angosta (~1.3 puntos ≈ 9px de scroll real, primer intento) es MENOS
  *    que un solo tick de rueda de mouse — el usuario scrolleaba una vez y todo aparecía de golpe,
  *    sin frames intermedios. Necesita cientos de px reales (1% ≈ 61px acá) para verse progresiva.
@@ -107,16 +107,20 @@ const ICONO_RANGO = '24.5% 25.3%';
 ---
 
 <Base>
+	<!-- Foto FIJA al viewport de Pantalla 1 (2026-08-28, pedido de Ale: "la foto 100% fija, que
+	     todo el sitio se mueva"). Vive en la capa .fondo-fijo de Base.astro (fuera de .hz-track,
+	     ver ahí el porqué). Recorte en curva S: solo se ve la mitad derecha, con la curva sobre su
+	     borde izquierdo. Opacidad atada a --hz-progreso — 0 salvo en la ventana de scroll de
+	     Pantalla 1, si no aparecería detrás del Hero y de Pantalla 2. Placeholder, ver import. -->
+	<div slot="fondo-fijo" class="fondo-oportunidad">
+		<Image src={fotoOportunidad} alt="" widths={[600, 1000, 1600]} sizes="55vw" />
+	</div>
+
 	<Pantalla id="hero" completa>
 		<Hero />
 	</Pantalla>
 	<Pantalla id="oportunidad" completa>
-		<!-- anclaCentro=25: % de --hz-progreso en que ESTA tarjeta queda perfectamente centrada,
-		     MEDIDO en vivo (getBoundingClientRect a varios %: card.left = 430px a 18%, 62px a 24%
-		     → pendiente −61px/punto → cruza 0 en 25.0%). NO la fórmula de "N bloques iguales" (que
-		     daba 26 y quedaba corrido). La foto queda anclada al viewport entre 25−anclaRadio y
-		     25%. Recalcular cuando pase a ~10 pantallas (anclaCentro y pasoCintaVw), en vivo. -->
-		<Lamina indice={0} anclaCentro={25}>
+		<Lamina indice={0} fondoRecortado>
 			<!-- Primer elemento de Pantalla 1 (2026-08-28, guiado por Ale): el wordmark + bajada de
 			     la página 1 del mazo ("RENAMU / SUR EN RUTA" + "Una red para ordenar y potenciar el
 			     turismo itinerante en Uruguay") — se había sacado del Hero (Pantalla 0) pero nunca
@@ -186,16 +190,6 @@ const ICONO_RANGO = '24.5% 25.3%';
 					</span>
 				</div>
 			</div>
-
-			<!-- Foto con corte en curva S (2026-08-28) — llena el espacio vacío a la derecha que
-			     notó Ale. Placeholder (ver import arriba), pendiente la foto real. -->
-			<Image
-				slot="foto"
-				src={fotoOportunidad}
-				alt=""
-				widths={[400, 700, 1000]}
-				sizes="42vw"
-			/>
 
 			<!-- Pie del footer (2026-08-28, guiado por Ale): logo en badge circular blanco + columna
 			     "Sur en Ruta" / eslogan (ver Preloader.astro `ESLOGAN`) al lado — el eslogan vivía
@@ -313,8 +307,8 @@ const ICONO_RANGO = '24.5% 25.3%';
 	/* === Reveal de entrada, por línea o por palabra (2026-08-28) ===
 	 * "Mejor que fade in" — pedido de Ale. Máscara (overflow:hidden) + el texto real adentro
 	 * arrancando debajo (translateY) y subiendo a su lugar — técnica de "text splitting" de sitios
-	 * premiados, no una simple opacidad. Atado al mismo --hz-progreso que ya usa el parallax de la
-	 * foto (ver Lamina.astro) — cada instancia trae su propio animation-range inline (ver arriba,
+	 * premiados, no una simple opacidad. Atado al mismo --hz-progreso que la foto fija
+	 * (.fondo-oportunidad) — cada instancia trae su propio animation-range inline (ver arriba,
 	 * calculado en el frontmatter), esta clase solo define la MECÁNICA, no los tiempos. */
 	/* inline-block, NO block — tiene que poder flotar en línea junto a otras palabras/espacios y
 	 * ajustar de renglón con el resto del párrafo (bajada, frase "conecta"); con block, cada
@@ -387,6 +381,65 @@ const ICONO_RANGO = '24.5% 25.3%';
 		.marca-conecta-icono {
 			animation: none !important;
 			transform: scale(1);
+		}
+	}
+
+	/* === Foto FIJA al viewport de Pantalla 1 (2026-08-28) ===
+	 * Vive en la capa .fondo-fijo de Base.astro (fuera de .hz-track — un position:fixed adentro
+	 * quedaría relativo al ancestro rotado). Queda 100% quieta mientras la cinta (beige + texto +
+	 * footer de la lámina) se desliza por encima; el panel .lamina__fondo, recortado en curva S,
+	 * la va descubriendo. Full-bleed a propósito: la curva S la pone SOLO el panel beige, así hay
+	 * una sola curva que mantener (dos —una en la foto, otra en el beige— se separarían al
+	 * deslizarse el beige). */
+	.fondo-oportunidad {
+		position: absolute;
+		inset: 0;
+		/* 0 salvo en la ventana de scroll de Pantalla 1 — si no, la foto asomaría por la mitad
+		 * derecha transparente de la lámina también durante el Hero y Pantalla 2. El fade lo
+		 * maneja --hz-progreso (ver @supports). Base 0 = si el navegador no soporta scroll-driven
+		 * (Firefox viejo), la foto simplemente no aparece; la lámina queda beige (degradación
+		 * limpia, mismo criterio que HiloRuta). */
+		opacity: 0;
+	}
+
+	.fondo-oportunidad :global(img) {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		object-position: center;
+	}
+
+	@supports (animation-timeline: scroll(root)) {
+		.fondo-oportunidad {
+			animation: fondo-oportunidad-visible linear both;
+			animation-timeline: --hz-progreso;
+			/* Ventana atada a cuándo la foto es REALMENTE visible: recién a ~22% el corte en curva S
+			 * de .lamina__fondo entra al viewport y la deja ver; a ~31% la tarjeta de Pantalla 1 ya
+			 * casi salió y Pantalla 2 (que NO es `completa`, deja márgenes) empieza a asomar por la
+			 * derecha — la foto tiene que estar en 0 ANTES de eso para no sangrar alrededor de la
+			 * tarjeta 2. De ahí el corte agresivo 31%→33%. */
+			animation-range: 18% 35%;
+		}
+	}
+
+	@keyframes fondo-oportunidad-visible {
+		0% {
+			opacity: 0;
+		}
+		24%,
+		76% {
+			opacity: 1;
+		}
+		88%,
+		100% {
+			opacity: 0;
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.fondo-oportunidad {
+			animation: none !important;
+			opacity: 0;
 		}
 	}
 

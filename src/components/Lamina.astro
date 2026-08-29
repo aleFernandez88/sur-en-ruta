@@ -17,64 +17,30 @@
  *
  * Va dentro de <Pantalla completa> en index.astro.
  *
- * === Foto lateral con corte en curva S (2026-08-28) ===
- * Slot opcional `foto` — no todas las pantallas del mazo llevan foto (la de "¿Qué es RENAMU?" es
- * más esquema que foto, ver docs/landing-contenido.md). Si no se pasa nada al slot, no se renderiza
- * el contenedor (Astro.slots.has, ver abajo) — así no queda un recorte vacío en las que no la usan.
- * El corte es UNA sola curva S (pedido de Ale: "curva", no varias ondas) hecha con clip-path +
- * <clipPath clipPathUnits="objectBoundingBox">, en fracciones 0–1 — a diferencia del viewBox de la
- * onda del footer (que necesita userSpaceOnUse + recalculo por JS para que los círculos salgan
- * redondos, ver HiloRuta), acá no hay nada que deba salir "redondo": una curva un poco estirada de
- * más en un eje no se nota, así que objectBoundingBox (se adapta solo al tamaño real, sin JS) alcanza.
+ * === Fondo beige recortado + foto FIJA por detrás (2026-08-28) ===
+ * Pedido de Ale: "la foto 100% fija, fixed, que todo el sitio se mueva". La foto NO vive acá —
+ * vive en la capa `.fondo-fijo` de Base.astro (fuera de `.hz-track`, ver ahí; un `position: fixed`
+ * dentro de la cinta quedaría relativo al ancestro rotado). Lo que hace ESTA lámina es dejar su
+ * mitad derecha TRANSPARENTE para que esa foto fija se vea por detrás: el fondo beige
+ * (`--color-fondo`) ya no llena toda la lámina, es un panel `.lamina__fondo` recortado en curva S
+ * a la IZQUIERDA. Beige + texto + footer se siguen deslizando con la cinta; solo la foto queda
+ * quieta, y el panel beige la va "descubriendo" a medida que se corre.
  *
- * === Foto anclada al viewport durante la aproximación (2026-08-28) ===
- * Pedido de Ale: la foto tiene que sentirse FIJA en la mitad derecha de la pantalla mientras la
- * tarjeta de texto se desliza — no pegada a la tarjeta (que es como quedaba antes: foto y texto
- * viajaban como un solo bloque y el parallax de ±1.5% no se notaba nada).
- *
- * Restricción real de la mecánica "cinta": tanto `.hz-tarjeta` como `.lamina` tienen
- * `overflow: hidden` y la tarjeta mide exactamente el viewport — o sea que la foto NO puede
- * escaparse de los límites de su propia tarjeta. Fijarla al viewport DESPUÉS de que la tarjeta
- * pasó el centro es imposible sin sacar la capa de foto fuera de `.hz-track` (otro laburo). Lo
- * que SÍ se puede: fijarla durante toda la APROXIMACIÓN — desde que la tarjeta entra por la
- * derecha hasta que queda centrada. En ese tramo la tarjeta siempre cubre la mitad derecha del
- * viewport, así que la foto se puede "clavar" ahí contra-desplazándola dentro de la tarjeta.
- * Pasado el centro se suelta y sale con el texto (movimiento natural, sin corte).
- *
- * Cómo: la foto se traslada en X en sentido CONTRARIO al deslizamiento de la cinta, con la misma
- * `--hz-progreso` (scope en `body`, ver base.css). La cinta desliza `pasoCintaVw` vw de viewport
- * por cada punto de `--hz-progreso` (= N−1 para N pantallas iguales; hoy N=5 → 4). Si la tarjeta
- * está centrada en `anclaCentro`% (MEDIDO en vivo con getBoundingClientRect, no la fórmula de
- * bloques), entre `anclaCentro − anclaRadio` y `anclaCentro` la foto se compensa de `−span` a `0`
- * (span = pasoCintaVw · anclaRadio vw) y queda quieta en la mitad derecha del viewport. OJO:
- * recalcular `anclaCentro`/`pasoCintaVw` cuando el esqueleto deje de tener 5 pantallas iguales.
+ * El corte es UNA sola curva S (pedido de Ale: "curva", no varias ondas) con clip-path +
+ * `clipPathUnits="objectBoundingBox"` en fracciones 0–1 — es exactamente la curva de antes
+ * (`M0.4,0 C0.05,0.33 0.65,0.67 0.3,1` sobre un contenedor al 50%) pero mapeada a ancho completo
+ * (×0.5 + 0.5) y quedándose con la MITAD IZQUIERDA en vez de la derecha. objectBoundingBox se
+ * adapta solo al tamaño real sin JS; una curva un poco estirada de más en un eje no se nota.
  */
 interface Props {
   /** Posición de esta pantalla entre las del mazo (0 = primera). Fija la fase de la onda. */
   indice?: number;
-  /** % de --hz-progreso en que ESTA tarjeta queda perfectamente centrada. MEDIDO en vivo
-   * (getBoundingClientRect a varios %), no por fórmula. Default: 2ª de 5 pantallas iguales. */
-  anclaCentro?: number;
-  /** Puntos de --hz-progreso ANTES del centro durante los que la foto queda clavada al viewport.
-   * Más grande = la foto "agarra" antes (y tapa más al texto que entra). */
-  anclaRadio?: number;
-  /** vw de viewport que la cinta desliza por cada punto de --hz-progreso. = N−1 para N pantallas
-   * iguales (hoy N=5 → 4). Es la constante que traduce "puntos de scroll" a "vw en pantalla". */
-  pasoCintaVw?: number;
+  /** true = esta lámina tiene una foto FIJA por detrás (capa .fondo-fijo de Base.astro): el fondo
+   * beige pasa a ser un panel recortado en curva S a la izquierda y la mitad derecha queda
+   * transparente para dejarla ver. false (default) = fondo beige lleno, como el resto. */
+  fondoRecortado?: boolean;
 }
-const {
-  indice = 0,
-  anclaCentro = 25,
-  anclaRadio = 6,
-  pasoCintaVw = 4,
-} = Astro.props;
-const anclaDesde = anclaCentro - anclaRadio;
-// vw que la foto se contra-desplaza al inicio de la ventana (negativo). Se calcula acá y se pasa
-// como custom property ya lista — Chrome NO resuelve calc() con var() DENTRO de un @keyframes de
-// forma fiable (probado: la regla entera se descarta y no aplica ningún transform), pero un var()
-// pelado (sin calc) sí.
-const anclaXDesde = `-${pasoCintaVw * anclaRadio}vw`;
-const tieneFoto = Astro.slots.has('foto');
+const { indice = 0, fondoRecortado = false } = Astro.props;
 
 /* Onda del footer — spec de Ale (2026-08-27):
  *  - En el borde de la pantalla (la costura) el navy tiene BASE px de alto.
@@ -100,22 +66,16 @@ for (let k = 1; k <= N; k++) {
 d += ` L 100 ${ALTO} L 0 ${ALTO} Z`;
 ---
 
-<div class="lamina" style={`--footer-alto: ${ALTO}px`}>
-  {tieneFoto && (
-    <div
-      class="lamina__foto"
-      style={`animation-range: ${anclaDesde}% ${anclaCentro}%; --ancla-x-desde: ${anclaXDesde}`}
-    >
+<div class:list={['lamina', { 'lamina--fondo-recortado': fondoRecortado }]} style={`--footer-alto: ${ALTO}px`}>
+  {fondoRecortado && (
+    <div class="lamina__fondo" style={`clip-path: url(#lamina-fondo-recorte-${indice})`}>
       <svg width="0" height="0" aria-hidden="true">
         <defs>
-          <clipPath id={`lamina-foto-recorte-${indice}`} clipPathUnits="objectBoundingBox">
-            <path d="M0.4,0 C0.05,0.33 0.65,0.67 0.3,1 L1,1 L1,0 Z" />
+          <clipPath id={`lamina-fondo-recorte-${indice}`} clipPathUnits="objectBoundingBox">
+            <path d="M0,0 L0.7,0 C0.525,0.33 0.825,0.67 0.65,1 L0,1 Z" />
           </clipPath>
         </defs>
       </svg>
-      <div class="lamina__foto-recorte" style={`clip-path: url(#lamina-foto-recorte-${indice})`}>
-        <slot name="foto" />
-      </div>
     </div>
   )}
   <div class="lamina__cuerpo">
@@ -152,6 +112,30 @@ d += ` L 100 ${ALTO} L 0 ${ALTO} Z`;
     overflow: hidden;
   }
 
+  /* Con foto fija por detrás: la lámina no pinta fondo propio — lo hace .lamina__fondo, recortado
+   * a la izquierda. La mitad derecha queda transparente → se ve la capa .fondo-fijo de Base.astro
+   * (que es opaca por debajo, atravesando .hz-tarjeta--completa, que no tiene fondo). */
+  .lamina--fondo-recortado {
+    background-color: transparent;
+  }
+
+  .lamina__fondo {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    background-color: var(--color-fondo);
+  }
+
+  /* Sin soporte de scroll-driven / movimiento reducido, la capa .fondo-fijo queda invisible
+   * (opacidad 0, ver index.astro) — sacar el recorte para que el beige llene la lámina y no se
+   * vea una curva "a la nada" (la mitad derecha mostraría el fondo del body, mismo color pero con
+   * la costura del clip-path marcada). */
+  @media (prefers-reduced-motion: reduce) {
+    .lamina__fondo {
+      clip-path: none !important;
+    }
+  }
+
   .lamina__cuerpo {
     position: relative;
     z-index: 1;
@@ -160,64 +144,6 @@ d += ` L 100 ${ALTO} L 0 ${ALTO} Z`;
      * quede tapado. --footer-alto lo fija el componente (px). */
     padding: clamp(3rem, 8vh, 5.5rem) clamp(1.5rem, 5vw, 4rem)
       calc(var(--footer-alto) + clamp(1rem, 3vh, 2rem));
-  }
-
-  /* Foto lateral: pegada al borde derecho/superior de LA LÁMINA entera (no de .lamina__cuerpo,
-   * que tiene su propio padding) — por eso es hermana de .lamina__cuerpo, no hija. z-index 0:
-   * siempre detrás del texto. Baja hasta el borde de ABAJO (bottom:0, no var(--footer-alto)) —
-   * pasa por detrás del footer a propósito: el footer tiene z-index 2 (más que la foto), así que
-   * donde se superponen gana el footer, sin necesidad de recortar la foto arriba de esa línea. */
-  .lamina__foto {
-    position: absolute;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    width: 50%;
-    z-index: 0;
-  }
-
-  .lamina__foto-recorte {
-    width: 100%;
-    height: 100%;
-  }
-
-  .lamina__foto-recorte :global(img) {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
-
-  /* Anclaje al viewport durante la aproximación (2026-08-28, ver nota de cabecera). La foto se
-   * contra-desplaza en X respecto del deslizamiento de la cinta: de `−span` (tarjeta entrando por
-   * la derecha, en `--ancla-desde`) a `0` (tarjeta centrada, en `--ancla-hasta` = anclaCentro).
-   * En ese tramo queda quieta en la mitad derecha del viewport. `both`: antes de `--ancla-desde`
-   * mantiene `−span` (entra con la tarjeta); después del centro mantiene `0` (sale con el texto,
-   * pegada a la tarjeta otra vez). Usa `--hz-progreso`, el scroll-timeline de la cinta. */
-  @supports (animation-timeline: scroll(root)) {
-    .lamina__foto {
-      animation: lamina-foto-ancla linear both;
-      animation-timeline: --hz-progreso;
-      /* animation-range va inline (literal, calculado en el frontmatter) — Chrome no sustituye
-       * var() dentro de animation-range de forma fiable. Mismo patrón que los reveals de index. */
-    }
-  }
-
-  @keyframes lamina-foto-ancla {
-    from {
-      transform: translateX(var(--ancla-x-desde));
-    }
-    to {
-      transform: translateX(0);
-    }
-  }
-
-  /* Movimiento reducido: sin contra-desplazamiento — la foto queda pegada a la tarjeta y viaja
-   * con ella (igual que cualquier otro contenido de la lámina), sin efecto de anclaje. */
-  @media (prefers-reduced-motion: reduce) {
-    .lamina__foto {
-      animation: none !important;
-      transform: none;
-    }
   }
 
   .lamina__footer {

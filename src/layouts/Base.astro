@@ -92,6 +92,15 @@ const urlImagenOG = new URL('/og-image.png', Astro.site ?? 'https://surenruta.uy
 		<a href="#contenido-principal" class="skip-link">Saltar al contenido principal</a>
 		<HiloRuta />
 		<div class="hz-viewport">
+			{/* Capa de fondo FIJA al viewport — vive acá, fuera de .hz-track, a propósito: un
+			   `position: fixed` dentro de .hz-track quedaría relativo a ese ancestro rotado
+			   (transform crea containing block) y encima girado. Como hermana de .hz-track dentro
+			   de .hz-viewport (que NO está transformada), queda quieta mientras la cinta scrollea
+			   por encima. La llena index.astro con la foto de la pantalla que la use (hoy solo
+			   Pantalla 1); cada una trae su propio recorte + fade de opacidad atado a --hz-progreso
+			   para no aparecer detrás de las demás. Ver base.css (.fondo-fijo) y HiloRuta, que usa
+			   el mismo truco de "hermano de .hz-viewport que igual ve --hz-progreso". */}
+			<div class="fondo-fijo"><slot name="fondo-fijo" /></div>
 			<div class="hz-track">
 				<main id="contenido-principal">
 					<slot />
