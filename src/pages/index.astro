@@ -111,14 +111,12 @@ const ICONO_RANGO = '24.5% 25.3%';
 		<Hero />
 	</Pantalla>
 	<Pantalla id="oportunidad" completa>
-		<!-- ventanaScroll=[18,34]: la mecánica "cinta" en pantallas `completa` NO tiene pausa/settle
-		     — la tarjeta se desliza 1:1 con el scroll todo el tiempo. Medido en vivo con
-		     getBoundingClientRect a varios %: la tarjeta está centrada EXACTO a los 26% (no un
-		     rango) y se mantiene sustancialmente visible (>60-80% del viewport cubierto) desde
-		     ~17% hasta ~35% — de ahí este rango, centrado en el punto real de centrado, no en la
-		     fórmula de "N bloques iguales" (que daba [25,50] y quedaba corrido, la mitad ya con la
-		     tarjeta afuera). Recalcular cuando pase a ~10 pantallas, siempre en vivo, no a fórmula. -->
-		<Lamina indice={0} ventanaScroll={[18, 34]}>
+		<!-- anclaCentro=25: % de --hz-progreso en que ESTA tarjeta queda perfectamente centrada,
+		     MEDIDO en vivo (getBoundingClientRect a varios %: card.left = 430px a 18%, 62px a 24%
+		     → pendiente −61px/punto → cruza 0 en 25.0%). NO la fórmula de "N bloques iguales" (que
+		     daba 26 y quedaba corrido). La foto queda anclada al viewport entre 25−anclaRadio y
+		     25%. Recalcular cuando pase a ~10 pantallas (anclaCentro y pasoCintaVw), en vivo. -->
+		<Lamina indice={0} anclaCentro={25}>
 			<!-- Primer elemento de Pantalla 1 (2026-08-28, guiado por Ale): el wordmark + bajada de
 			     la página 1 del mazo ("RENAMU / SUR EN RUTA" + "Una red para ordenar y potenciar el
 			     turismo itinerante en Uruguay") — se había sacado del Hero (Pantalla 0) pero nunca
