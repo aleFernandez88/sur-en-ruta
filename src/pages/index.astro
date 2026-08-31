@@ -128,15 +128,16 @@ const CONECTA_DURACION = 0.55;
 const ICONO_RANGO = rango(24.5, 25.3);
 
 /* === Pantalla 2 · "LA OPORTUNIDAD" (mazo pág. 2) ===
- * Entrada DISTINTA a la de la Pantalla 1 (pedido de Ale 2026-08-31: cada pantalla elige su
- * animación, no se repite el reveal enmascarado). Acá: título + subtítulo como UN bloque
- * (`.op-cabecera`) que **entra desde arriba a la par del scroll**, estilo bertani.net — se desplaza
- * hacia abajo hasta su lugar y va de "fantasma" (opacidad baja) a sólido, todo atado a
- * `--hz-progreso`, sin trigger. Ventana ancha que TERMINA en el instante de centrado de la P2
- * (~`P1_CENTRO·2`) para que al llegar ya esté asentado. Falta: los 2 bloques, los 4 chips
- * (Libertad · Naturaleza · Experiencias · Economía local), el cierre "Sin una red organizada…",
- * la foto con corte S y el eyebrow de puntos. */
-const OP_CABECERA_RANGO = rango(6, 26, 2);
+ * Entrada DISTINTA a la de la Pantalla 1 (pedido de Ale: cada pantalla elige su animación, no se
+ * repite el reveal enmascarado). Acá: título + subtítulo en UNA caja (`.op-cabecera`, con fondo
+ * propio) que **se desliza en vertical a la par del scroll y NUNCA se queda quieta** — sigue
+ * moviéndose incluso cuando la P2 está saliendo. El texto SIEMPRE nítido (sin fade), lo que se
+ * anima es la posición: la caja pasa por encima del contenido de la lámina. Atado a --hz-progreso,
+ * linear. Correcciones de Ale 2026-08-31: sin transparencia, movimiento MÁS notorio, sin punto de
+ * reposo. Ventana = todo el arco visible de la P2 (centro ± ~20 puntos). Falta: los 2 bloques, los
+ * 4 chips (Libertad · Naturaleza · Experiencias · Economía local), el cierre, la foto y el eyebrow. */
+const P2_CENTRO = P1_CENTRO * 2; // % de --hz-progreso en que la Pantalla 2 se centra
+const OP_CABECERA_RANGO = `${(P2_CENTRO - 20).toFixed(2)}% ${(P2_CENTRO + 22).toFixed(2)}%`;
 const OP_SUBTITULO_TEXTO = 'Una nueva forma de viajar necesita una nueva forma de organizarse';
 ---
 
@@ -362,37 +363,41 @@ const OP_SUBTITULO_TEXTO = 'Una nueva forma de viajar necesita una nueva forma d
 	/* === Pantalla 2 · "LA OPORTUNIDAD" (mazo pág. 2) — cabecera (2026-08-31) ===
 	 * Título bicolor a 2 líneas (LA navy / OPORTUNIDAD verde), subrayado verde corto debajo, y el
 	 * subtítulo. Mismo sistema visual que el mazo (título mayúsculas, 2 tintas, regla verde).
-	 * ENTRADA (distinta a la P1, pedido de Ale): título + subtítulo como UN bloque que baja desde
-	 * arriba a la par del scroll y va de fantasma a sólido — estilo bertani.net. `linear` +
-	 * `--hz-progreso`: el "super suave" lo da el suavizado de rueda de Base.astro. La ventana
-	 * (OP_CABECERA_RANGO, inline) termina en el instante de centrado de la P2. `.lamina` recorta
-	 * (`overflow:hidden`) así el bloque asoma desde el borde de arriba. */
+	 * ENTRADA (distinta a la P1, correcciones de Ale 2026-08-31): es una CAJA con fondo propio
+	 * (`--color-fondo` + sombra suave) que se DESLIZA en vertical a la par del scroll y NUNCA se
+	 * queda quieta — sigue bajando incluso cuando la P2 sale. El texto SIEMPRE nítido (nada de
+	 * opacidad), lo único que se anima es `translateY`. Movimiento amplio para que se note. `linear`
+	 * + `--hz-progreso`; el "suave" lo da el suavizado de rueda de Base.astro. `.lamina` recorta
+	 * (`overflow:hidden`) así la caja asoma desde arriba y se va por abajo. */
 	.op-cabecera {
 		display: flex;
 		flex-direction: column;
 		align-items: flex-start;
 		gap: var(--espacio-xs);
-		/* estado final / visible por defecto (sin scroll-driven → sin animación) */
+		/* la caja: fondo opaco que pasa por encima de lo que haya en la lámina */
+		background: var(--color-fondo);
+		padding: clamp(1rem, 3vh, 2rem) clamp(1.25rem, 3vw, 2.5rem) clamp(1.25rem, 3vh, 2.25rem);
+		box-shadow: 0 30px 45px -28px rgba(15, 43, 77, 0.35);
+		/* posición de reposo por defecto (sin scroll-driven → sin animación) */
 		transform: translateY(0);
-		opacity: 1;
 	}
 
 	@supports (animation-timeline: scroll(root)) {
 		.op-cabecera {
-			animation: op-cabecera-baja linear both;
+			animation: op-cabecera-desliza linear both;
 			animation-timeline: --hz-progreso;
-			will-change: transform, opacity;
+			will-change: transform;
 		}
 	}
 
-	@keyframes op-cabecera-baja {
+	@keyframes op-cabecera-desliza {
+		/* -6rem → +6rem: ~12rem de recorrido sobre toda la ventana. Es el número a subir/bajar si
+		 * Ale lo quiere más o menos notorio. Pasa por translateY(0) cerca del centrado de la P2. */
 		from {
-			transform: translateY(-5rem);
-			opacity: 0.1;
+			transform: translateY(-6rem);
 		}
 		to {
-			transform: translateY(0);
-			opacity: 1;
+			transform: translateY(6rem);
 		}
 	}
 
@@ -400,7 +405,6 @@ const OP_SUBTITULO_TEXTO = 'Una nueva forma de viajar necesita una nueva forma d
 		.op-cabecera {
 			animation: none !important;
 			transform: translateY(0);
-			opacity: 1;
 		}
 	}
 
