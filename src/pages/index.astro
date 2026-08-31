@@ -6,8 +6,9 @@
  *
  * Recorrido de la "cinta" (ver Pantalla.astro y base.css): Hero propio (Pantalla 0) → Pantalla 1
  * PORTADA (mazo pág. 1, cerrada) → Pantalla 2 "LA OPORTUNIDAD" (mazo pág. 2, en construcción) →
- * pág. 3..10 todavía como SlidePlaceholder. Cada pantalla del mazo es `<Pantalla completa>` (el
- * look full-bleed del mazo lo necesita); el Hero también.
+ * 3 SlidePlaceholder (mapa / rutas / centro-regional) hasta que se mapeen las págs. 3..10 del mazo.
+ * Cada pantalla del mazo es `<Pantalla completa>` (el look full-bleed del mazo lo necesita); el
+ * Hero también.
  *
  * `N_PANTALLAS` (abajo) = total de <Pantalla>. TODAS las ventanas de animación scroll-driven se
  * calculan a partir de ese número (ver `esc()`), así sumar una pantalla del mazo es cambiar ese
@@ -130,15 +131,16 @@ const ICONO_RANGO = rango(24.5, 25.3);
 /* === Pantalla 2 · "LA OPORTUNIDAD" (mazo pág. 2) ===
  * Entrada DISTINTA a la de la Pantalla 1 (pedido de Ale: cada pantalla elige su animación, no se
  * repite el reveal enmascarado). Acá: título + subtítulo en UNA caja (`.op-cabecera`, con fondo
- * propio) que **se desliza en vertical a la par del scroll y NUNCA se queda quieta** — sigue
- * moviéndose incluso cuando la P2 está saliendo. El texto SIEMPRE nítido (sin fade), lo que se
- * anima es la posición: la caja pasa por encima del contenido de la lámina. Atado a --hz-progreso,
- * linear. Correcciones de Ale 2026-08-31: sin transparencia, movimiento MÁS notorio, sin punto de
- * reposo. Ventana = todo el arco visible de la P2 (centro ± ~20 puntos). Falta: los 2 bloques, los
- * 4 chips (Libertad · Naturaleza · Experiencias · Economía local), el cierre, la foto y el eyebrow. */
+ * propio) que se desliza en vertical a la par del scroll y NUNCA se queda quieta — sigue moviéndose
+ * incluso cuando la P2 está saliendo. Texto SIEMPRE nítido (sin fade); lo único que se anima es
+ * `translateY`. Atado a --hz-progreso, linear. La caja pasa por encima de los 2 bloques (los tapa
+ * al deslizarse) pero por DEBAJO de los 4 chips (z-index, ver .op-chips) — así su parallax no
+ * esconde la entrada escalonada de los chips.
+ * Hecho: cabecera + 2 bloques + 4 chips + su ruta de nodos. Falta: el cierre, la foto y el eyebrow. */
 const P2_CENTRO = P1_CENTRO * 2; // % de --hz-progreso en que la Pantalla 2 se centra
-// Ventana SIMÉTRICA alrededor del centrado de la P2 → la caja pasa por translate(0,0) EXACTO en el
-// punto medio (cuando la P2 está centrada) y sigue de largo hacia arriba-izquierda.
+// Ventana SIMÉTRICA alrededor del centrado de la P2 → la caja pasa por translateY(0) EXACTO en el
+// punto medio (cuando la P2 está centrada) y sigue de largo hacia arriba. El componente horizontal
+// "der → izq" lo aporta el deslizamiento de la cinta, no este keyframe.
 const OP_CABECERA_RANGO = `${(P2_CENTRO - 20).toFixed(2)}% ${(P2_CENTRO + 20).toFixed(2)}%`;
 const OP_SUBTITULO_TEXTO = 'Una nueva forma de viajar necesita una nueva forma de organizarse';
 
@@ -271,10 +273,9 @@ const CHIPS_RUTA_RANGO = `${CHIPS_INICIO.toFixed(2)}% ${(CHIPS_INICIO + (CHIPS.l
 	</Pantalla>
 
 	<!-- Pantalla 2 · "LA OPORTUNIDAD" (mazo pág. 2). Se arma elemento por elemento, guiado por Ale.
-	     Hecho: cabecera (título + subtítulo, caja con parallax) + los 2 bloques del mazo.
-	     Falta: los 4 chips (Libertad · Naturaleza · Experiencias · Economía local), el cierre
-	     "Sin una red organizada…", la foto (camper en ruta costera) con corte S y el eyebrow de
-	     puntos. Footer CONTINUO con la Pantalla 1 vía indice={1} (ver Lamina.astro). -->
+	     Hecho: cabecera (título + subtítulo, caja con parallax) + los 2 bloques + los 4 chips con su
+	     ruta de nodos. Falta: el cierre "Sin una red organizada…", la foto (camper en ruta costera)
+	     con corte S y el eyebrow de puntos. Footer CONTINUO con la Pantalla 1 vía indice={1}. -->
 	<Pantalla id="oportunidad" completa>
 		<Lamina indice={1} distribucion="columna">
 			<div class="op-cabecera" style={`animation-range: ${OP_CABECERA_RANGO}`}>
@@ -310,16 +311,15 @@ const CHIPS_RUTA_RANGO = `${CHIPS_INICIO.toFixed(2)}% ${(CHIPS_INICIO + (CHIPS.l
 
 			<!-- Los 4 chips = VALORES del mazo (Libertad · Naturaleza · Experiencias · Economía
 			     local), no elementos del sistema (confirmado con el render de la pág. 2). Tarjetas
-			     blancas con ícono + label. z-index 1: la caja de la cabecera también les pasa por
-			     encima. La estructura de líneas punteadas tipo árbol que los une a los 2 bloques es
-			     decorativa — se suma después. -->
+			     blancas con ícono + label. La estructura de líneas punteadas tipo árbol que los une a
+			     los 2 bloques (decorativa) se suma después. -->
 			<div class="op-chips">
 				<!-- Los 4 nodos van UNIDOS por una "ruta" ondulada, mismo formato que el nav lateral
 				     (HiloRuta): línea marino + nodos llenos centrados en ella. Pedido de Ale — los
 				     puntos no van sueltos; la bajadita nodo→chip se obvió. La línea se DIBUJA con el
-				     scroll (pathLength=1 + stroke-dashoffset, misma técnica que HiloRuta).
-				     preserveAspectRatio="none" estira la línea (ok, es un trazo); los NODOS y las
-				     tarjetas son HTML para no ovalarse y para poder animarlos escalonados. -->
+				     scroll (wipe con clip-path — ver el <style>). preserveAspectRatio="none" estira la
+				     línea (ok, es un trazo); los NODOS y las tarjetas son HTML para no ovalarse y para
+				     poder animarlos escalonados. -->
 				<svg
 					class="op-chips-ruta"
 					viewBox="0 0 100 28"
@@ -609,13 +609,12 @@ const CHIPS_RUTA_RANGO = `${CHIPS_INICIO.toFixed(2)}% ${(CHIPS_INICIO + (CHIPS.l
 	}
 
 	/* === Pantalla 2 · los 4 chips (mazo pág. 2, 2026-08-31) ===
-	 * Tarjetas blancas (--color-superficie) sobre el fondo cálido, formato **apenas más vertical que
-	 * horizontal** (aspect-ratio ~1/1.12, pedido de Ale) con ícono GRANDE y vistoso (~56px, íconos
-	 * detallados de Icono.astro) + label + reglita verde debajo + nodo verde arriba (conector del
-	 * "árbol" del mazo; las líneas punteadas del árbol se suman después). Mucho más chicas que el
-	 * box del título. z-index 3 → los chips van POR ENCIMA de la caja de la cabecera (z-index 2): la
-	 * caja hace su parallax por DETRÁS y ya no los tapa (así se aprecia la entrada). Los 2 bloques
-	 * (z-index 1) sí siguen por debajo de la caja. */
+	 * Tarjetas blancas (--color-superficie) sobre el fondo cálido, formato apenas más vertical que
+	 * horizontal (aspect-ratio 1/1.06, pedido de Ale) con ícono grande y detallado (~56px, íconos de
+	 * Icono.astro) + label + reglita verde debajo. Unidos por una "ruta" de nodos (ver
+	 * .op-chips-ruta). Mucho más chicas que el box del título. z-index 3 → van POR ENCIMA de la caja
+	 * de la cabecera (z-index 2): su parallax pasa por DETRÁS y no esconde la entrada de los chips.
+	 * Los 2 bloques (z-index 1) sí quedan por debajo de la caja. */
 	.op-chips {
 		position: relative;
 		z-index: 3;
@@ -677,8 +676,9 @@ const CHIPS_RUTA_RANGO = `${CHIPS_INICIO.toFixed(2)}% ${(CHIPS_INICIO + (CHIPS.l
 	}
 
 	/* === Entrada progresiva de los chips, al ritmo del scroll (2026-08-31, pedido de Ale) ===
-	 * La ruta se dibuja (dashoffset 1→0), y cada nodo + su tarjeta entran escalonados — cada uno con
-	 * su animation-range inline (calculado en el frontmatter, ver CHIPS_*). Termina antes del
+	 * La ruta se dibuja de izq→der (`clip-path` wipe — con `preserveAspectRatio=none` un
+	 * stroke-dashoffset se veía segmentado), y cada nodo + su tarjeta entran escalonados, cada uno
+	 * con su `animation-range` inline (calculado en el frontmatter, ver `rangoChip`). Termina en el
 	 * centrado de la P2. */
 	@supports (animation-timeline: scroll(root)) {
 		.op-chips-ruta {
