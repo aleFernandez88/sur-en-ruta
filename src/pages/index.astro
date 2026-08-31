@@ -249,18 +249,41 @@ const OP_SUBTITULO_TEXTO = 'Una nueva forma de viajar necesita una nueva forma d
 	</Pantalla>
 
 	<!-- Pantalla 2 · "LA OPORTUNIDAD" (mazo pág. 2). Se arma elemento por elemento, guiado por Ale.
-	     Por ahora: cabecera (título bicolor + subtítulo) como UN bloque que entra desde arriba con
-	     el scroll (ver .op-cabecera en el <style>, y feedback-animacion-por-pantalla en memoria).
-	     Falta: los 2 bloques, los 4 chips (Libertad · Naturaleza · Experiencias · Economía local),
-	     el cierre "Sin una red organizada…", la foto (camper en ruta costera) con corte S y el
-	     eyebrow de puntos. Footer CONTINUO con la Pantalla 1 vía indice={1} (misma función de onda,
-	     tramo siguiente — ver Lamina.astro). -->
+	     Hecho: cabecera (título + subtítulo, caja con parallax) + los 2 bloques del mazo.
+	     Falta: los 4 chips (Libertad · Naturaleza · Experiencias · Economía local), el cierre
+	     "Sin una red organizada…", la foto (camper en ruta costera) con corte S y el eyebrow de
+	     puntos. Footer CONTINUO con la Pantalla 1 vía indice={1} (ver Lamina.astro). -->
 	<Pantalla id="oportunidad" completa>
 		<Lamina indice={1} distribucion="columna">
 			<div class="op-cabecera" style={`animation-range: ${OP_CABECERA_RANGO}`}>
 				<p class="op-titulo op-titulo--l1">LA</p>
 				<p class="op-titulo op-titulo--l2">OPORTUNIDAD</p>
 				<p class="op-subtitulo">{OP_SUBTITULO_TEXTO}</p>
+			</div>
+
+			<!-- Los 2 bloques del mazo (lado a lado, divisoria punteada). Copy literal, con el
+			     lead-in en verde/bold (ya venía resaltado en el mazo). Todavía SIN animación propia
+			     — la caja de la cabecera pasa por encima de ellos con su parallax ("caja que se
+			     mueve sobre el contenido", pedido de Ale). -->
+			<div class="op-bloques">
+				<div class="op-bloque">
+					<span class="op-bloque-icono">
+						<Icono nombre="grafico-creciente" tamano={26} acento="var(--color-verde)" />
+					</span>
+					<p class="op-bloque-texto">
+						<strong>El turismo itinerante crece</strong> porque combina libertad, flexibilidad y
+						contacto con el territorio.
+					</p>
+				</div>
+				<div class="op-bloque">
+					<span class="op-bloque-icono">
+						<Icono nombre="ubicacion" tamano={26} acento="var(--color-verde)" />
+					</span>
+					<p class="op-bloque-texto">
+						<strong>La oportunidad</strong> está en ordenar la experiencia con información clara,
+						servicios identificados y buenas prácticas.
+					</p>
+				</div>
 			</div>
 		</Lamina>
 	</Pantalla>
@@ -381,7 +404,10 @@ const OP_SUBTITULO_TEXTO = 'Una nueva forma de viajar necesita una nueva forma d
 		flex-direction: column;
 		align-items: flex-start;
 		gap: var(--espacio-xs);
-		/* la caja: fondo opaco que pasa por encima de lo que haya en la lámina */
+		/* la caja: fondo opaco que pasa POR ENCIMA de los 2 bloques (z-index) mientras hace su
+		 * parallax — "una caja que se mueve sobre el contenido" (Ale). */
+		position: relative;
+		z-index: 2;
 		background: var(--color-fondo);
 		padding: clamp(1rem, 3vh, 2rem) clamp(1.25rem, 3vw, 2.5rem) clamp(1.25rem, 3vh, 2.25rem);
 		box-shadow: 0 30px 45px -28px rgba(15, 43, 77, 0.35);
@@ -456,6 +482,62 @@ const OP_SUBTITULO_TEXTO = 'Una nueva forma de viajar necesita una nueva forma d
 		line-height: 1.3;
 		max-width: 22ch;
 		color: var(--color-marino);
+	}
+
+	/* === Pantalla 2 · los 2 bloques (mazo pág. 2, 2026-08-31) ===
+	 * Lado a lado con una divisoria punteada al medio (sistema visual del mazo). Cada bloque: ícono
+	 * en círculo de trazo verde + texto con el lead-in en verde/bold. z-index 1 para quedar POR
+	 * DEBAJO de la caja de la cabecera (que les pasa por encima con su parallax). */
+	.op-bloques {
+		position: relative;
+		z-index: 1;
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		column-gap: clamp(2rem, 5vw, 3.5rem);
+		width: min(44rem, 62vw);
+		margin-top: clamp(1.75rem, 5vh, 3rem);
+	}
+
+	/* Divisoria punteada vertical, centrada en el gap. */
+	.op-bloques::before {
+		content: '';
+		position: absolute;
+		top: 0.25rem;
+		bottom: 0.25rem;
+		left: 50%;
+		border-left: 2px dotted var(--color-tinta-suave);
+		opacity: 0.5;
+	}
+
+	.op-bloque {
+		display: flex;
+		align-items: flex-start;
+		gap: var(--espacio-sm);
+	}
+
+	.op-bloque-icono {
+		flex-shrink: 0;
+		width: 2.6rem;
+		height: 2.6rem;
+		border: 1.5px solid var(--color-verde);
+		border-radius: 50%;
+		display: grid;
+		place-items: center;
+		color: var(--color-verde);
+	}
+
+	.op-bloque-texto {
+		margin: 0;
+		font-family: var(--fuente-texto);
+		font-weight: 400;
+		font-size: var(--texto-base);
+		line-height: 1.45;
+		color: var(--color-tinta);
+	}
+
+	.op-bloque-texto strong {
+		font-weight: 700;
+		color: var(--color-verde);
 	}
 
 	/* === Reveal de entrada, por línea o por palabra (2026-08-28) ===
