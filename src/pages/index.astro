@@ -285,6 +285,38 @@ const OP_SUBTITULO_TEXTO = 'Una nueva forma de viajar necesita una nueva forma d
 					</p>
 				</div>
 			</div>
+
+			<!-- Los 4 chips = VALORES del mazo (Libertad · Naturaleza · Experiencias · Economía
+			     local), no elementos del sistema (confirmado con el render de la pág. 2). Tarjetas
+			     blancas con ícono + label. z-index 1: la caja de la cabecera también les pasa por
+			     encima. La estructura de líneas punteadas tipo árbol que los une a los 2 bloques es
+			     decorativa — se suma después. -->
+			<div class="op-chips">
+				<div class="op-chip">
+					<span class="op-chip-icono">
+						<Icono nombre="libertad" tamano={30} acento="var(--color-verde)" />
+					</span>
+					<span class="op-chip-label">Libertad</span>
+				</div>
+				<div class="op-chip">
+					<span class="op-chip-icono">
+						<Icono nombre="naturaleza" tamano={30} acento="var(--color-verde)" />
+					</span>
+					<span class="op-chip-label">Naturaleza</span>
+				</div>
+				<div class="op-chip">
+					<span class="op-chip-icono">
+						<Icono nombre="experiencias" tamano={30} acento="var(--color-verde)" />
+					</span>
+					<span class="op-chip-label">Experiencias</span>
+				</div>
+				<div class="op-chip">
+					<span class="op-chip-icono">
+						<Icono nombre="economia-local" tamano={30} acento="var(--color-verde)" />
+					</span>
+					<span class="op-chip-label">Economía local</span>
+				</div>
+			</div>
 		</Lamina>
 	</Pantalla>
 
@@ -543,6 +575,42 @@ const OP_SUBTITULO_TEXTO = 'Una nueva forma de viajar necesita una nueva forma d
 	.op-bloque-texto strong {
 		font-weight: 700;
 		color: var(--color-verde);
+	}
+
+	/* === Pantalla 2 · los 4 chips (mazo pág. 2, 2026-08-31) ===
+	 * Tarjetas blancas (--color-superficie) sobre el fondo cálido, con ícono + label. Mucho más
+	 * chicas que el box del título. z-index 1 → la caja de la cabecera les pasa por encima. */
+	.op-chips {
+		position: relative;
+		z-index: 1;
+		display: grid;
+		grid-template-columns: repeat(4, 1fr);
+		gap: clamp(0.6rem, 1.4vw, 1.1rem);
+		width: min(44rem, 62vw);
+		margin-top: clamp(1.25rem, 3.5vh, 2rem);
+	}
+
+	.op-chip {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 0.55rem;
+		padding: clamp(0.9rem, 2.2vh, 1.35rem) 0.4rem;
+		background: var(--color-superficie);
+		border-radius: var(--radio-lg);
+		box-shadow: 0 10px 22px -14px rgba(15, 43, 77, 0.28);
+		text-align: center;
+	}
+
+	.op-chip-icono {
+		color: var(--color-marino);
+	}
+
+	.op-chip-label {
+		font-family: var(--fuente-texto);
+		font-weight: 600;
+		font-size: var(--texto-sm);
+		color: var(--color-marino);
 	}
 
 	/* === Reveal de entrada, por línea o por palabra (2026-08-28) ===
