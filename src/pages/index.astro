@@ -143,17 +143,19 @@ const OP_CABECERA_RANGO = `${(P2_CENTRO - 20).toFixed(2)}% ${(P2_CENTRO + 20).to
 const OP_SUBTITULO_TEXTO = 'Una nueva forma de viajar necesita una nueva forma de organizarse';
 
 /* Entrada progresiva de los 4 chips (pedido de Ale): la ruta se "dibuja" y cada nodo + su chip
- * entran escalonados, TODO atado a --hz-progreso mientras la P2 se acerca al centro. Termina un
- * toque antes del centrado (misma lógica que el resto de las entradas). Cada elemento lleva su
- * `animation-range` inline (Chrome no resuelve `animation-range` con var()). */
+ * entran escalonados, TODO atado a --hz-progreso. Cada elemento lleva su `animation-range` inline
+ * (Chrome no resuelve `animation-range` con var()).
+ * Los chips van POR ENCIMA de la caja de la cabecera (z-index, ver .op-chips) — la caja hace su
+ * parallax por DETRÁS, así que ya no los tapa y la entrada se aprecia. La ventana va durante la
+ * aproximación de la P2 y termina en el centrado (misma lógica que el resto de las entradas). */
 const CHIPS = [
 	{ icono: 'libertad', label: 'Libertad' },
 	{ icono: 'naturaleza', label: 'Naturaleza' },
 	{ icono: 'experiencias', label: 'Experiencias' },
 	{ icono: 'economia-local', label: 'Economía local' },
 ] as const;
-const CHIPS_INICIO = P2_CENTRO - 15;
-const CHIP_PASO = 2.1; // separación entre chip y chip (y entre nodo y nodo)
+const CHIPS_INICIO = P2_CENTRO - 13;
+const CHIP_PASO = 1.6; // separación entre chip y chip (y entre nodo y nodo)
 const rangoChip = (k: number, off: number, dur: number): string => {
 	const d = CHIPS_INICIO + off + k * CHIP_PASO;
 	return `${d.toFixed(2)}% ${(d + dur).toFixed(2)}%`;
@@ -332,11 +334,11 @@ const CHIPS_RUTA_RANGO = `${CHIPS_INICIO.toFixed(2)}% ${(CHIPS_INICIO + (CHIPS.l
 				{CHIPS.map((_, k) => (
 					<span
 						class="op-chip-nodo"
-						style={`left: ${12.5 + k * 25}%; animation-range: ${rangoChip(k, 0, 1.8)}`}
+						style={`left: ${12.5 + k * 25}%; animation-range: ${rangoChip(k, 0, 1.6)}`}
 					/>
 				))}
 				{CHIPS.map((c, k) => (
-					<div class="op-chip" style={`animation-range: ${rangoChip(k, 0.9, 3)}`}>
+					<div class="op-chip" style={`animation-range: ${rangoChip(k, 0.8, 2.4)}`}>
 						<span class="op-chip-icono">
 							<Icono nombre={c.icono} tamano={56} acento="var(--color-verde)" />
 						</span>
@@ -483,16 +485,18 @@ const CHIPS_RUTA_RANGO = `${CHIPS_INICIO.toFixed(2)}% ${(CHIPS_INICIO + (CHIPS.l
 	}
 
 	@keyframes op-cabecera-desliza {
-		/* Parallax vertical fuerte (equivalente al data-scroll-speed="4" de bertani): la caja
-		 * recorre ~1.3 pantallas de alto, entra desde abajo del cuadro y sale por arriba. Punto
-		 * medio de la ventana = translateY(0), justo cuando la P2 se centra. El 65vh es el número
-		 * a subir/bajar para más o menos "grosería". El horizontal lo pone la cinta, no este
-		 * keyframe. */
+		/* Parallax vertical: la caja entra desde abajo y sale por arriba, pasando por translateY(0)
+		 * justo cuando la P2 se centra (punto medio de la ventana). Bajado de 65vh a 22vh
+		 * (2026-08-31): con 65vh la caja descendía TANTO en la aproximación que tapaba la zona de
+		 * los 2 bloques + los 4 chips, y la entrada escalonada de los chips no se apreciaba. Con
+		 * 22vh apenas roza los bloques y nunca llega a los chips. Sigue siendo un movimiento amplio
+		 * (44vh de recorrido) y, sumado al deslizamiento horizontal de la cinta, se lee bien
+		 * diagonal. El horizontal lo pone la cinta, no este keyframe. */
 		from {
-			transform: translateY(65vh);
+			transform: translateY(22vh);
 		}
 		to {
-			transform: translateY(-65vh);
+			transform: translateY(-22vh);
 		}
 	}
 
@@ -609,10 +613,12 @@ const CHIPS_RUTA_RANGO = `${CHIPS_INICIO.toFixed(2)}% ${(CHIPS_INICIO + (CHIPS.l
 	 * horizontal** (aspect-ratio ~1/1.12, pedido de Ale) con ícono GRANDE y vistoso (~56px, íconos
 	 * detallados de Icono.astro) + label + reglita verde debajo + nodo verde arriba (conector del
 	 * "árbol" del mazo; las líneas punteadas del árbol se suman después). Mucho más chicas que el
-	 * box del título. z-index 1 → la caja de la cabecera les pasa por encima. */
+	 * box del título. z-index 3 → los chips van POR ENCIMA de la caja de la cabecera (z-index 2): la
+	 * caja hace su parallax por DETRÁS y ya no los tapa (así se aprecia la entrada). Los 2 bloques
+	 * (z-index 1) sí siguen por debajo de la caja. */
 	.op-chips {
 		position: relative;
-		z-index: 1;
+		z-index: 3;
 		display: grid;
 		grid-template-columns: repeat(4, 1fr);
 		gap: clamp(0.6rem, 1.4vw, 1.15rem);
@@ -689,7 +695,7 @@ const CHIPS_RUTA_RANGO = `${CHIPS_INICIO.toFixed(2)}% ${(CHIPS_INICIO + (CHIPS.l
 
 		.op-chip {
 			opacity: 0;
-			transform: translateY(1.4rem);
+			transform: translateY(2rem) scale(0.9);
 			animation: op-chip-entra linear both;
 			animation-timeline: --hz-progreso;
 		}
@@ -717,13 +723,16 @@ const CHIPS_RUTA_RANGO = `${CHIPS_INICIO.toFixed(2)}% ${(CHIPS_INICIO + (CHIPS.l
 	}
 
 	@keyframes op-chip-entra {
-		from {
+		0% {
 			opacity: 0;
-			transform: translateY(1.4rem);
+			transform: translateY(2rem) scale(0.9);
 		}
-		to {
+		70% {
 			opacity: 1;
-			transform: translateY(0);
+		}
+		100% {
+			opacity: 1;
+			transform: translateY(0) scale(1);
 		}
 	}
 
