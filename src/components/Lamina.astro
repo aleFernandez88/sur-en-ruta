@@ -3,9 +3,11 @@
  * Lamina.astro — shell de las pantallas que siguen el mazo de Ana (ver docs/landing-contenido.md).
  * Se arma por partes, guiado por Ale. Estado actual (2026-08-28):
  *   1. Fondo claro cálido (--color-fondo), a pantalla completa.
- *   2. Footer con **degradé animado** (--color-marino-noche → --color-marino → --color-celeste,
- *      ver más abajo) con el **borde superior ondulado y CONTINUO entre pantallas**. Pedido de
- *      Ale (2026-08-28): dinamismo en el COLOR, no en la forma de la onda (esa sigue igual).
+ *   2. Footer con **degradé VERTICAL animado** (--color-marino-noche abajo → --color-marino →
+ *      --color-celeste arriba, ver más abajo) con el **borde superior ondulado y CONTINUO entre
+ *      pantallas**. Pedido de Ale (2026-08-28): dinamismo en el COLOR, no en la forma de la onda.
+ *      El degradé es vertical (no diagonal) a propósito, 2026-08-31: así el color es idéntico a lo
+ *      ancho y no hay escalón en la costura entre pantallas (ver el <linearGradient>).
  *
  * Cómo es continuo: la onda es UNA sola función `banda(x)` definida sobre el ancho de todas las
  * pantallas del mazo. Cada lámina recibe su `indice` y dibuja solo su tramo `[indice, indice+1]`.
@@ -95,12 +97,19 @@ d += ` L 100 ${ALTO} L 0 ${ALTO} Z`;
   <footer class="lamina__footer" aria-hidden="true">
     <svg class="lamina__onda" viewBox={`0 0 100 ${ALTO}`} preserveAspectRatio="none">
       <defs>
+        {/* VERTICAL (x1==x2), no diagonal — 2026-08-31. Con el degradé diagonal (x2=100) cada
+           footer tenía su propia rampa izquierda→derecha, así que en la costura entre pantallas
+           el borde derecho de una (claro) chocaba con el borde izquierdo de la siguiente (oscuro):
+           un escalón de color visible, y la Pantalla 2 "empezaba" su degradé de cero. Vertical: el
+           color solo varía de abajo (stop 1) a arriba (stop 3), es idéntico a lo ancho, y como las
+           animaciones de los 3 stops arrancan en el load y son iguales en todas las láminas, la
+           costura queda invisible — el footer se lee como UNA banda continua. */}
         <linearGradient
           id={`lamina-degrade-${indice}`}
           gradientUnits="userSpaceOnUse"
           x1="0"
           y1={ALTO}
-          x2="100"
+          x2="0"
           y2="0"
         >
           <stop class="lamina__stop lamina__stop--1" offset="0%" style="stop-color: var(--color-marino-noche)" />
