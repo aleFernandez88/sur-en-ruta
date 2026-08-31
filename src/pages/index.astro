@@ -638,20 +638,19 @@ const OP_SUBTITULO_TEXTO = 'Una nueva forma de viajar necesita una nueva forma d
 		text-align: center;
 	}
 
-	/* Nodo de la "ruta" arriba de cada chip — anillado, mismo look que los nodos de HiloRuta
-	 * (relleno del color de fondo + anillo marino). Se apoya sobre la línea de .op-chips-ruta. */
+	/* Nodo de la "ruta" arriba de cada chip — círculo marino LLENO, CENTRADO sobre la línea de
+	 * .op-chips-ruta (la línea le pasa por el medio, no por el borde). La línea está a
+	 * 15/28·1.75rem ≈ 0.8125rem desde el top del SVG, y el SVG arranca en -1.75rem. */
 	.op-chip::before {
 		content: '';
 		position: absolute;
-		top: -0.82rem;
+		top: calc(-1.75rem + 15 / 28 * 1.75rem);
 		left: 50%;
-		width: 0.72rem;
-		height: 0.72rem;
-		margin-left: -0.36rem;
+		width: 0.78rem;
+		height: 0.78rem;
+		transform: translate(-50%, -50%);
 		border-radius: 50%;
-		background: var(--color-fondo);
-		border: 2.5px solid var(--color-marino);
-		box-sizing: content-box;
+		background: var(--color-marino);
 	}
 
 	.op-chip-icono {
