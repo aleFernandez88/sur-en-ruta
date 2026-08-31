@@ -140,10 +140,34 @@ d += ` L 100 ${ALTO} L 0 ${ALTO} Z`;
     position: relative;
     z-index: 1;
     height: 100%;
-    /* Deja libre la zona del footer (incluida la cresta de la onda) para que el contenido no
-     * quede tapado. --footer-alto lo fija el componente (px). */
-    padding: clamp(3rem, 8vh, 5.5rem) clamp(1.5rem, 5vw, 4rem)
+    /* El contenido se centra en el espacio disponible (los dos ejes) en vez de anclarse
+     * arriba-izquierda — en monitores grandes, anclado, quedaba un aire muerto enorme entre el
+     * texto y el borde. `align-content: center` = centrado vertical; `justify-items: center` =
+     * centrado horizontal del bloque de contenido (que toma el ancho de su línea más ancha).
+     * Deja libre la zona del footer (cresta de la onda incluida) con el padding inferior;
+     * --footer-alto lo fija el componente (px). */
+    display: grid;
+    align-content: center;
+    justify-items: center;
+    padding: clamp(2rem, 5vh, 3.5rem) clamp(1.5rem, 5vw, 4rem)
       calc(var(--footer-alto) + clamp(1rem, 3vh, 2rem));
+  }
+
+  /* Con foto fija a la derecha: la zona útil es solo la franja beige (izquierda de la curva S
+   * de .lamina__fondo, que llega a ~x=62–67% según la altura). Se reserva esa franja a la
+   * derecha y el bloque se centra en lo que queda — así queda en el medio del beige, no pegado
+   * al borde. El `min()` evita que en pantallas más chicas la franja de texto baje de ~50rem
+   * (ancho de "SUR EN RUTA" + margen) y el título tenga que partirse. Por debajo de 1200px se
+   * desactiva el reservado (ver más abajo): ahí ya no sobra espacio para centrar. */
+  .lamina--fondo-recortado .lamina__cuerpo {
+    padding-right: min(36vw, 100vw - 50rem);
+  }
+
+  @media (max-width: 1200px) {
+    .lamina--fondo-recortado .lamina__cuerpo {
+      justify-items: start;
+      padding-right: clamp(1.5rem, 5vw, 4rem);
+    }
   }
 
   .lamina__footer {
