@@ -292,6 +292,16 @@ const OP_SUBTITULO_TEXTO = 'Una nueva forma de viajar necesita una nueva forma d
 			     encima. La estructura de líneas punteadas tipo árbol que los une a los 2 bloques es
 			     decorativa — se suma después. -->
 			<div class="op-chips">
+				<!-- Los 4 nodos van UNIDOS por una "ruta" ondulada, mismo formato que el nav lateral
+				     (HiloRuta): línea marino + nodos anillados, con una bajadita de cada nodo al chip.
+				     Pedido de Ale — los puntos no van sueltos. preserveAspectRatio="none" estira la
+				     línea (ok, es un trazo) pero los NODOS son .op-chip::before en HTML para no
+				     ovalarse. `non-scaling-stroke` mantiene el grosor en px. -->
+				<svg class="op-chips-ruta" viewBox="0 0 100 28" preserveAspectRatio="none" aria-hidden="true">
+					<path
+						d="M2 15C6 15 9 12 12 15C19 22 30 22 37.5 15C45 8 55 8 62.5 15C70 22 80 22 88 15C91 13 95 15 98 15M12 15V28M37.5 15V28M62.5 15V28M88 15V28"
+					/>
+				</svg>
 				<div class="op-chip">
 					<span class="op-chip-icono">
 						<Icono nombre="libertad" tamano={56} acento="var(--color-verde)" />
@@ -590,7 +600,27 @@ const OP_SUBTITULO_TEXTO = 'Una nueva forma de viajar necesita una nueva forma d
 		grid-template-columns: repeat(4, 1fr);
 		gap: clamp(0.6rem, 1.4vw, 1.15rem);
 		width: min(48rem, 66vw);
-		margin-top: clamp(0.85rem, 2.5vh, 1.5rem);
+		/* aire arriba para la "ruta" que une los nodos (vive con top negativo dentro de .op-chips) */
+		margin-top: calc(clamp(0.85rem, 2.5vh, 1.5rem) + 1.75rem);
+	}
+
+	/* "Ruta" ondulada que une los 4 nodos — mismo lenguaje que HiloRuta (línea marino fina). */
+	.op-chips-ruta {
+		position: absolute;
+		top: -1.75rem;
+		left: 0;
+		right: 0;
+		height: 1.75rem;
+		width: 100%;
+		pointer-events: none;
+	}
+
+	.op-chips-ruta path {
+		fill: none;
+		stroke: var(--color-marino);
+		stroke-width: 2;
+		stroke-linecap: round;
+		vector-effect: non-scaling-stroke;
 	}
 
 	.op-chip {
@@ -608,17 +638,20 @@ const OP_SUBTITULO_TEXTO = 'Una nueva forma de viajar necesita una nueva forma d
 		text-align: center;
 	}
 
-	/* Nodo verde arriba (conector del árbol del mazo). */
+	/* Nodo de la "ruta" arriba de cada chip — anillado, mismo look que los nodos de HiloRuta
+	 * (relleno del color de fondo + anillo marino). Se apoya sobre la línea de .op-chips-ruta. */
 	.op-chip::before {
 		content: '';
 		position: absolute;
-		top: calc(-1 * clamp(0.5rem, 1.4vh, 0.85rem));
+		top: -0.82rem;
 		left: 50%;
-		width: 0.55rem;
-		height: 0.55rem;
-		margin-left: -0.275rem;
+		width: 0.72rem;
+		height: 0.72rem;
+		margin-left: -0.36rem;
 		border-radius: 50%;
-		background: var(--color-verde);
+		background: var(--color-fondo);
+		border: 2.5px solid var(--color-marino);
+		box-sizing: content-box;
 	}
 
 	.op-chip-icono {
