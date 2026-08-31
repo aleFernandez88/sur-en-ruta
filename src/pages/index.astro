@@ -365,14 +365,17 @@ const OP_SUBTITULO_TEXTO = 'Una nueva forma de viajar necesita una nueva forma d
 	/* === Pantalla 2 · "LA OPORTUNIDAD" (mazo pág. 2) — cabecera (2026-08-31) ===
 	 * Título bicolor a 2 líneas (LA navy / OPORTUNIDAD verde), subrayado verde corto debajo, y el
 	 * subtítulo. Mismo sistema visual que el mazo (título mayúsculas, 2 tintas, regla verde).
-	 * ENTRADA (distinta a la P1, correcciones de Ale 2026-08-31): es una CAJA con fondo propio
-	 * (`--color-fondo` + sombra) que ATRAVIESA la pantalla en DIAGONAL — de abajo-derecha a
-	 * arriba-izquierda — a la par del scroll y NUNCA se queda quieta. Pasa por `translate(0,0)`
-	 * EXACTO cuando la P2 está centrada (punto medio de la ventana) y sigue de largo. Movimiento
-	 * GROSERO/amplio a propósito (pedido de Ale), no un ajuste sutil. Texto SIEMPRE nítido (nada de
-	 * opacidad). `linear` + `--hz-progreso`; el "suave" lo da el suavizado de rueda de Base.astro.
-	 * `.lamina` recorta (`overflow:hidden`) mientras la caja entra y sale de cuadro.
-	 * PENDIENTE: copiar easing/distancias reales del box de bertani.net cuando Ale pase el selector. */
+	 * ENTRADA (distinta a la P1, correcciones de Ale 2026-08-31): una CAJA con fondo propio
+	 * (`--color-fondo` + sombra) que ATRAVIESA la pantalla y NUNCA se queda quieta.
+	 * Referencia: el box de bertani.net es `<div data-scroll data-scroll-speed="4"
+	 * data-scroll-direction="vertical">` — o sea Locomotive Scroll con **parallax VERTICAL a
+	 * velocidad 4** (muy fuerte): la caja viaja > una pantalla de alto mientras la sección pasa, y
+	 * está en `translateY(0)` justo cuando la sección se centra. Acá replicamos eso con un
+	 * `translateY` grande (65vh → -65vh) sobre una ventana simétrica al centrado de la P2. El
+	 * componente horizontal "derecha → izquierda" que se ve lo aporta SOLO el deslizamiento de la
+	 * cinta (la tarjeta de la P2 ya viaja de derecha a izquierda) — la caja en sí es vertical, como
+	 * bertani. Texto SIEMPRE nítido (nada de opacidad). `linear` + `--hz-progreso`. `.lamina`
+	 * recorta (`overflow:hidden`) mientras la caja entra y sale de cuadro. */
 	.op-cabecera {
 		display: flex;
 		flex-direction: column;
@@ -395,14 +398,16 @@ const OP_SUBTITULO_TEXTO = 'Una nueva forma de viajar necesita una nueva forma d
 	}
 
 	@keyframes op-cabecera-desliza {
-		/* Diagonal abajo-derecha → arriba-izquierda. Punto medio de la ventana = translate(0,0)
-		 * (P2 centrada). Distancias en vw/vh para que "atraviese la pantalla"; son los números a
-		 * tunear (o a reemplazar por los de bertani). */
+		/* Parallax vertical fuerte (equivalente al data-scroll-speed="4" de bertani): la caja
+		 * recorre ~1.3 pantallas de alto, entra desde abajo del cuadro y sale por arriba. Punto
+		 * medio de la ventana = translateY(0), justo cuando la P2 se centra. El 65vh es el número
+		 * a subir/bajar para más o menos "grosería". El horizontal lo pone la cinta, no este
+		 * keyframe. */
 		from {
-			transform: translate(34vw, 30vh);
+			transform: translateY(65vh);
 		}
 		to {
-			transform: translate(-34vw, -30vh);
+			transform: translateY(-65vh);
 		}
 	}
 
