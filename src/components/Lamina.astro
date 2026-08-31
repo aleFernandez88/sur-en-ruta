@@ -94,6 +94,11 @@ d += ` L 100 ${ALTO} L 0 ${ALTO} Z`;
   <div class="lamina__cuerpo">
     <slot />
   </div>
+  {Astro.slots.has('galeria') && (
+    <div class="lamina__galeria">
+      <slot name="galeria" />
+    </div>
+  )}
   <footer class="lamina__footer" aria-hidden="true">
     <svg class="lamina__onda" viewBox={`0 0 100 ${ALTO}`} preserveAspectRatio="none">
       <defs>
@@ -191,11 +196,40 @@ d += ` L 100 ${ALTO} L 0 ${ALTO} Z`;
   }
 
   /* Contenido en columna (pantallas de contenido denso del mazo): arriba-izquierda, crece hacia
-   * abajo. La curva S de .lamina--fondo-recortado (si la hay) sigue reservando su franja a la
-   * derecha con el padding-right de arriba. */
+   * abajo. Se DESPEGA del borde izquierdo (ahí vive HiloRuta, la barra de nav) y se RESERVA la
+   * franja derecha para las foto-cards del mazo — así el contenido queda en el medio-izquierda, no
+   * encimado con el nav ni con las fotos. */
   .lamina--columna .lamina__cuerpo {
     align-content: start;
     justify-items: start;
+    padding-left: clamp(2.5rem, 8vw, 7rem);
+    padding-right: min(42vw, 100vw - 44rem);
+  }
+
+  @media (max-width: 1100px) {
+    .lamina--columna .lamina__cuerpo {
+      padding-left: clamp(2rem, 6vw, 4rem);
+      padding-right: clamp(1.5rem, 5vw, 4rem);
+    }
+  }
+
+  /* Zona de foto-cards del mazo — pegada al borde derecho de la lámina, sangra por ahí (la
+   * lámina tiene overflow:hidden). z-index 0: por debajo del contenido de texto (.lamina__cuerpo
+   * es z-index 1). El contenido en columna ya reserva su franja con padding-right, así que no se
+   * enciman. */
+  .lamina__galeria {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: min(46vw, 100vw - 40rem);
+    z-index: 0;
+  }
+
+  @media (max-width: 1100px) {
+    .lamina__galeria {
+      display: none;
+    }
   }
 
   .lamina__footer {

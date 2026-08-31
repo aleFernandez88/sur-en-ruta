@@ -165,6 +165,10 @@ const rangoChip = (k: number, off: number, dur: number): string => {
 // La ruta termina de dibujarse justo cuando aparece el último nodo (así "alcanza" a cada nodo al
 // pasar por él).
 const CHIPS_RUTA_RANGO = `${CHIPS_INICIO.toFixed(2)}% ${(CHIPS_INICIO + (CHIPS.length - 1) * CHIP_PASO + 1.8).toFixed(2)}%`;
+
+// Stack de foto-cards del mazo (pág. 2), en diagonal, sangrando por la derecha. PLACEHOLDER:
+// gradiente + label hasta tener las 4 fotos reales de Uruguay (faro / viñedo / cartel / feria).
+const GALERIA = ['Faro', 'Viñedo', 'Cartel indicador', 'Feria local'];
 ---
 
 <Base>
@@ -343,6 +347,17 @@ const CHIPS_RUTA_RANGO = `${CHIPS_INICIO.toFixed(2)}% ${(CHIPS_INICIO + (CHIPS.l
 							<Icono nombre={c.icono} tamano={56} acento="var(--color-verde)" />
 						</span>
 						<span class="op-chip-label">{c.label}</span>
+					</div>
+				))}
+			</div>
+
+			<!-- Stack de foto-cards del mazo (faro / viñedo / cartel / feria) en diagonal, sangrando
+			     por la derecha. Vive en el slot `galeria` de Lamina (fuera de .lamina__cuerpo, ver
+			     Lamina.astro). PLACEHOLDER: gradiente + label hasta tener las fotos reales. -->
+			<div slot="galeria" class="op-galeria" aria-hidden="true">
+				{GALERIA.map((label, k) => (
+					<div class="op-galeria-card" style={`--i: ${k}`}>
+						<span class="op-galeria-ph">{label}</span>
 					</div>
 				))}
 			</div>
@@ -774,6 +789,59 @@ const CHIPS_RUTA_RANGO = `${CHIPS_INICIO.toFixed(2)}% ${(CHIPS_INICIO + (CHIPS.l
 		margin: 0.5rem auto 0;
 		border-radius: 999px;
 		background: var(--color-verde);
+	}
+
+	/* === Pantalla 2 · foto-cards de la derecha (mazo pág. 2, 2026-08-31) ===
+	 * 4 cards en diagonal (borde izquierdo en `/`, mismo ángulo, ligeramente rotadas y corridas a la
+	 * derecha para sangrar). Marco blanco (--color-superficie) por el padding. PLACEHOLDER: cada una
+	 * es un gradiente + label hasta tener las 4 fotos reales (faro / viñedo / cartel / feria).
+	 * Vive en .lamina__galeria (Lamina.astro), z-index 0, por detrás del texto. */
+	.op-galeria {
+		height: 100%;
+		display: flex;
+		flex-direction: column;
+		gap: clamp(0.45rem, 1.2vh, 0.85rem);
+		padding: clamp(0.75rem, 3vh, 2rem) 0 calc(var(--footer-alto) * 0.55);
+	}
+
+	.op-galeria-card {
+		flex: 1;
+		min-height: 0;
+		background: var(--color-superficie);
+		padding: 5px;
+		/* borde izquierdo en diagonal (/), borde derecho recto (sangra fuera de la lámina) */
+		clip-path: polygon(11% 0%, 100% 0%, 100% 100%, 0% 100%);
+		box-shadow: 0 20px 40px -24px rgba(15, 43, 77, 0.4);
+		transform: translateX(6%) rotate(-2deg);
+	}
+
+	.op-galeria-ph {
+		display: flex;
+		align-items: flex-end;
+		width: 100%;
+		height: 100%;
+		padding: 0.85rem 1.1rem 0.85rem 16%;
+		color: var(--color-superficie);
+		font-family: var(--fuente-texto);
+		font-weight: 700;
+		font-size: var(--texto-base);
+		letter-spacing: 0.02em;
+		text-shadow: 0 1px 6px rgba(0, 0, 0, 0.4);
+	}
+
+	/* PLACEHOLDER — gradientes evocativos por card hasta tener las fotos reales (faro / viñedo /
+	 * cartel / feria). Usan los tonos terrosos de --color-ruta-*. */
+	.op-galeria-card:nth-child(1) .op-galeria-ph {
+		background: linear-gradient(155deg, var(--color-ruta-oceanica, #4a6b82), var(--color-marino));
+	}
+	.op-galeria-card:nth-child(2) .op-galeria-ph {
+		background: linear-gradient(155deg, var(--color-ruta-naturaleza, #3d7a5c), var(--color-verde));
+	}
+	.op-galeria-card:nth-child(3) .op-galeria-ph {
+		background: linear-gradient(155deg, var(--color-ruta-rural, #6b7d3a), var(--color-marino-profundo, #0a2036));
+	}
+	.op-galeria-card:nth-child(4) .op-galeria-ph {
+		background: linear-gradient(155deg, var(--color-terracota), var(--color-ruta-rural, #6a4a2c));
 	}
 
 	/* === Reveal de entrada, por línea o por palabra (2026-08-28) ===
