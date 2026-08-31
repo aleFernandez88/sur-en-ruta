@@ -40,14 +40,17 @@ const iconos = {
   'grafico-creciente': `<path d="M3.6 20.4h16.8"/><path d="M7.2 20.4v-3.4M12 20.4v-7.4M16.8 20.4v-11.4"/><path d="m4.8 13.6 4.2-3.7 3 2.5 6.2-6.4" data-acento/><path d="M14.6 6h3.8v3.8" data-acento/>`,
 
   // ── Chips de Pantalla 2 (los 4 valores del mazo) ──────────────────────────
-  // Libertad — gaviota en vuelo + línea de agua (2ª tinta).
-  libertad: `<path d="M12 8c-2.1 0-4.2 1.5-6.8 4.2M12 8c2.1 0 4.2 1.5 6.8 4.2"/><path d="M4 16.5c2-1.7 4-1.7 6 0s4 1.7 6 0 4-1.7 4 0" data-acento/>`,
-  // Naturaleza — un pino de dos pisos + una loma (2ª tinta).
-  naturaleza: `<path d="M12 3 7.4 10.5h9.2zM12 7.5 6.4 16h11.2M12 16v3.4"/><path d="M2.8 20c3-3 5.4-3 8.4 0 3-3 5.4-3 8-0.6" data-acento/>`,
-  // Experiencias — cámara de fotos.
-  experiencias: `<rect x="3.4" y="7.4" width="17.2" height="11.6" rx="2"/><path d="M8.6 7.4 10 4.8h4l1.4 2.6"/><circle cx="12" cy="13.2" r="3.3" data-acento/>`,
-  // Economía local — puesto/comercio con toldo ondulado (2ª tinta).
-  'economia-local': `<path d="M4.5 10.5h15V20h-15z"/><path d="M3 10.5 4.6 6h14.8L21 10.5"/><path d="M3 10.5c1.5 1.6 3 1.6 4.5 0s3-1.6 4.5 0 3 1.6 4.5 0 3-1.6 4.5 0" data-acento/><path d="M10 20v-4.6h4V20"/>`,
+  // Iconos "vistosos", más detallados que un glifo de UI — se usan a tamaño grande (~56px) dentro
+  // de la tarjeta. Referencia: el render de la pág. 2 del mazo.
+  // Libertad — pájaro en vuelo (cuerpo + cola en cuña, ala levantada en 2ª tinta) sobre el agua.
+  libertad: `<path d="M2.8 13.9c2.1-1 4-.7 5.8.9l1.4 1.3c1 .9 2.3 1.4 3.7 1.4h7.5l-3.9 3.1c-.9.7-2 1.1-3.1 1.1h-3.3c-1.5 0-3 .7-3.9 1.9l-1.5 1.9c-.7-2.3-.7-4.5-.1-6.7z"/><path d="M9.6 15.2c-.6-3.2.4-6 3.1-8.2-.5 2.3 0 4.2 1.6 5.7" data-acento/><path d="M3.2 21.4c2-1.3 4-1.3 6 0s4 1.3 6 0" data-acento/>`,
+  // Naturaleza — dos pinos (uno navy, uno verde) sobre lomas onduladas (2ª tinta).
+  naturaleza: `<path d="M8 2.8 4.7 7.6H6L3.3 11.8h1.8L2.6 15.8h10.8L10.9 11.8h1.8L10 7.6h1.3z"/><path d="M8 15.8v2.4"/><path d="M15.8 5.6 13 9.9h1.2l-2.3 3.6h1.5l-2 3.1h9.6l-2-3.1h1.5L18 9.9h1.2z" data-acento/><path d="M15.8 16.6v1.8" data-acento/><path d="M1.6 21c2.4-3 4.6-3 7 0 2.2-3.6 5.2-3.6 7.4 0 1.6-2.2 3.4-2.2 4.9 0" data-acento/>`,
+  // Experiencias — cámara de fotos con lente doble (2ª tinta) + visor y flash.
+  experiencias: `<rect x="2.2" y="6.6" width="19.6" height="14" rx="2.8"/><path d="M7.4 6.6 8.9 3.6h6.2l1.5 3"/><rect x="3.8" y="8.4" width="3.6" height="1.9" rx=".8"/><circle cx="12" cy="13.8" r="4.4" data-acento/><circle cx="12" cy="13.8" r="1.9"/><circle cx="18.4" cy="10" r=".9" data-acento/>`,
+  // Economía local — comercio con techo a dos aguas, toldo ondulado y rayado (2ª tinta),
+  // puerta + vidriera.
+  'economia-local': `<path d="M4.8 11.4h14.4v9H4.8z"/><path d="M3.4 11.4 5.4 5.8h13.2l2 5.6"/><path d="M3.4 11.4c1 1.5 2.4 1.5 3.4 0 1 1.5 2.4 1.5 3.4 0 1 1.5 2.4 1.5 3.4 0 1 1.5 2.4 1.5 3.4 0 1 1.5 2.4 1.5 3.4 0" data-acento/><path d="M7 5.8v5.6M11 5.8v5.6M15 5.8v5.6M19 5.8v5.6" data-acento/><path d="M7.6 20.4v-4.8h3.4v4.8M13 15.6h3.6v3.8H13z"/>`,
   'puntos-amigos': `<circle cx="9" cy="8" r="2.6"/><path d="M3.8 19c0-3.1 2.3-5.3 5.2-5.3s5.2 2.2 5.2 5.3"/><circle cx="16.6" cy="9" r="2.1" data-acento/><path d="M14.7 18.4c.2-2.9 2.1-4.8 4.4-4.8 1.2 0 2.3.5 3.1 1.4" data-acento/>`,
   sello: `<circle cx="12" cy="9.4" r="5.2"/><path d="m9.7 9.5 1.7 1.7 3.1-3.3" data-acento/><path d="M9 13.7 7.3 21l4.7-2.6L16.7 21l-1.7-7.3"/>`,
 

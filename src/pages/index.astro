@@ -294,25 +294,25 @@ const OP_SUBTITULO_TEXTO = 'Una nueva forma de viajar necesita una nueva forma d
 			<div class="op-chips">
 				<div class="op-chip">
 					<span class="op-chip-icono">
-						<Icono nombre="libertad" tamano={30} acento="var(--color-verde)" />
+						<Icono nombre="libertad" tamano={56} acento="var(--color-verde)" />
 					</span>
 					<span class="op-chip-label">Libertad</span>
 				</div>
 				<div class="op-chip">
 					<span class="op-chip-icono">
-						<Icono nombre="naturaleza" tamano={30} acento="var(--color-verde)" />
+						<Icono nombre="naturaleza" tamano={56} acento="var(--color-verde)" />
 					</span>
 					<span class="op-chip-label">Naturaleza</span>
 				</div>
 				<div class="op-chip">
 					<span class="op-chip-icono">
-						<Icono nombre="experiencias" tamano={30} acento="var(--color-verde)" />
+						<Icono nombre="experiencias" tamano={56} acento="var(--color-verde)" />
 					</span>
 					<span class="op-chip-label">Experiencias</span>
 				</div>
 				<div class="op-chip">
 					<span class="op-chip-icono">
-						<Icono nombre="economia-local" tamano={30} acento="var(--color-verde)" />
+						<Icono nombre="economia-local" tamano={56} acento="var(--color-verde)" />
 					</span>
 					<span class="op-chip-label">Economía local</span>
 				</div>
@@ -441,7 +441,7 @@ const OP_SUBTITULO_TEXTO = 'Una nueva forma de viajar necesita una nueva forma d
 		position: relative;
 		z-index: 2;
 		background: var(--color-fondo);
-		padding: clamp(1rem, 3vh, 2rem) clamp(1.25rem, 3vw, 2.5rem) clamp(1.25rem, 3vh, 2.25rem);
+		padding: clamp(0.75rem, 2vh, 1.4rem) clamp(1.25rem, 3vw, 2.25rem) clamp(0.9rem, 2vh, 1.5rem);
 		box-shadow: 0 30px 45px -28px rgba(15, 43, 77, 0.35);
 		/* posición de reposo por defecto (sin scroll-driven → sin animación) */
 		transform: translateY(0);
@@ -509,13 +509,13 @@ const OP_SUBTITULO_TEXTO = 'Una nueva forma de viajar necesita una nueva forma d
 	}
 
 	.op-subtitulo {
-		margin: var(--espacio-md) 0 0;
+		margin: var(--espacio-sm) 0 0;
 		font-family: var(--fuente-display);
 		font-weight: 500;
 		/* Bajado junto con el título (Ale) — de tope 2.05rem a 1.7rem. */
-		font-size: clamp(1.15rem, 0.95rem + 0.8vw, 1.7rem);
-		line-height: 1.3;
-		max-width: 24ch;
+		font-size: clamp(1.15rem, 0.95rem + 0.8vw, 1.65rem);
+		line-height: 1.25;
+		max-width: 30ch;
 		color: var(--color-marino);
 	}
 
@@ -530,7 +530,7 @@ const OP_SUBTITULO_TEXTO = 'Una nueva forma de viajar necesita una nueva forma d
 		grid-template-columns: 1fr 1fr;
 		column-gap: clamp(2rem, 5vw, 3.5rem);
 		width: min(44rem, 62vw);
-		margin-top: clamp(1.75rem, 5vh, 3rem);
+		margin-top: clamp(1rem, 3vh, 1.75rem);
 	}
 
 	/* Divisoria punteada vertical, centrada en el gap. */
@@ -578,28 +578,47 @@ const OP_SUBTITULO_TEXTO = 'Una nueva forma de viajar necesita una nueva forma d
 	}
 
 	/* === Pantalla 2 · los 4 chips (mazo pág. 2, 2026-08-31) ===
-	 * Tarjetas blancas (--color-superficie) sobre el fondo cálido, con ícono + label. Mucho más
-	 * chicas que el box del título. z-index 1 → la caja de la cabecera les pasa por encima. */
+	 * Tarjetas blancas (--color-superficie) sobre el fondo cálido, formato **apenas más vertical que
+	 * horizontal** (aspect-ratio ~1/1.12, pedido de Ale) con ícono GRANDE y vistoso (~56px, íconos
+	 * detallados de Icono.astro) + label + reglita verde debajo + nodo verde arriba (conector del
+	 * "árbol" del mazo; las líneas punteadas del árbol se suman después). Mucho más chicas que el
+	 * box del título. z-index 1 → la caja de la cabecera les pasa por encima. */
 	.op-chips {
 		position: relative;
 		z-index: 1;
 		display: grid;
 		grid-template-columns: repeat(4, 1fr);
-		gap: clamp(0.6rem, 1.4vw, 1.1rem);
-		width: min(44rem, 62vw);
-		margin-top: clamp(1.25rem, 3.5vh, 2rem);
+		gap: clamp(0.6rem, 1.4vw, 1.15rem);
+		width: min(48rem, 66vw);
+		margin-top: clamp(0.85rem, 2.5vh, 1.5rem);
 	}
 
 	.op-chip {
+		position: relative;
+		aspect-ratio: 1 / 1.06;
 		display: flex;
 		flex-direction: column;
 		align-items: center;
-		gap: 0.55rem;
-		padding: clamp(0.9rem, 2.2vh, 1.35rem) 0.4rem;
+		justify-content: center;
+		gap: clamp(0.5rem, 1.6vh, 0.9rem);
+		padding: clamp(0.6rem, 1.5vw, 1.1rem);
 		background: var(--color-superficie);
-		border-radius: var(--radio-lg);
-		box-shadow: 0 10px 22px -14px rgba(15, 43, 77, 0.28);
+		border-radius: clamp(0.9rem, 1.8vw, 1.5rem);
+		box-shadow: 0 14px 28px -16px rgba(15, 43, 77, 0.3);
 		text-align: center;
+	}
+
+	/* Nodo verde arriba (conector del árbol del mazo). */
+	.op-chip::before {
+		content: '';
+		position: absolute;
+		top: calc(-1 * clamp(0.5rem, 1.4vh, 0.85rem));
+		left: 50%;
+		width: 0.55rem;
+		height: 0.55rem;
+		margin-left: -0.275rem;
+		border-radius: 50%;
+		background: var(--color-verde);
 	}
 
 	.op-chip-icono {
@@ -607,10 +626,23 @@ const OP_SUBTITULO_TEXTO = 'Una nueva forma de viajar necesita una nueva forma d
 	}
 
 	.op-chip-label {
+		display: block;
 		font-family: var(--fuente-texto);
 		font-weight: 600;
-		font-size: var(--texto-sm);
+		font-size: var(--texto-base);
+		line-height: 1.2;
 		color: var(--color-marino);
+	}
+
+	/* Reglita verde bajo el label (mini versión de la del título — cada chip la tiene en el mazo). */
+	.op-chip-label::after {
+		content: '';
+		display: block;
+		width: 1.4rem;
+		height: 0.18rem;
+		margin: 0.5rem auto 0;
+		border-radius: 999px;
+		background: var(--color-verde);
 	}
 
 	/* === Reveal de entrada, por línea o por palabra (2026-08-28) ===
