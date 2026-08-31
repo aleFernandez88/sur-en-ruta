@@ -139,6 +139,20 @@ main {
    * en vez de 5), no solo cosmético. */
   flex-shrink: 0;
   position: relative;
+  /* Fondo OPACO (el mismo off-white del body) — cada bloque llena el viewport cuando le toca,
+   * así tapa por completo la capa .fondo-fijo (foto fija al viewport, ver Base.astro). Sin esto,
+   * la foto de Pantalla 1 sangraría por los márgenes que dejan las tarjetas al 82% de las
+   * pantallas siguientes (se veía un marco de foto de camping alrededor de "Mapa y servicios").
+   * La única excepción es .hz-bloque--transparente. Esto vuelve innecesario el fade-out de
+   * opacidad de la foto: cada bloque vecino la oculta por geometría, no por timing. */
+  background-color: var(--color-fondo);
+}
+
+/* Pantalla 1 (Oportunidad): su bloque queda TRANSPARENTE a propósito para que la foto fija de
+ * .fondo-fijo se vea por detrás, a través de la mitad derecha transparente de la lámina. Ver
+ * Pantalla.astro (prop `transparente`) e index.astro. */
+.hz-bloque--transparente {
+  background-color: transparent;
 }
 
 .hz-tarjeta {

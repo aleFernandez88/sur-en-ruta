@@ -19,13 +19,16 @@
 interface Props {
 	id: string;
 	completa?: boolean;
+	/** true = el bloque de esta pantalla queda transparente para dejar ver la capa .fondo-fijo
+	 * (foto fija al viewport, ver Base.astro). Solo Pantalla 1 lo usa hoy. */
+	transparente?: boolean;
 }
 
-const { id, completa = false } = Astro.props;
+const { id, completa = false, transparente = false } = Astro.props;
 const claseTarjeta = completa ? 'hz-tarjeta hz-tarjeta--completa' : 'hz-tarjeta';
 ---
 
-<div class="hz-bloque">
+<div class:list={['hz-bloque', { 'hz-bloque--transparente': transparente }]}>
 	<section class={claseTarjeta} id={id}>
 		<div class="hz-tarjeta__contenido">
 			<slot />
