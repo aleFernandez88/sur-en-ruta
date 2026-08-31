@@ -137,7 +137,9 @@ const ICONO_RANGO = rango(24.5, 25.3);
  * reposo. Ventana = todo el arco visible de la P2 (centro ± ~20 puntos). Falta: los 2 bloques, los
  * 4 chips (Libertad · Naturaleza · Experiencias · Economía local), el cierre, la foto y el eyebrow. */
 const P2_CENTRO = P1_CENTRO * 2; // % de --hz-progreso en que la Pantalla 2 se centra
-const OP_CABECERA_RANGO = `${(P2_CENTRO - 20).toFixed(2)}% ${(P2_CENTRO + 22).toFixed(2)}%`;
+// Ventana SIMÉTRICA alrededor del centrado de la P2 → la caja pasa por translate(0,0) EXACTO en el
+// punto medio (cuando la P2 está centrada) y sigue de largo hacia arriba-izquierda.
+const OP_CABECERA_RANGO = `${(P2_CENTRO - 20).toFixed(2)}% ${(P2_CENTRO + 20).toFixed(2)}%`;
 const OP_SUBTITULO_TEXTO = 'Una nueva forma de viajar necesita una nueva forma de organizarse';
 ---
 
@@ -364,11 +366,13 @@ const OP_SUBTITULO_TEXTO = 'Una nueva forma de viajar necesita una nueva forma d
 	 * Título bicolor a 2 líneas (LA navy / OPORTUNIDAD verde), subrayado verde corto debajo, y el
 	 * subtítulo. Mismo sistema visual que el mazo (título mayúsculas, 2 tintas, regla verde).
 	 * ENTRADA (distinta a la P1, correcciones de Ale 2026-08-31): es una CAJA con fondo propio
-	 * (`--color-fondo` + sombra suave) que se DESLIZA en vertical a la par del scroll y NUNCA se
-	 * queda quieta — sigue bajando incluso cuando la P2 sale. El texto SIEMPRE nítido (nada de
-	 * opacidad), lo único que se anima es `translateY`. Movimiento amplio para que se note. `linear`
-	 * + `--hz-progreso`; el "suave" lo da el suavizado de rueda de Base.astro. `.lamina` recorta
-	 * (`overflow:hidden`) así la caja asoma desde arriba y se va por abajo. */
+	 * (`--color-fondo` + sombra) que ATRAVIESA la pantalla en DIAGONAL — de abajo-derecha a
+	 * arriba-izquierda — a la par del scroll y NUNCA se queda quieta. Pasa por `translate(0,0)`
+	 * EXACTO cuando la P2 está centrada (punto medio de la ventana) y sigue de largo. Movimiento
+	 * GROSERO/amplio a propósito (pedido de Ale), no un ajuste sutil. Texto SIEMPRE nítido (nada de
+	 * opacidad). `linear` + `--hz-progreso`; el "suave" lo da el suavizado de rueda de Base.astro.
+	 * `.lamina` recorta (`overflow:hidden`) mientras la caja entra y sale de cuadro.
+	 * PENDIENTE: copiar easing/distancias reales del box de bertani.net cuando Ale pase el selector. */
 	.op-cabecera {
 		display: flex;
 		flex-direction: column;
@@ -391,13 +395,14 @@ const OP_SUBTITULO_TEXTO = 'Una nueva forma de viajar necesita una nueva forma d
 	}
 
 	@keyframes op-cabecera-desliza {
-		/* -6rem → +6rem: ~12rem de recorrido sobre toda la ventana. Es el número a subir/bajar si
-		 * Ale lo quiere más o menos notorio. Pasa por translateY(0) cerca del centrado de la P2. */
+		/* Diagonal abajo-derecha → arriba-izquierda. Punto medio de la ventana = translate(0,0)
+		 * (P2 centrada). Distancias en vw/vh para que "atraviese la pantalla"; son los números a
+		 * tunear (o a reemplazar por los de bertani). */
 		from {
-			transform: translateY(-6rem);
+			transform: translate(34vw, 30vh);
 		}
 		to {
-			transform: translateY(6rem);
+			transform: translate(-34vw, -30vh);
 		}
 	}
 
