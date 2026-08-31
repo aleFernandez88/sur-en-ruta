@@ -141,6 +141,26 @@ const P2_CENTRO = P1_CENTRO * 2; // % de --hz-progreso en que la Pantalla 2 se c
 // punto medio (cuando la P2 está centrada) y sigue de largo hacia arriba-izquierda.
 const OP_CABECERA_RANGO = `${(P2_CENTRO - 20).toFixed(2)}% ${(P2_CENTRO + 20).toFixed(2)}%`;
 const OP_SUBTITULO_TEXTO = 'Una nueva forma de viajar necesita una nueva forma de organizarse';
+
+/* Entrada progresiva de los 4 chips (pedido de Ale): la ruta se "dibuja" y cada nodo + su chip
+ * entran escalonados, TODO atado a --hz-progreso mientras la P2 se acerca al centro. Termina un
+ * toque antes del centrado (misma lógica que el resto de las entradas). Cada elemento lleva su
+ * `animation-range` inline (Chrome no resuelve `animation-range` con var()). */
+const CHIPS = [
+	{ icono: 'libertad', label: 'Libertad' },
+	{ icono: 'naturaleza', label: 'Naturaleza' },
+	{ icono: 'experiencias', label: 'Experiencias' },
+	{ icono: 'economia-local', label: 'Economía local' },
+] as const;
+const CHIPS_INICIO = P2_CENTRO - 15;
+const CHIP_PASO = 2.1; // separación entre chip y chip (y entre nodo y nodo)
+const rangoChip = (k: number, off: number, dur: number): string => {
+	const d = CHIPS_INICIO + off + k * CHIP_PASO;
+	return `${d.toFixed(2)}% ${(d + dur).toFixed(2)}%`;
+};
+// La ruta termina de dibujarse justo cuando aparece el último nodo (así "alcanza" a cada nodo al
+// pasar por él).
+const CHIPS_RUTA_RANGO = `${CHIPS_INICIO.toFixed(2)}% ${(CHIPS_INICIO + (CHIPS.length - 1) * CHIP_PASO + 1.8).toFixed(2)}%`;
 ---
 
 <Base>
@@ -293,39 +313,36 @@ const OP_SUBTITULO_TEXTO = 'Una nueva forma de viajar necesita una nueva forma d
 			     decorativa — se suma después. -->
 			<div class="op-chips">
 				<!-- Los 4 nodos van UNIDOS por una "ruta" ondulada, mismo formato que el nav lateral
-				     (HiloRuta): línea marino + nodos anillados, con una bajadita de cada nodo al chip.
-				     Pedido de Ale — los puntos no van sueltos. preserveAspectRatio="none" estira la
-				     línea (ok, es un trazo) pero los NODOS son .op-chip::before en HTML para no
-				     ovalarse. `non-scaling-stroke` mantiene el grosor en px. -->
-				<svg class="op-chips-ruta" viewBox="0 0 100 28" preserveAspectRatio="none" aria-hidden="true">
+				     (HiloRuta): línea marino + nodos llenos centrados en ella. Pedido de Ale — los
+				     puntos no van sueltos; la bajadita nodo→chip se obvió. La línea se DIBUJA con el
+				     scroll (pathLength=1 + stroke-dashoffset, misma técnica que HiloRuta).
+				     preserveAspectRatio="none" estira la línea (ok, es un trazo); los NODOS y las
+				     tarjetas son HTML para no ovalarse y para poder animarlos escalonados. -->
+				<svg
+					class="op-chips-ruta"
+					viewBox="0 0 100 28"
+					preserveAspectRatio="none"
+					aria-hidden="true"
+					style={`animation-range: ${CHIPS_RUTA_RANGO}`}
+				>
 					<path
-						d="M2 15C6 15 9 12 12 15C19 22 30 22 37.5 15C45 8 55 8 62.5 15C70 22 80 22 88 15C91 13 95 15 98 15M12 15V28M37.5 15V28M62.5 15V28M88 15V28"
+						d="M2 15C6 15 9 12 12 15C19 22 30 22 37.5 15C45 8 55 8 62.5 15C70 22 80 22 88 15C91 13 95 15 98 15"
 					/>
 				</svg>
-				<div class="op-chip">
-					<span class="op-chip-icono">
-						<Icono nombre="libertad" tamano={56} acento="var(--color-verde)" />
-					</span>
-					<span class="op-chip-label">Libertad</span>
-				</div>
-				<div class="op-chip">
-					<span class="op-chip-icono">
-						<Icono nombre="naturaleza" tamano={56} acento="var(--color-verde)" />
-					</span>
-					<span class="op-chip-label">Naturaleza</span>
-				</div>
-				<div class="op-chip">
-					<span class="op-chip-icono">
-						<Icono nombre="experiencias" tamano={56} acento="var(--color-verde)" />
-					</span>
-					<span class="op-chip-label">Experiencias</span>
-				</div>
-				<div class="op-chip">
-					<span class="op-chip-icono">
-						<Icono nombre="economia-local" tamano={56} acento="var(--color-verde)" />
-					</span>
-					<span class="op-chip-label">Economía local</span>
-				</div>
+				{CHIPS.map((_, k) => (
+					<span
+						class="op-chip-nodo"
+						style={`left: ${12.5 + k * 25}%; animation-range: ${rangoChip(k, 0, 1.8)}`}
+					/>
+				))}
+				{CHIPS.map((c, k) => (
+					<div class="op-chip" style={`animation-range: ${rangoChip(k, 0.9, 3)}`}>
+						<span class="op-chip-icono">
+							<Icono nombre={c.icono} tamano={56} acento="var(--color-verde)" />
+						</span>
+						<span class="op-chip-label">{c.label}</span>
+					</div>
+				))}
 			</div>
 		</Lamina>
 	</Pantalla>
@@ -613,6 +630,8 @@ const OP_SUBTITULO_TEXTO = 'Una nueva forma de viajar necesita una nueva forma d
 		height: 1.75rem;
 		width: 100%;
 		pointer-events: none;
+		/* Fallback (sin scroll-driven): visible entera. */
+		clip-path: inset(0 0 0 0);
 	}
 
 	.op-chips-ruta path {
@@ -624,7 +643,6 @@ const OP_SUBTITULO_TEXTO = 'Una nueva forma de viajar necesita una nueva forma d
 	}
 
 	.op-chip {
-		position: relative;
 		aspect-ratio: 1 / 1.06;
 		display: flex;
 		flex-direction: column;
@@ -638,19 +656,91 @@ const OP_SUBTITULO_TEXTO = 'Una nueva forma de viajar necesita una nueva forma d
 		text-align: center;
 	}
 
-	/* Nodo de la "ruta" arriba de cada chip — círculo marino LLENO, CENTRADO sobre la línea de
-	 * .op-chips-ruta (la línea le pasa por el medio, no por el borde). La línea está a
-	 * 15/28·1.75rem ≈ 0.8125rem desde el top del SVG, y el SVG arranca en -1.75rem. */
-	.op-chip::before {
-		content: '';
+	/* Nodo de la "ruta" — círculo marino LLENO, centrado SOBRE la línea de .op-chips-ruta (la línea
+	 * a 15/28·1.75rem del top del SVG, que arranca en -1.75rem). Es un <span> hermano de los chips
+	 * (no un ::before) para poder darle su propio animation-range inline. `left` va inline por nodo. */
+	.op-chip-nodo {
 		position: absolute;
 		top: calc(-1.75rem + 15 / 28 * 1.75rem);
-		left: 50%;
 		width: 0.78rem;
 		height: 0.78rem;
 		transform: translate(-50%, -50%);
 		border-radius: 50%;
 		background: var(--color-marino);
+		z-index: 2;
+	}
+
+	/* === Entrada progresiva de los chips, al ritmo del scroll (2026-08-31, pedido de Ale) ===
+	 * La ruta se dibuja (dashoffset 1→0), y cada nodo + su tarjeta entran escalonados — cada uno con
+	 * su animation-range inline (calculado en el frontmatter, ver CHIPS_*). Termina antes del
+	 * centrado de la P2. */
+	@supports (animation-timeline: scroll(root)) {
+		.op-chips-ruta {
+			clip-path: inset(0 100% 0 0);
+			animation: op-ruta-dibuja linear both;
+			animation-timeline: --hz-progreso;
+		}
+
+		.op-chip-nodo {
+			transform: translate(-50%, -50%) scale(0);
+			animation: op-nodo-pop linear both;
+			animation-timeline: --hz-progreso;
+		}
+
+		.op-chip {
+			opacity: 0;
+			transform: translateY(1.4rem);
+			animation: op-chip-entra linear both;
+			animation-timeline: --hz-progreso;
+		}
+	}
+
+	@keyframes op-ruta-dibuja {
+		from {
+			clip-path: inset(0 100% 0 0);
+		}
+		to {
+			clip-path: inset(0 0 0 0);
+		}
+	}
+
+	@keyframes op-nodo-pop {
+		0% {
+			transform: translate(-50%, -50%) scale(0);
+		}
+		70% {
+			transform: translate(-50%, -50%) scale(1.28);
+		}
+		100% {
+			transform: translate(-50%, -50%) scale(1);
+		}
+	}
+
+	@keyframes op-chip-entra {
+		from {
+			opacity: 0;
+			transform: translateY(1.4rem);
+		}
+		to {
+			opacity: 1;
+			transform: translateY(0);
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.op-chips-ruta {
+			animation: none !important;
+			clip-path: inset(0 0 0 0);
+		}
+		.op-chip-nodo {
+			animation: none !important;
+			transform: translate(-50%, -50%);
+		}
+		.op-chip {
+			animation: none !important;
+			opacity: 1;
+			transform: none;
+		}
 	}
 
 	.op-chip-icono {
