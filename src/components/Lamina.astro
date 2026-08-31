@@ -39,8 +39,13 @@ interface Props {
    * beige pasa a ser un panel recortado en curva S a la izquierda y la mitad derecha queda
    * transparente para dejarla ver. false (default) = fondo beige lleno, como el resto. */
   fondoRecortado?: boolean;
+  /** Distribución del contenido dentro de la lámina.
+   *  - 'centrado' (default): el bloque se centra en los dos ejes del espacio disponible (portada).
+   *  - 'columna': alineado arriba-izquierda y crece hacia abajo — para las pantallas de contenido
+   *    denso del mazo (título + bloques + chips + cierre ocupan toda la columna). */
+  distribucion?: 'centrado' | 'columna';
 }
-const { indice = 0, fondoRecortado = false } = Astro.props;
+const { indice = 0, fondoRecortado = false, distribucion = 'centrado' } = Astro.props;
 
 /* Onda del footer — spec de Ale (2026-08-27):
  *  - En el borde de la pantalla (la costura) el navy tiene BASE px de alto.
@@ -66,7 +71,13 @@ for (let k = 1; k <= N; k++) {
 d += ` L 100 ${ALTO} L 0 ${ALTO} Z`;
 ---
 
-<div class:list={['lamina', { 'lamina--fondo-recortado': fondoRecortado }]} style={`--footer-alto: ${ALTO}px`}>
+<div
+  class:list={[
+    'lamina',
+    { 'lamina--fondo-recortado': fondoRecortado, 'lamina--columna': distribucion === 'columna' },
+  ]}
+  style={`--footer-alto: ${ALTO}px`}
+>
   {fondoRecortado && (
     <div class="lamina__fondo" style={`clip-path: url(#lamina-fondo-recorte-${indice})`}>
       <svg width="0" height="0" aria-hidden="true">
@@ -168,6 +179,14 @@ d += ` L 100 ${ALTO} L 0 ${ALTO} Z`;
       justify-items: start;
       padding-right: clamp(1.5rem, 5vw, 4rem);
     }
+  }
+
+  /* Contenido en columna (pantallas de contenido denso del mazo): arriba-izquierda, crece hacia
+   * abajo. La curva S de .lamina--fondo-recortado (si la hay) sigue reservando su franja a la
+   * derecha con el padding-right de arriba. */
+  .lamina--columna .lamina__cuerpo {
+    align-content: start;
+    justify-items: start;
   }
 
   .lamina__footer {

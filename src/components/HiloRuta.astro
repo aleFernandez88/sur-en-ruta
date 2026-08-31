@@ -31,9 +31,10 @@
  *
  * Posiciones de paradas APROXIMADAS, no exactas — mismo criterio que la versión anterior: calcar
  * la posición real de cada sección en el scroll necesitaría JS midiendo layout, fuera de alcance
- * a propósito. Repartidas ~parejo. Hoy son 5 (Hero + 4), coincide con el esqueleto actual de
- * `index.astro` — el plan de fondo sigue siendo ~10 pantallas siguiendo el mazo (ver
- * `docs/landing-contenido.md`); cuando el contenido real crezca, esta lista crece con él.
+ * a propósito. La `distancia` (y el instante en que el nodo "llega") se reparte pareja según el
+ * instante de centrado de cada bloque de la cinta: k/(N-1). Cuando se sumen las pantallas que
+ * faltan del mazo (ver `docs/landing-contenido.md`), agregar la entrada acá y subir `N_PANTALLAS`
+ * en `index.astro` — nada más.
  */
 
 interface Parada {
@@ -43,13 +44,22 @@ interface Parada {
 	distancia: number; // % a lo largo de la curva
 }
 
-const paradas: Parada[] = [
-	{ numero: 0, nombre: 'Portada', id: 'hero', distancia: 3 },
-	{ numero: 1, nombre: 'La Oportunidad', id: 'oportunidad', distancia: 26 },
-	{ numero: 2, nombre: 'Mapa y servicios', id: 'mapa', distancia: 50 },
-	{ numero: 3, nombre: 'Rutas + Pasaporte', id: 'rutas', distancia: 74 },
-	{ numero: 4, nombre: 'Centro Regional', id: 'centro-regional', distancia: 97 },
+// Orden = orden de las <Pantalla> en index.astro (incluido el Hero).
+const recorrido: { nombre: string; id: string }[] = [
+	{ nombre: 'Inicio', id: 'hero' },
+	{ nombre: 'Portada', id: 'portada' },
+	{ nombre: 'La Oportunidad', id: 'oportunidad' },
+	{ nombre: 'Mapa y servicios', id: 'mapa' },
+	{ nombre: 'Rutas + Pasaporte', id: 'rutas' },
+	{ nombre: 'Centro Regional', id: 'centro-regional' },
 ];
+
+const paradas: Parada[] = recorrido.map((p, k, arr) => {
+	const centro = (k / (arr.length - 1)) * 100;
+	// extremos metidos un poco hacia adentro para que el nodo + su anillo no se corten contra el
+	// borde de la barra.
+	return { numero: k, nombre: p.nombre, id: p.id, distancia: Math.round(Math.min(97, Math.max(3, centro))) };
+});
 
 // Ventana de "llegada" de cada nodo (el latido + anillo, ver estilos más abajo): rango angosto
 // del scroll-timeline compartido (--hz-progreso) centrado en la distancia exacta del nodo. No

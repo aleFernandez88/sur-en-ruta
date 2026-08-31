@@ -1,20 +1,17 @@
 ---
 /**
- * index.astro — landing de Sur en Ruta. Ensambla el recorrido definido por el pivot de audiencia
- * del 2026-08-26 (ver docs/planes/2026-08-26-pivot-audiencia-general.md y
- * docs/landing-contenido.md): Portada (Sección 0) → 1 Problema/Oportunidad → 2 Mapa y servicios →
- * 3 Rutas/Pasaporte → 4 Centro Regional.
+ * index.astro — landing de Sur en Ruta. Sigue el mazo de Ana (`Presentacion Sur en Ruta
+ * RENAMU.pdf`, 10 páginas) 1:1 — ver docs/landing-contenido.md y docs/comparativa-mazo-vs-landing.md.
+ * Se arma pantalla por pantalla, guiado por Ale, no todo de una vez.
  *
- * 2026-08-27: se levantó la regla de "exactamente 5 pantallas, sin partir ninguna". Cada sección
- * de contenido puede ocupar 1 o más <Pantalla> de la "cinta" (se decide al implementarla) — la
- * mecánica no tiene tope de cantidad.
+ * Recorrido de la "cinta" (ver Pantalla.astro y base.css): Hero propio (Pantalla 0) → Pantalla 1
+ * PORTADA (mazo pág. 1, cerrada) → Pantalla 2 "LA OPORTUNIDAD" (mazo pág. 2, en construcción) →
+ * pág. 3..10 todavía como SlidePlaceholder. Cada pantalla del mazo es `<Pantalla completa>` (el
+ * look full-bleed del mazo lo necesita); el Hero también.
  *
- * 2026-08-27 (noche): se decidió seguir el mazo de Ana (10 páginas) 1:1 — ver
- * docs/landing-contenido.md. Se armará pantalla por pantalla, guiado por Ale, no todo de una vez.
- * Por ahora solo la Portada (Pantalla 0) tiene contenido real; el resto son SlidePlaceholder.
- *
- * Mecánica de transición ("cinta", ver Pantalla.astro y base.css): cada pantalla es una tarjeta
- * al 82% del viewport, salvo el Hero (`completa`), que pega fuerte a pantalla completa.
+ * `N_PANTALLAS` (abajo) = total de <Pantalla>. TODAS las ventanas de animación scroll-driven se
+ * calculan a partir de ese número (ver `esc()`), así sumar una pantalla del mazo es cambiar ese
+ * número + agregar la parada en HiloRuta.astro (`recorrido`), sin recalibrar a mano.
  */
 import Base from '../layouts/Base.astro';
 import Pantalla from '../components/Pantalla.astro';
@@ -50,13 +47,38 @@ import fotoOportunidad from '../assets/oportunidad/camping-placeholder.png';
  *    secuencia entera tiene que TERMINAR antes o justo en el instante de centrado, no extenderse
  *    después — por eso arranca bien antes (15%) y termina en el centrado (25.8%), no [20,32].
  */
-function rangoPalabra(inicio: number, indice: number, paso: number, duracion: number): string {
-	const desde = inicio + indice * paso;
-	return `${desde.toFixed(2)}% ${(desde + duracion).toFixed(2)}%`;
+/* Cantidad total de <Pantalla> en la cinta (incluye el Hero). El instante en que cada bloque k
+ * queda centrado es ~100·k/(N-1) % del scroll-timeline --hz-progreso, y de ahí salen TODAS las
+ * ventanas de animación de abajo. Los tiempos crudos se afinaron EN VIVO con N=5 (centro de
+ * Pantalla 1 medido ~26%); `esc()` los reescala al N actual. Cuando se sumen las pantallas que
+ * faltan del mazo, subir este número (y agregar la parada en HiloRuta.astro `recorrido`) es lo
+ * único que hay que tocar para recalibrar. */
+const N_PANTALLAS = 6;
+const P1_CENTRO = 100 / (N_PANTALLAS - 1); // % de --hz-progreso en que la Pantalla 1 (portada) se centra
+const CENTRO_REF = 26; // centro de P1 con el que se afinaron los tiempos crudos (N=5, medido en vivo)
+const K = P1_CENTRO / CENTRO_REF;
+// Reescala un tiempo crudo de Pantalla 1. `pantalla` (default 1) lo corre a otra pantalla de la
+// cinta: la 2 arranca CENTRO_REF más adelante en la escala cruda, etc.
+const esc = (v: number, pantalla = 1): number =>
+	+((v + (pantalla - 1) * CENTRO_REF) * K).toFixed(3);
+const rango = (desde: number, hasta: number, pantalla = 1): string =>
+	`${esc(desde, pantalla)}% ${esc(hasta, pantalla)}%`;
+
+function rangoPalabra(
+	inicio: number,
+	indice: number,
+	paso: number,
+	duracion: number,
+	pantalla = 1,
+): string {
+	const desde = esc(inicio + indice * paso, pantalla);
+	return `${desde.toFixed(3)}% ${(desde + duracion * K).toFixed(3)}%`;
 }
 
-const RENAMU_RANGO = '15% 16%';
-const SURENRUTA_RANGO = '15.7% 16.7%';
+const RENAMU_RANGO = rango(15, 16);
+const SURENRUTA_RANGO = rango(15.7, 16.7);
+const FONDO_FIJO_RANGO = rango(12, 24);
+const PIE_MARCA_RANGO = rango(19.5, 25);
 
 const BAJADA_TEXTO = 'Una red para ordenar y potenciar el turismo itinerante en Uruguay';
 const BAJADA_INICIO = 16.9;
@@ -103,7 +125,21 @@ for (const segmento of CONECTA_SEGMENTOS) {
 const CONECTA_INICIO = 21.4;
 const CONECTA_PASO = 0.31;
 const CONECTA_DURACION = 0.55;
-const ICONO_RANGO = '24.5% 25.3%';
+const ICONO_RANGO = rango(24.5, 25.3);
+
+/* === Pantalla 2 · "LA OPORTUNIDAD" (mazo pág. 2) ===
+ * Se arranca por la cabecera (título bicolor LA/OPORTUNIDAD + subtítulo), igual que la Pantalla 1
+ * arrancó por el wordmark. Reveals con el mismo mecanismo (.reveal-mascara), corridos una pantalla
+ * hacia adelante en la escala cruda (pantalla=2) para que caigan mientras la P2 se acerca al
+ * centro. Falta: los 2 bloques, los 4 chips (Libertad · Naturaleza · Experiencias · Economía
+ * local), el cierre "Sin una red organizada…", la foto con corte S y el eyebrow de puntos. */
+const OP_TITULO_L1_RANGO = rango(15, 16.6, 2);
+const OP_TITULO_L2_RANGO = rango(16.4, 18.2, 2);
+const OP_SUBTITULO_TEXTO = 'Una nueva forma de viajar necesita una nueva forma de organizarse';
+const opSubtituloPartes = OP_SUBTITULO_TEXTO.split(/(\s+)/).filter((p) => p !== '');
+const OP_SUBTITULO_INICIO = 18.6;
+const OP_SUBTITULO_PASO = 0.42;
+const OP_SUBTITULO_DURACION = 0.7;
 ---
 
 <Base>
@@ -112,21 +148,24 @@ const ICONO_RANGO = '24.5% 25.3%';
 	     ver ahí el porqué). Recorte en curva S: solo se ve la mitad derecha, con la curva sobre su
 	     borde izquierdo. Hace fade-in con --hz-progreso mientras Pantalla 1 entra y después queda
 	     visible (no se apaga): los .hz-bloque vecinos son opacos y la tapan solos. Placeholder. -->
-	<div slot="fondo-fijo" class="fondo-oportunidad">
+	<div
+		slot="fondo-fijo"
+		class="fondo-oportunidad"
+		style={`animation-range: ${FONDO_FIJO_RANGO}`}
+	>
 		<Image src={fotoOportunidad} alt="" widths={[600, 1000, 1600]} sizes="55vw" />
 	</div>
 
 	<Pantalla id="hero" completa>
 		<Hero />
 	</Pantalla>
-	<Pantalla id="oportunidad" completa transparente>
+	<!-- Pantalla 1 · PORTADA (mazo pág. 1). Ale (2026-08-31) la cerró como portada sola: solo el
+	     wordmark + bajada + frase "conecta viajeros...". El contenido de "LA OPORTUNIDAD" (pág. 2)
+	     NO va acá, es la Pantalla 2 (ver abajo). -->
+	<Pantalla id="portada" completa transparente>
 		<Lamina indice={0} fondoRecortado>
-			<!-- Primer elemento de Pantalla 1 (2026-08-28, guiado por Ale): el wordmark + bajada de
-			     la página 1 del mazo ("RENAMU / SUR EN RUTA" + "Una red para ordenar y potenciar el
-			     turismo itinerante en Uruguay") — se había sacado del Hero (Pantalla 0) pero nunca
-			     se integró acá, ver docs/comparativa-mazo-vs-landing.md § Página 1. Todavía falta el
-			     resto de Pantalla 1 (título LA/OPORTUNIDAD, bloques, chips, cierre, foto) — se suma
-			     elemento por elemento, no todo junto (ver memoria del proyecto). -->
+			<!-- Wordmark + bajada + frase "conecta viajeros..." de la pág. 1 del mazo (cita textual,
+			     ver docs/comparativa-mazo-vs-landing.md § Página 1). Se había sacado del Hero. -->
 			<div class="marca-institucional">
 				<p class="marca-renamu">
 					<span class="reveal-mascara">
@@ -195,7 +234,7 @@ const ICONO_RANGO = '24.5% 25.3%';
 			     "Sur en Ruta" / eslogan (ver Preloader.astro `ESLOGAN`) al lado — el eslogan vivía
 			     suelto a la derecha, se trajo debajo del nombre. Probando la fuente de RENAMU acá. -->
 			<div slot="footer" class="pie-footer">
-				<div class="pie-marca">
+				<div class="pie-marca" style={`animation-range: ${PIE_MARCA_RANGO}`}>
 					<span class="pie-logo">
 						<img src={logoUrl} alt="" width="64" height="58" />
 					</span>
@@ -207,14 +246,56 @@ const ICONO_RANGO = '24.5% 25.3%';
 			</div>
 		</Lamina>
 	</Pantalla>
+
+	<!-- Pantalla 2 · "LA OPORTUNIDAD" (mazo pág. 2). Se arma elemento por elemento, guiado por Ale
+	     (mismo criterio que la Pantalla 1). Por ahora: cabecera (título bicolor + subtítulo).
+	     Falta: los 2 bloques, los 4 chips (Libertad · Naturaleza · Experiencias · Economía local),
+	     el cierre "Sin una red organizada…", la foto (camper en ruta costera) con corte S y el
+	     eyebrow de puntos. Footer CONTINUO con la Pantalla 1 vía indice={1} (misma función de onda,
+	     tramo siguiente — ver Lamina.astro). -->
+	<Pantalla id="oportunidad" completa>
+		<Lamina indice={1} distribucion="columna">
+			<div class="op-cabecera">
+				<p class="op-titulo op-titulo--l1">
+					<span class="reveal-mascara">
+						<span class="reveal-interior" style={`animation-range: ${OP_TITULO_L1_RANGO}`}>LA</span>
+					</span>
+				</p>
+				<p class="op-titulo op-titulo--l2">
+					<span class="reveal-mascara">
+						<span class="reveal-interior" style={`animation-range: ${OP_TITULO_L2_RANGO}`}>
+							OPORTUNIDAD
+						</span>
+					</span>
+				</p>
+				<p class="op-subtitulo">
+					{opSubtituloPartes.map((parte, indice) =>
+						parte.trim() === '' ? (
+							parte
+						) : (
+							<span class="reveal-mascara">
+								<span
+									class="reveal-interior"
+									style={`animation-range: ${rangoPalabra(OP_SUBTITULO_INICIO, indice, OP_SUBTITULO_PASO, OP_SUBTITULO_DURACION, 2)}`}
+								>
+									{parte}
+								</span>
+							</span>
+						),
+					)}
+				</p>
+			</div>
+		</Lamina>
+	</Pantalla>
+
 	<Pantalla id="mapa">
-		<SlidePlaceholder color="var(--color-ruta-oceanica)" etiqueta="2 — Mapa y servicios" />
+		<SlidePlaceholder color="var(--color-ruta-oceanica)" etiqueta="3 — Mapa y servicios" />
 	</Pantalla>
 	<Pantalla id="rutas">
-		<SlidePlaceholder color="var(--color-ruta-rural)" etiqueta="3 — Rutas + Pasaporte" />
+		<SlidePlaceholder color="var(--color-ruta-rural)" etiqueta="4 — Rutas + Pasaporte" />
 	</Pantalla>
 	<Pantalla id="centro-regional">
-		<SlidePlaceholder color="var(--color-ruta-naturaleza)" etiqueta="4 — Centro Regional" />
+		<SlidePlaceholder color="var(--color-ruta-naturaleza)" etiqueta="5 — Centro Regional" />
 	</Pantalla>
 </Base>
 
@@ -302,6 +383,56 @@ const ICONO_RANGO = '24.5% 25.3%';
 	.marca-conecta-resaltado {
 		font-weight: 700;
 		color: var(--color-verde);
+	}
+
+	/* === Pantalla 2 · "LA OPORTUNIDAD" (mazo pág. 2) — cabecera (2026-08-31) ===
+	 * Título bicolor a 2 líneas (LA navy / OPORTUNIDAD verde), subrayado verde corto debajo, y el
+	 * subtítulo. Mismo sistema visual que el mazo (título mayúsculas, 2 tintas, regla verde). */
+	.op-cabecera {
+		display: flex;
+		flex-direction: column;
+		align-items: flex-start;
+		gap: var(--espacio-xs);
+	}
+
+	.op-titulo {
+		margin: 0;
+		font-family: var(--fuente-display);
+		font-weight: 800;
+		font-size: clamp(3rem, 1.4rem + 6vw, 6.75rem);
+		line-height: 0.95;
+		text-transform: uppercase;
+	}
+
+	.op-titulo--l1 {
+		color: var(--color-marino);
+	}
+
+	.op-titulo--l2 {
+		color: var(--color-verde);
+	}
+
+	/* Regla verde corta bajo el título (sistema visual del mazo). Va DENTRO del .reveal-interior de
+	 * la 2ª línea para que suba con la palabra en el reveal — si estuviera en el <p> quedaría
+	 * flotando sola mientras "OPORTUNIDAD" todavía está enmascarada. */
+	.op-titulo--l2 .reveal-interior::after {
+		content: '';
+		display: block;
+		width: 4.5rem;
+		height: 0.4rem;
+		margin-top: var(--espacio-sm);
+		border-radius: 999px;
+		background: var(--color-verde);
+	}
+
+	.op-subtitulo {
+		margin: var(--espacio-md) 0 0;
+		font-family: var(--fuente-display);
+		font-weight: 500;
+		font-size: clamp(1.35rem, 0.9rem + 1.5vw, 2.05rem);
+		line-height: 1.3;
+		max-width: 22ch;
+		color: var(--color-marino);
 	}
 
 	/* === Reveal de entrada, por línea o por palabra (2026-08-28) ===
@@ -415,11 +546,11 @@ const ICONO_RANGO = '24.5% 25.3%';
 		.fondo-oportunidad {
 			animation: fondo-oportunidad-visible linear both;
 			animation-timeline: --hz-progreso;
-			/* Solo fade-IN, mientras Pantalla 1 entra y la curva S de .lamina__fondo empieza a
-			 * descubrir la foto. Sin fade-out: `both` deja la opacidad en 1 pasado el 24% y ahí se
-			 * queda — la foto no se apaga nunca, la ocultan los .hz-bloque opacos vecinos por
-			 * geometría (ver base.css y el comentario de .fondo-oportunidad). */
-			animation-range: 12% 24%;
+			/* La ventana (animation-range) va inline, calculada en el frontmatter (FONDO_FIJO_RANGO)
+			 * a partir de N_PANTALLAS — Chrome no resuelve `animation-range` con var() de forma
+			 * fiable, y depende de la cantidad de pantallas de la cinta. Solo fade-IN: `both` deja
+			 * la opacidad en 1 pasado el final y ahí se queda; la foto no se apaga nunca, la ocultan
+			 * los .hz-bloque opacos vecinos por geometría (ver base.css). */
 		}
 	}
 
@@ -477,7 +608,8 @@ const ICONO_RANGO = '24.5% 25.3%';
 		.pie-marca {
 			animation: pie-marca-choca linear both;
 			animation-timeline: --hz-progreso;
-			animation-range: 19.5% 25%;
+			/* animation-range va inline (PIE_MARCA_RANGO, calculado desde N_PANTALLAS en el
+			 * frontmatter) — mismo motivo que .fondo-oportunidad. */
 			transform-origin: bottom center;
 		}
 	}
