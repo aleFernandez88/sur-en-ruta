@@ -41,7 +41,8 @@ interface Parada {
 	numero: number;
 	nombre: string;
 	id: string;
-	distancia: number; // % a lo largo de la curva
+	distancia: number; // % a lo largo de la curva (posición VISUAL del nodo, repartida parejo)
+	llegada: number; // % de --hz-progreso donde su pantalla se centra (cuándo se pinta/pulsa el nodo)
 }
 
 // Orden = orden de las <Pantalla> del mazo en index.astro. El Hero (Pantalla 0) NO está: es una
@@ -56,14 +57,26 @@ const recorrido: { nombre: string; id: string }[] = [
 ];
 
 const paradas: Parada[] = recorrido.map((p, k, arr) => {
-	// `distancia` = posición del nodo en la curva Y (a la vez) el % de --hz-progreso donde "llega"
-	// (pulso + pintado) — van acoplados y lineales. Repartidas parejo de ~8% a 97% para usar casi
-	// toda la barra (aproximado, no calcado al centrado exacto de cada pantalla — mismo criterio
-	// que siempre tuvo este componente). El primer nodo (Portada) "llega" ~cuando la barra termina
-	// de entrar.
+	// `distancia` = posición VISUAL del nodo en la curva, repartida parejo de ~8% a 97% (usa casi
+	// toda la barra, sin que quede corrida hacia abajo).
 	const distancia = Math.round(8 + (k / (arr.length - 1)) * 89);
-	return { numero: k + 1, nombre: p.nombre, id: p.id, distancia };
+	// `llegada` = % de --hz-progreso donde ESTA pantalla queda centrada (su mejor posición visual):
+	// es el bloque k+1 de la cinta de N bloques (N = arr.length + 1, con el Hero) → k+1 / (N-1).
+	// El pintado del "caminito" y el pulso del nodo se acomodan a esto (ver keyframes generados).
+	const llegada = Math.round(((k + 1) / arr.length) * 100);
+	return { numero: k + 1, nombre: p.nombre, id: p.id, distancia, llegada };
 });
+
+// El pintado celeste NO es lineal: tiene que llegar al nodo k (posición visual `distancia`) justo
+// cuando su pantalla se centra (`llegada`). Se generan los keyframes con un stop por parada — su %
+// es el `llegada` y el `stroke-dashoffset` es `1 - distancia/100` (fracción de curva pintada). Va
+// en un <style is:global set:html> porque un <style> normal de Astro no se puede templatear.
+const paintKeyframes = `@keyframes hilo-ruta-pintar {
+  0% { stroke-dashoffset: 1; }
+  ${paradas
+		.map((p) => `${p.llegada}% { stroke-dashoffset: ${(1 - p.distancia / 100).toFixed(4)}; }`)
+		.join('\n  ')}
+}`;
 
 // Ventana de "llegada" de cada nodo (el latido + anillo, ver estilos más abajo): rango angosto
 // del scroll-timeline compartido (--hz-progreso) centrado en la distancia exacta del nodo. No
@@ -189,8 +202,8 @@ const barraApareceRango = `${Math.max(2, Math.round(p1Centro - 15))}% ${Math.rou
 
 		<!-- Capa de progreso: celeste, revelada por scroll a través de la máscara. Cada nodo trae
 		     además su propio anillo (aparece + el nodo "late" una vez al llegar, ver @keyframes
-		     hilo-ruta-latido/hilo-ruta-anillo) acotado a una ventana angosta alrededor de su
-		     distancia exacta vía --nodo-desde/--nodo-hasta. -->
+		     hilo-ruta-latido/hilo-ruta-anillo) acotado a una ventana angosta alrededor de `llegada`
+		     (cuándo su pantalla se centra), vía --nodo-desde/--nodo-hasta. -->
 		<g mask="url(#hilo-ruta-mascara)" aria-hidden="true">
 			<use href="#hilo-ruta-curva" class="hilo-ruta-linea-progreso"></use>
 			{paradas.map((parada) => (
@@ -198,12 +211,12 @@ const barraApareceRango = `${Math.max(2, Math.round(p1Centro - 15))}% ${Math.rou
 					<circle
 						class="hilo-ruta-nodo-anillo"
 						r="11"
-						style={`offset-distance: ${parada.distancia}%; --nodo-desde: ${parada.distancia - VENTANA}%; --nodo-hasta: ${parada.distancia + VENTANA}%`}
+						style={`offset-distance: ${parada.distancia}%; --nodo-desde: ${parada.llegada - VENTANA}%; --nodo-hasta: ${parada.llegada + VENTANA}%`}
 					></circle>
 					<circle
 						class="hilo-ruta-nodo-progreso"
 						r="7"
-						style={`offset-distance: ${parada.distancia}%; --nodo-desde: ${parada.distancia - VENTANA}%; --nodo-hasta: ${parada.distancia + VENTANA}%`}
+						style={`offset-distance: ${parada.distancia}%; --nodo-desde: ${parada.llegada - VENTANA}%; --nodo-hasta: ${parada.llegada + VENTANA}%`}
 					></circle>
 				</>
 			))}
@@ -498,14 +511,9 @@ const barraApareceRango = `${Math.max(2, Math.round(p1Centro - 15))}% ${Math.rou
 		}
 	}
 
-	@keyframes hilo-ruta-pintar {
-		from {
-			stroke-dashoffset: var(--dashoffsetInicial);
-		}
-		to {
-			stroke-dashoffset: 0;
-		}
-	}
+	/* @keyframes hilo-ruta-pintar — generado en el frontmatter (piecewise, un stop por parada, así
+	 * el celeste llega a cada nodo cuando su pantalla se centra) e inyectado en un <style is:global>
+	 * más abajo. */
 
 	/* Latido pronunciado, una sola vez, al llegar al nodo: sube fuerte, rebota corto y decanta
 	 * en un tamaño de reposo apenas más grande (1.08) — no un crecimiento monótono. */
@@ -746,6 +754,11 @@ const barraApareceRango = `${Math.max(2, Math.round(p1Centro - 15))}% ${Math.rou
 		}
 	}
 </style>
+
+{/* Keyframes del pintado — generados (piecewise) en el frontmatter: un stop por parada, con su %
+   = `llegada` (cuándo su pantalla se centra) y el dashoffset = `1 - distancia/100`. Va global +
+   set:html porque un <style> normal de Astro no se templatea; el nombre es único, no colisiona. */}
+<style is:global set:html={paintKeyframes}></style>
 
 <script>
 	// Redondez real de los nodos: el <svg> usa preserveAspectRatio="none" a propósito (necesita
