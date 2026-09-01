@@ -56,12 +56,13 @@ const recorrido: { nombre: string; id: string }[] = [
 ];
 
 const paradas: Parada[] = recorrido.map((p, k, arr) => {
-	// La parada k (0-indexed acá) es el bloque k+1 de la cinta de N bloques (N = arr.length + 1, el
-	// Hero) → se centra en ~100·(k+1)/(N-1) % de --hz-progreso. La `distancia` es a la vez la
-	// posición del nodo en la curva Y el % de scroll en que "llega" (pulso + pintado), así van
-	// sincronizados. Extremos metidos un poco hacia adentro para que no se corten contra el borde.
-	const centro = ((k + 1) / arr.length) * 100;
-	return { numero: k + 1, nombre: p.nombre, id: p.id, distancia: Math.round(Math.min(97, Math.max(6, centro))) };
+	// `distancia` = posición del nodo en la curva Y (a la vez) el % de --hz-progreso donde "llega"
+	// (pulso + pintado) — van acoplados y lineales. Repartidas parejo de ~8% a 97% para usar casi
+	// toda la barra (aproximado, no calcado al centrado exacto de cada pantalla — mismo criterio
+	// que siempre tuvo este componente). El primer nodo (Portada) "llega" ~cuando la barra termina
+	// de entrar.
+	const distancia = Math.round(8 + (k / (arr.length - 1)) * 89);
+	return { numero: k + 1, nombre: p.nombre, id: p.id, distancia };
 });
 
 // Ventana de "llegada" de cada nodo (el latido + anillo, ver estilos más abajo): rango angosto
@@ -133,7 +134,7 @@ const duracionLetra = `${DURACION_LETRA_MS}ms`;
 // La P1 es el bloque 1 de la cinta de N bloques (N = recorrido.length + 1, el Hero); se centra en
 // ~100·1/(N-1) % de --hz-progreso. La ventana termina unos puntos antes de ese centro.
 const p1Centro = 100 / recorrido.length;
-const barraApareceRango = `${Math.max(2, Math.round(p1Centro - 12))}% ${Math.round(p1Centro - 5)}%`;
+const barraApareceRango = `${Math.max(2, Math.round(p1Centro - 15))}% ${Math.round(p1Centro - 7)}%`;
 ---
 
 <div class="hilo-ruta" style={`--curva-offset-path: ${curvaOffsetPath}`}>
@@ -312,7 +313,6 @@ const barraApareceRango = `${Math.max(2, Math.round(p1Centro - 12))}% ${Math.rou
 			animation: none !important;
 			transform: translateX(0);
 		}
-	}
 	}
 
 	/* --curva-offset-path se declara a mano en el wrapper (ver el div de arriba), no vía
