@@ -44,9 +44,10 @@ interface Parada {
 	distancia: number; // % a lo largo de la curva
 }
 
-// Orden = orden de las <Pantalla> en index.astro (incluido el Hero).
+// Orden = orden de las <Pantalla> del mazo en index.astro. El Hero (Pantalla 0) NO está: es una
+// portada sin contenido, no un destino navegable, y la barra recién aparece al entrar a la
+// Pantalla 1 (ver .hilo-ruta-barra en el <style>). El primer nodo/parada es la Portada.
 const recorrido: { nombre: string; id: string }[] = [
-	{ nombre: 'Inicio', id: 'hero' },
 	{ nombre: 'Portada', id: 'portada' },
 	{ nombre: 'La Oportunidad', id: 'oportunidad' },
 	{ nombre: 'Mapa y servicios', id: 'mapa' },
@@ -55,10 +56,12 @@ const recorrido: { nombre: string; id: string }[] = [
 ];
 
 const paradas: Parada[] = recorrido.map((p, k, arr) => {
-	const centro = (k / (arr.length - 1)) * 100;
-	// extremos metidos un poco hacia adentro para que el nodo + su anillo no se corten contra el
-	// borde de la barra.
-	return { numero: k, nombre: p.nombre, id: p.id, distancia: Math.round(Math.min(97, Math.max(3, centro))) };
+	// La parada k (0-indexed acá) es el bloque k+1 de la cinta de N bloques (N = arr.length + 1, el
+	// Hero) → se centra en ~100·(k+1)/(N-1) % de --hz-progreso. La `distancia` es a la vez la
+	// posición del nodo en la curva Y el % de scroll en que "llega" (pulso + pintado), así van
+	// sincronizados. Extremos metidos un poco hacia adentro para que no se corten contra el borde.
+	const centro = ((k + 1) / arr.length) * 100;
+	return { numero: k + 1, nombre: p.nombre, id: p.id, distancia: Math.round(Math.min(97, Math.max(6, centro))) };
 });
 
 // Ventana de "llegada" de cada nodo (el latido + anillo, ver estilos más abajo): rango angosto
@@ -121,11 +124,25 @@ const curvaOffsetPath = `"${curva}"`;
 // El sitio carga ya "parado" en la parada 0 (Hero, la primera pantalla, visible sin scrollear),
 // así que ese tramo tiene que verse ya pintado de celeste desde el arranque — mismo cálculo que
 // la versión anterior (ver memoria del proyecto).
-const dashoffsetInicial = 1 - paradas[0].distancia / 100;
+// El sitio carga en el Hero (Pantalla 0), ANTES de la primera parada — nada pintado todavía. (Antes
+// arrancaba "parado" en la parada 0, con esa fracción ya pintada; ya no, el Hero no es parada.)
+const dashoffsetInicial = 1;
 const duracionLetra = `${DURACION_LETRA_MS}ms`;
+
+// La barra entra deslizándose desde la izquierda antes de que la Pantalla 1 (Portada) se centre.
+// La P1 es el bloque 1 de la cinta de N bloques (N = recorrido.length + 1, el Hero); se centra en
+// ~100·1/(N-1) % de --hz-progreso. La ventana termina unos puntos antes de ese centro.
+const p1Centro = 100 / recorrido.length;
+const barraApareceRango = `${Math.max(2, Math.round(p1Centro - 12))}% ${Math.round(p1Centro - 5)}%`;
 ---
 
 <div class="hilo-ruta" style={`--curva-offset-path: ${curvaOffsetPath}`}>
+	{/* .hilo-ruta-barra es lo VISIBLE (fondo navy + botón + línea de ruta) y lo que se desliza desde
+	    la izquierda al entrar a la Pantalla 1 — está oculta durante el Hero (ver <style>). El menú
+	    de pantalla completa (.hilo-ruta-menu) queda FUERA de este wrapper a propósito: un `transform`
+	    en un ancestro le crearía un containing block y su `position: fixed; inset: 0` dejaría de
+	    tomar el viewport. */}
+	<div class="hilo-ruta-barra" style={`animation-range: ${barraApareceRango}`}>
 	<button
 		type="button"
 		class="hilo-ruta-menu-boton"
@@ -204,6 +221,7 @@ const duracionLetra = `${DURACION_LETRA_MS}ms`;
 			</a>
 		))}
 	</svg>
+	</div>
 
 	<nav id="hilo-ruta-menu" class="hilo-ruta-menu" aria-hidden="true">
 		<ul>
@@ -244,6 +262,9 @@ const duracionLetra = `${DURACION_LETRA_MS}ms`;
 </div>
 
 <style define:vars={{ dashoffsetInicial, duracionLetra }}>
+	/* Wrapper SOLO de posición — sin fondo ni transform (un transform acá le rompería el
+	 * `position: fixed` al menú de pantalla completa que vive adentro). Lo visible y lo que se
+	 * desliza es .hilo-ruta-barra. */
 	.hilo-ruta {
 		position: fixed;
 		top: 0;
@@ -251,14 +272,47 @@ const duracionLetra = `${DURACION_LETRA_MS}ms`;
 		bottom: 0;
 		width: var(--ancho-hilo-ruta);
 		z-index: 60;
-		/* Fondo azul casi negro (2026-08-31, pedido de Ale) — la barra deja de ser transparente. La
-		 * línea de ruta, los nodos y el ícono de menú van en el claro cálido del fondo de las
-		 * pantallas (--color-fondo) para leerse sobre este navy; el "progreso ya recorrido" sigue
-		 * en celeste. */
+	}
+
+	/* La barra visible: fondo azul casi negro (2026-08-31, Ale — deja de ser transparente). La
+	 * línea de ruta, los nodos y el ícono de menú van en el claro cálido del fondo de las pantallas
+	 * (--color-fondo) para leerse sobre este navy; el "progreso ya recorrido" sigue en celeste.
+	 * ENTRA deslizándose desde la izquierda al acercarse la Pantalla 1 (pedido de Ale): oculta
+	 * durante el Hero, aparece `justo antes` de que la P1 se centre. Ventana inline en el markup
+	 * (depende de cuántas pantallas hay). */
+	.hilo-ruta-barra {
+		width: 100%;
+		height: 100%;
 		background: var(--color-marino-noche);
 		display: flex;
 		flex-direction: column;
 		align-items: center;
+		/* fallback sin scroll-driven: visible */
+		transform: translateX(0);
+	}
+
+	@supports (animation-timeline: scroll(root)) {
+		.hilo-ruta-barra {
+			animation: hilo-ruta-barra-aparece linear both;
+			animation-timeline: --hz-progreso;
+		}
+	}
+
+	@keyframes hilo-ruta-barra-aparece {
+		from {
+			transform: translateX(-100%);
+		}
+		to {
+			transform: translateX(0);
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.hilo-ruta-barra {
+			animation: none !important;
+			transform: translateX(0);
+		}
+	}
 	}
 
 	/* --curva-offset-path se declara a mano en el wrapper (ver el div de arriba), no vía
