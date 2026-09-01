@@ -251,6 +251,11 @@ const duracionLetra = `${DURACION_LETRA_MS}ms`;
 		bottom: 0;
 		width: var(--ancho-hilo-ruta);
 		z-index: 60;
+		/* Fondo azul casi negro (2026-08-31, pedido de Ale) — la barra deja de ser transparente. La
+		 * línea de ruta, los nodos y el ícono de menú van en el claro cálido del fondo de las
+		 * pantallas (--color-fondo) para leerse sobre este navy; el "progreso ya recorrido" sigue
+		 * en celeste. */
+		background: var(--color-marino-noche);
 		display: flex;
 		flex-direction: column;
 		align-items: center;
@@ -294,15 +299,15 @@ const duracionLetra = `${DURACION_LETRA_MS}ms`;
 		width: 30px;
 		height: 3px;
 		border-radius: 1.5px;
-		background: var(--color-marino);
+		background: var(--color-fondo);
 		transition:
 			transform 280ms cubic-bezier(0.65, 0, 0.35, 1),
 			opacity 180ms ease,
 			background-color 200ms ease;
 	}
 
-	/* Panel oscuro de fondo: las líneas (dark navy) quedan sobre sí mismas, mejor pasarlas a
-	 * celeste apenas se abre para que se lean sobre el navy del panel. */
+	/* Al abrir el menú (panel navy a pantalla completa) las líneas pasan a celeste — estado activo,
+	 * y contrasta mejor que el claro contra el navy del panel. */
 	.hilo-ruta-menu-boton[aria-expanded='true'] .hilo-ruta-menu-linea {
 		background: var(--color-celeste);
 	}
@@ -335,7 +340,8 @@ const duracionLetra = `${DURACION_LETRA_MS}ms`;
 	 * los <use> que lo pintan (gotcha ya documentado en la versión anterior). */
 
 	.hilo-ruta-linea-base {
-		stroke: var(--color-marino);
+		/* Claro cálido sobre el navy de la barra (2026-08-31, Ale) — "todavía no recorrido". */
+		stroke: var(--color-fondo);
 		stroke-width: 3;
 		stroke-linecap: round;
 		fill: none;
@@ -363,12 +369,15 @@ const duracionLetra = `${DURACION_LETRA_MS}ms`;
 
 	.hilo-ruta-nodo-base,
 	.hilo-ruta-nodo-progreso {
-		fill: var(--color-fondo);
+		/* Relleno = fondo de la barra (navy casi negro) → el nodo se lee como un anillo hueco,
+		 * igual que antes cuando la barra era transparente sobre el claro. */
+		fill: var(--color-marino-noche);
 		stroke-width: 3;
 	}
 
 	.hilo-ruta-nodo-base {
-		stroke: var(--color-marino);
+		/* Mismo claro que la línea base (2026-08-31, Ale). */
+		stroke: var(--color-fondo);
 	}
 
 	.hilo-ruta-nodo-progreso {
