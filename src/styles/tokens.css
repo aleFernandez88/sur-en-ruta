@@ -56,8 +56,12 @@
   /* Azul casi negro — 2026-08-28, para el degradé animado del footer de Lamina (junto con
    * --color-marino y --color-celeste). Más oscuro que --color-marino-profundo a propósito. */
   --color-marino-noche: #050b14;
-  /* Verde territorio: OLIVA, no verde bosque (esa es la diferencia con el mazo). */
-  --color-verde: #5a6b2e;
+  /* Verde territorio (2026-09-01: cambiado a este verde, pedido de Ale mientras se ajustaba el
+   * título de P3 — "usá este verde mejor, en lugar del que tenemos en la paleta"). Nota: el verde
+   * anterior (#5a6b2e, OLIVA) era una decisión deliberada para diferenciarse del "verde bosque"
+   * del mazo (ver docs/decisiones/identidad-visual.md) — este #356a2c se acerca más a un verde
+   * bosque. Si esto importa, confirmarlo con Ale; por ahora se sigue la instrucción directa. */
+  --color-verde: #356a2c;
   /* Verde oliva levantado, para acentos SOBRE fondo oscuro (donde el oliva se
    * empasta) y para resaltar palabras sueltas. Derivado, no está en los boards. */
   --color-verde-vivo: #8c9c50;

@@ -46,8 +46,18 @@ interface Props {
    *  - 'columna': alineado arriba-izquierda y crece hacia abajo — para las pantallas de contenido
    *    denso del mazo (título + bloques + chips + cierre ocupan toda la columna). */
   distribucion?: 'centrado' | 'columna';
+  /** true = agrega la cuña diagonal ondulada que se funde con el navy del footer (Pantalla 3,
+   * 2026-09-01, pedido de Ale) — clara arriba-izquierda, navy abajo-derecha. Independiente de
+   * `fondoRecortado` (ese es el corte-S para una foto fija; esto es una pieza de color propia,
+   * sin foto). Ver el comentario largo más abajo, antes de `DIAG_TOPE_IZQ`. */
+  fondoDiagonal?: boolean;
 }
-const { indice = 0, fondoRecortado = false, distribucion = 'centrado' } = Astro.props;
+const {
+  indice = 0,
+  fondoRecortado = false,
+  distribucion = 'centrado',
+  fondoDiagonal = false,
+} = Astro.props;
 
 /* Onda del footer — spec de Ale (2026-08-27):
  *  - En el borde de la pantalla (la costura) el navy tiene BASE px de alto.
@@ -71,6 +81,33 @@ for (let k = 1; k <= N; k++) {
   d += ` L ${((k / N) * 100).toFixed(2)} ${yv(k / N)}`;
 }
 d += ` L 100 ${ALTO} L 0 ${ALTO} Z`;
+
+/* === Cuña diagonal ondulada (prop `fondoDiagonal`, 2026-09-01) ===
+ * A diferencia de la onda de arriba (banda FIJA de `ALTO` px), esta cuña ocupa TODA la altura de
+ * la lámina en fracciones 0-100 (`viewBox="0 0 100 100"` + `preserveAspectRatio="none"`, mismo
+ * truco que `.lamina__onda` pero sin depender de un alto fijo en px — a la lámina no le queda un
+ * alto fijo como al footer). Clara arriba-izquierda, se mezcla con el navy del footer
+ * abajo-derecha: el borde de arriba de la cuña es una diagonal (sube de izq a der) con un ripple
+ * senoidal encima ("unas ondas", pedido de Ale) — mismo espíritu que la onda del footer, pendiente
+ * en vez de plana. El relleno reusa el MISMO degradé animado del footer: el `<linearGradient>` es
+ * propio (id distinto, para no chocar con el del footer) pero sus `<stop>` llevan las MISMAS
+ * clases `.lamina__stop--1/2/3` — las `@keyframes lamina-degrade-1/2/3` animan por CLASE, no por
+ * instancia de SVG, así que quedan sincronizados con el footer real sin duplicar la animación. El
+ * borde inferior de la cuña (y=100, toda la base) queda detrás del `<footer>` real (z-index 2,
+ * pinta encima) — ahí está la costura invisible. */
+const DIAG_TOPE_IZQ = 95; // % de alto del borde arriba en x=0 — casi todo claro
+const DIAG_TOPE_DER = 30; // % de alto del borde arriba en x=100 — el navy sube mucho acá
+const DIAG_ONDA_AMP = 3.5;
+const DIAG_ONDA_FRECUENCIA = 2.5; // ciclos completos de la ondulación a lo ancho
+const diagY = (t: number): number =>
+  DIAG_TOPE_IZQ -
+  (DIAG_TOPE_IZQ - DIAG_TOPE_DER) * t +
+  DIAG_ONDA_AMP * Math.sin(2 * Math.PI * DIAG_ONDA_FRECUENCIA * t);
+let dDiagonal = `M 0 ${diagY(0).toFixed(2)}`;
+for (let k = 1; k <= N; k++) {
+  dDiagonal += ` L ${((k / N) * 100).toFixed(2)} ${diagY(k / N).toFixed(2)}`;
+}
+dDiagonal += ` L 100 100 L 0 100 Z`;
 ---
 
 <div
@@ -90,6 +127,25 @@ d += ` L 100 ${ALTO} L 0 ${ALTO} Z`;
         </defs>
       </svg>
     </div>
+  )}
+  {fondoDiagonal && (
+    <svg class="lamina__diagonal" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+      <defs>
+        <linearGradient
+          id={`lamina-diagonal-degrade-${indice}`}
+          gradientUnits="userSpaceOnUse"
+          x1="0"
+          y1="100"
+          x2="0"
+          y2="0"
+        >
+          <stop class="lamina__stop lamina__stop--1" offset="0%" style="stop-color: var(--color-marino-noche)" />
+          <stop class="lamina__stop lamina__stop--2" offset="50%" style="stop-color: var(--color-marino)" />
+          <stop class="lamina__stop lamina__stop--3" offset="100%" style="stop-color: var(--color-celeste)" />
+        </linearGradient>
+      </defs>
+      <path d={dDiagonal} fill={`url(#lamina-diagonal-degrade-${indice})`}></path>
+    </svg>
   )}
   <div class="lamina__cuerpo">
     <slot />
@@ -151,6 +207,18 @@ d += ` L 100 ${ALTO} L 0 ${ALTO} Z`;
     background-color: var(--color-fondo);
   }
 
+  /* Cuña diagonal (prop `fondoDiagonal`) — z-index 0, mismo nivel que `.lamina__fondo` pero
+   * declarada DESPUÉS en el DOM, así pinta encima del beige plano y por debajo de
+   * `.lamina__cuerpo` (z-index 1, siempre arriba sin importar el orden). */
+  .lamina__diagonal {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+
   /* Sin soporte de scroll-driven / movimiento reducido, la capa .fondo-fijo queda invisible
    * (opacidad 0, ver index.astro) — sacar el recorte para que el beige llene la lámina y no se
    * vea una curva "a la nada" (la mitad derecha mostraría el fondo del body, mismo color pero con
@@ -172,6 +240,15 @@ d += ` L 100 ${ALTO} L 0 ${ALTO} Z`;
      * Deja libre la zona del footer (cresta de la onda incluida) con el padding inferior;
      * --footer-alto lo fija el componente (px). */
     display: grid;
+    /* `minmax(0, 1fr)` explícito (2026-09-01) — sin esto, la única columna del grid se
+     * autodimensiona por el contenido más ancho (comportamiento "auto" de grid), no por el
+     * espacio disponible. Sin problema mientras todo el contenido era más angosto que la lámina,
+     * pero P3 con `width: 100%` en `.op-chips`/`.op-bloques` (pedido de Ale: "las cards de lado a
+     * lado") entraba en un círculo: el 100% se resolvía contra un track que a su vez se agrandaba
+     * para hacerle lugar al 100% — la card 6 terminaba desbordando la lámina entera (invisible,
+     * cortada por el `overflow:hidden`). Acotando el track a `minmax(0, 1fr)` el 100% pasa a
+     * resolverse contra el espacio real. */
+    grid-template-columns: minmax(0, 1fr);
     align-content: center;
     justify-items: center;
     padding: clamp(2rem, 5vh, 3.5rem) clamp(1.5rem, 5vw, 4rem)
@@ -198,11 +275,28 @@ d += ` L 100 ${ALTO} L 0 ${ALTO} Z`;
   /* Contenido en columna (pantallas de contenido denso del mazo): arriba-izquierda, crece hacia
    * abajo. Se DESPEGA del borde izquierdo (ahí vive HiloRuta, la barra de nav) y se RESERVA la
    * franja derecha para las foto-cards del mazo — así el contenido queda en el medio-izquierda, no
-   * encimado con el nav ni con las fotos. */
+   * encimado con el nav ni con las fotos.
+   *
+   * `pointer-events: none` (2026-09-01) — aunque el `padding-right` deja esa franja derecha SIN
+   * contenido visible, la caja de `.lamina__cuerpo` sigue ocupando ese espacio (z-index 1, por
+   * ENCIMA de `.lamina__galeria`, z-index 0) y de forma invisible se comía el mouse: el hover-zoom
+   * de las foto-cards nunca se disparaba porque el puntero nunca llegaba a tocarlas. Como hoy el
+   * contenido de esta columna es todo texto no interactivo (sin links/botones), apagar el puntero
+   * acá es seguro — si en algún momento se agrega algo clickeable adentro, esa pieza puntual
+   * necesita su propio `pointer-events: auto`. */
   .lamina--columna .lamina__cuerpo {
     align-content: start;
     justify-items: start;
     padding-left: clamp(2.5rem, 8vw, 7rem);
+    /* Reservado para la galería de foto-cards SOLO si esta lámina realmente tiene una — sin
+     * galería (P3, "esquema" sin fotos), dejar la franja grande vacía por las dudas iba en contra
+     * de "el contenido que se oriente al medio" (pedido de Ale 2026-09-01): con `:has()` el
+     * padding se reduce solo, sin necesitar un prop nuevo ni tocar P1/P2. */
+    padding-right: clamp(2.5rem, 8vw, 7rem);
+    pointer-events: none;
+  }
+
+  .lamina--columna:has(.lamina__galeria) .lamina__cuerpo {
     padding-right: min(42vw, 100vw - 44rem);
   }
 

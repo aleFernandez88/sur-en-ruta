@@ -5,10 +5,11 @@
  * Se arma pantalla por pantalla, guiado por Ale, no todo de una vez.
  *
  * Recorrido de la "cinta" (ver Pantalla.astro y base.css): Hero propio (Pantalla 0) → Pantalla 1
- * PORTADA (mazo pág. 1, cerrada) → Pantalla 2 "LA OPORTUNIDAD" (mazo pág. 2, en construcción) →
- * 3 SlidePlaceholder (mapa / rutas / centro-regional) hasta que se mapeen las págs. 3..10 del mazo.
- * Cada pantalla del mazo es `<Pantalla completa>` (el look full-bleed del mazo lo necesita); el
- * Hero también.
+ * PORTADA (mazo pág. 1, CERRADA) → Pantalla 2 "LA OPORTUNIDAD" (mazo pág. 2, CERRADA — Ale: "no
+ * quiero agregar más elementos, está muy cargada") → Pantalla 3 "¿Qué es RENAMU / Sur en Ruta?"
+ * (mazo pág. 3, `id="sistema"`, en construcción 2026-09-01) → 2 SlidePlaceholder (rutas /
+ * centro-regional) hasta que se mapeen las págs. 4..10 del mazo. Cada pantalla del mazo es
+ * `<Pantalla completa>` (el look full-bleed del mazo lo necesita); el Hero también.
  *
  * `N_PANTALLAS` (abajo) = total de <Pantalla>. TODAS las ventanas de animación scroll-driven se
  * calculan a partir de ese número (ver `esc()`), así sumar una pantalla del mazo es cambiar ese
@@ -20,6 +21,7 @@ import Hero from '../components/Hero.astro';
 import Lamina from '../components/Lamina.astro';
 import SlidePlaceholder from '../components/SlidePlaceholder.astro';
 import Icono from '../components/Icono.astro';
+import { componentes } from '../data/componentes.ts';
 import logoUrl from '../assets/logo/isotipo-original.svg?url';
 import { Image } from 'astro:assets';
 // PLACEHOLDER, no deployar así — trae el logo de Dometic visible y no es Uruguay. Ver
@@ -144,6 +146,14 @@ const P2_CENTRO = P1_CENTRO * 2; // % de --hz-progreso en que la Pantalla 2 se c
 const OP_CABECERA_RANGO = `${(P2_CENTRO - 20).toFixed(2)}% ${(P2_CENTRO + 20).toFixed(2)}%`;
 const OP_SUBTITULO_TEXTO = 'Una nueva forma de viajar necesita una nueva forma de organizarse';
 
+// Cierre de P2 ("Sin una red organizada…", mazo pág. 2), sobre la onda del footer — mismo efecto
+// de "choque" que el logo del footer de p1 (`.pie-marca` / `@keyframes pie-marca-choca`, ver más
+// abajo). Mismos números crudos que PIE_MARCA_RANGO (19.5 → 25), solo que reescalados a la
+// Pantalla 2 con el 3er parámetro de `rango()` — es EXACTAMENTE el mecanismo que ya existe en este
+// archivo para correr una animación calibrada en p1 a una pantalla más adelante (ver `esc()`),
+// así que el timing relativo (cuánto dura, cuánto antes del centrado asienta) queda igual.
+const OP_CIERRE_RANGO = rango(19.5, 25, 2);
+
 /* Entrada progresiva de los 4 chips (pedido de Ale): la ruta se "dibuja" y cada nodo + su chip
  * entran escalonados, TODO atado a --hz-progreso. Cada elemento lleva su `animation-range` inline
  * (Chrome no resuelve `animation-range` con var()).
@@ -169,6 +179,76 @@ const CHIPS_RUTA_RANGO = `${CHIPS_INICIO.toFixed(2)}% ${(CHIPS_INICIO + (CHIPS.l
 // Stack de foto-cards del mazo (pág. 2), en diagonal, sangrando por la derecha. PLACEHOLDER:
 // gradiente + label hasta tener las 4 fotos reales de Uruguay (faro / viñedo / cartel / feria).
 const GALERIA = ['Faro', 'Viñedo', 'Cartel indicador', 'Feria local'];
+
+/* === Pantalla 3 · "¿Qué es RENAMU / Sur en Ruta?" (mazo pág. 3) ===
+ * Arrancada 2026-09-01, guiada por Ale, elemento por elemento (mismo flujo que P2) — ver el plan
+ * en la memoria del proyecto. Mismo mecanismo de cabecera y de tarjetas-con-ruta que P2, reusado
+ * tal cual donde se pueda en vez de reinventarlo. */
+const P3_CENTRO = P1_CENTRO * 3; // % de --hz-progreso en que la Pantalla 3 se centra
+// Misma caja/parallax que P2 (.op-cabecera, @keyframes op-cabecera-desliza) — pedido de Ale: "para
+// el título también usemos el diseño de pantalla 2". Se reusan las clases `.op-*` tal cual (no una
+// copia `.sis-*`) porque el diseño es idéntico, solo cambia el rango (centrado en P3_CENTRO).
+const SIS_CABECERA_RANGO = `${(P3_CENTRO - 20).toFixed(2)}% ${(P3_CENTRO + 20).toFixed(2)}%`;
+
+// Las 6 tarjetas numeradas (mazo pág. 3) — mismo mecanismo que los 4 chips de P2 (ruta ondulada +
+// nodos + entrada escalonada), extendido a 6 paradas. El copy sale de `componentes` (dato ya
+// verificado contra el PDF de propuesta, secc. 4.1-4.6) — solo se usa `nombre` acá (la
+// `descripcion` es del PDF, no del mazo, y es muy larga para una tarjeta chica tipo chip).
+const SIS_CHIPS_ICONOS = ['area', 'puntos-amigos', 'sello', 'ruta', 'pasaporte', 'app'] as const;
+const SIS_CHIPS = componentes.map((c, k) => ({ icono: SIS_CHIPS_ICONOS[k], label: c.nombre }));
+const SIS_CHIPS_INICIO = P3_CENTRO - 16; // más margen que P2_CENTRO-13: son 6 paradas, no 4
+const SIS_CHIP_PASO = 1.6;
+const rangoSisChip = (k: number, off: number, dur: number): string => {
+	const d = SIS_CHIPS_INICIO + off + k * SIS_CHIP_PASO;
+	return `${d.toFixed(2)}% ${(d + dur).toFixed(2)}%`;
+};
+const SIS_CHIPS_RUTA_RANGO = `${SIS_CHIPS_INICIO.toFixed(2)}% ${(SIS_CHIPS_INICIO + (SIS_CHIPS.length - 1) * SIS_CHIP_PASO + 1.8).toFixed(2)}%`;
+
+// Línea-ruta ondulada para las 6 tarjetas — mismo formato que `.op-chips-ruta` de P2 (línea +
+// nodos llenos), pero generada por fórmula en vez de a mano: con 6 paradas (vs. 4 en P2) tallar la
+// curva bezier punto por punto a mano era mucho más frágil. Un seno cuyo semiperíodo coincide con
+// la separación entre nodos cruza la línea de base (y=15) EXACTO en cada nodo — mismo resultado
+// visual (ondula entre nodo y nodo) sin ajustar puntos de control uno por uno.
+const SIS_RUTA_Y = 15;
+const SIS_RUTA_AMP = 7;
+const SIS_RUTA_SEPARACION = 100 / SIS_CHIPS.length; // % entre nodo y nodo
+const SIS_RUTA_X0 = SIS_RUTA_SEPARACION / 2; // x del primer nodo
+const sisRutaY = (x: number): number =>
+	SIS_RUTA_Y + SIS_RUTA_AMP * Math.sin((2 * Math.PI * (x - SIS_RUTA_X0)) / (2 * SIS_RUTA_SEPARACION));
+let dSisRuta = `M 2 ${sisRutaY(2).toFixed(2)}`;
+for (let i = 1; i <= 60; i++) {
+	const x = 2 + (96 * i) / 60;
+	dSisRuta += ` L ${x.toFixed(2)} ${sisRutaY(x).toFixed(2)}`;
+}
+
+// Entrada de los 2 nodos (RENAMU / Sur en Ruta), pedido de Ale: "que vengan desde arriba, al mando
+// del scroll". Animan el BLOQUE ENTERO (ícono + nombre + texto juntos, no solo el ícono) — si el
+// ícono se mueve y el texto queda quieto se leen como 2 cosas separadas en vez de "un nodo"
+// entrando. Sin opacity (regla ya fijada en la cabecera de P2: "el texto nunca debe quedar
+// transparente", Ale) — solo `translateY`.
+// OJO: el inicio NO puede ir muy antes de P3_CENTRO — a diferencia de P2 (una sola lámina fija que
+// solo hace zoom/parallax), acá la cinta todavía está deslizando ESTA lámina desde la derecha en
+// ese tramo del scroll. Medido con scroll real + getBoundingClientRect: con P3_CENTRO-19 (=41%) el
+// rango terminaba en ~44.6%, pero los bloques recién empiezan a asomar en pantalla ~44-46% y no
+// quedan cómodamente visibles hasta ~50% — la animación completaba entera FUERA de cámara y llegaba
+// ya asentada (`translateY:0`) apenas se veía, invisible para Ale.
+// Segundo ajuste (Ale): que NO caigan a la vez — RENAMU primero, Sur en Ruta después (secuencial, no
+// superpuesto) — y que las 2 caídas terminen justo cuando termina de entrar la ÚLTIMA tarjeta
+// numerada (mismo instante que `rangoSisChip(SIS_CHIPS.length - 1, 0.8, 2.4)`, calculado abajo para
+// no repetir el número mágico). Con eso el cierre de la pantalla queda: nodos + última tarjeta
+// asentándose juntos.
+const SIS_NODOS_DUR = 3; // duración de la caída de cada nodo
+const SIS_NODOS_FIN = SIS_CHIPS_INICIO + 0.8 + (SIS_CHIPS.length - 1) * SIS_CHIP_PASO + 2.4; // = fin de la última tarjeta
+const SIS_NODOS_INICIO = SIS_NODOS_FIN - 2 * SIS_NODOS_DUR; // 2 caídas seguidas, sin superponerse
+const rangoSisNodo = (k: number): string => {
+	const d = SIS_NODOS_INICIO + k * SIS_NODOS_DUR;
+	return `${d.toFixed(2)}% ${(d + SIS_NODOS_DUR).toFixed(2)}%`;
+};
+
+// Cierre de P3 ("Un sistema que conecta…", mazo pág. 3), mismo mecanismo que el cierre de P2
+// (reusa @keyframes pie-marca-choca, mismos números crudos de PIE_MARCA_RANGO reescalados —
+// esta vez a la Pantalla 3 con rango(..., 3)).
+const SIS_CIERRE_RANGO = rango(19.5, 25, 3);
 ---
 
 <Base>
@@ -344,7 +424,7 @@ const GALERIA = ['Faro', 'Viñedo', 'Cartel indicador', 'Feria local'];
 				{CHIPS.map((c, k) => (
 					<div class="op-chip" style={`animation-range: ${rangoChip(k, 0.8, 2.4)}`}>
 						<span class="op-chip-icono">
-							<Icono nombre={c.icono} tamano={56} acento="var(--color-verde)" />
+							<Icono nombre={c.icono} tamano={56} acento="var(--color-verde-vivo)" />
 						</span>
 						<span class="op-chip-label">{c.label}</span>
 					</div>
@@ -353,19 +433,154 @@ const GALERIA = ['Faro', 'Viñedo', 'Cartel indicador', 'Feria local'];
 
 			<!-- Stack de foto-cards del mazo (faro / viñedo / cartel / feria) en diagonal, sangrando
 			     por la derecha. Vive en el slot `galeria` de Lamina (fuera de .lamina__cuerpo, ver
-			     Lamina.astro). PLACEHOLDER: gradiente + label hasta tener las fotos reales. -->
+			     Lamina.astro). PLACEHOLDER: gradiente + label hasta tener las fotos reales.
+			     Recorte con puntas curvas (2026-09-01, pedido de Ale): un `clip-path: polygon()` no
+			     puede redondear vértices, así que el recorte vive en un `<clipPath>` SVG con un
+			     `<path>` (arcos en las 2 puntas izquierdas — las que se ven; las de la derecha
+			     sangran fuera de la lámina, no hace falta redondearlas). `clipPathUnits="objectBoundingBox"`
+			     = fracciones 0–1, se adapta solo al tamaño real de cada card sin JS (mismo truco que
+			     el recorte de .lamina__fondo, ver Lamina.astro). Las 4 cards comparten el mismo id. -->
+			<svg width="0" height="0" aria-hidden="true">
+				<defs>
+					<clipPath id="op-galeria-recorte" clipPathUnits="objectBoundingBox">
+						<path d="M0.17,0 L1,0 L1,1 L0.06,1 Q0,1 0.0165,0.85 L0.0935,0.15 Q0.11,0 0.17,0 Z" />
+					</clipPath>
+				</defs>
+			</svg>
 			<div slot="galeria" class="op-galeria" aria-hidden="true">
 				{GALERIA.map((label, k) => (
 					<div class="op-galeria-card" style={`--i: ${k}`}>
-						<span class="op-galeria-ph">{label}</span>
+						{/* Foto y label separados (2026-09-01, hover zoom): la foto es la capa que
+						    escala al hover, el label queda fijo encima — si compartieran el mismo
+						    elemento, el texto también se agrandaría. */}
+						<span class="op-galeria-foto" aria-hidden="true" />
+						<span class="op-galeria-label">{label}</span>
 					</div>
 				))}
+			</div>
+
+			<!-- Cierre de P2 (mazo pág. 2, "Sin una red organizada…") — sobre la onda del footer,
+			     mismo efecto de "choque" que el logo del footer de p1 (comparten @keyframes
+			     pie-marca-choca; ver el comentario largo ahí). Lead-in en celeste/bold (mismo
+			     tratamiento que los 4 resaltados de la Portada) porque va sobre el footer navy — el
+			     verde de .op-bloque-texto no tiene contraste ahí. -->
+			<div slot="footer" class="pie-footer">
+				<div class="op-cierre" style={`animation-range: ${OP_CIERRE_RANGO}`}>
+					<span class="op-cierre-icono">
+						<Icono nombre="warning" tamano={38} acento="var(--color-terracota)" />
+					</span>
+					<p class="op-cierre-texto">
+						<strong>Sin una red organizada,</strong> la experiencia pierde claridad, seguridad y
+						conexión con el destino.
+					</p>
+				</div>
 			</div>
 		</Lamina>
 	</Pantalla>
 
-	<Pantalla id="mapa">
-		<SlidePlaceholder color="var(--color-ruta-oceanica)" etiqueta="3 — Mapa y servicios" />
+	<!-- Pantalla 3 · "¿Qué es RENAMU / Sur en Ruta?" (mazo pág. 3). Se arma elemento por elemento,
+	     igual que P2. Hecho: cabecera (mismo diseño que P2, pedido de Ale). -->
+	<Pantalla id="sistema" completa>
+		<Lamina indice={2} distribucion="columna" fondoDiagonal>
+			<div class="op-cabecera" style={`animation-range: ${SIS_CABECERA_RANGO}`}>
+				<p class="sis-titulo-eyebrow">¿Qué es</p>
+				<!-- Título en UNA línea (2026-09-01, pedido de Ale, para liberar espacio vertical y
+				     agrandar lo de abajo) — antes 2 `<p class="op-titulo">` (bloques, cada uno su
+				     línea); ahora un solo `<p>` con 2 `<span>` inline. Colores igual que antes
+				     (intercambiados: "Sur en Ruta" siempre azul/blanco, nunca verde) — el subrayado ya
+				     no sale gratis de `.op-titulo--l2::after` (ese truco necesita el span en bloque),
+				     así que `.sis-titulo-renamu::after` lo repite a mano. -->
+				<p class="sis-titulo-linea"><span class="sis-titulo-renamu">RENAMU /</span> <span class="sis-titulo-marca">Sur en Ruta?</span></p>
+			</div>
+
+			<!-- Los 2 nodos del mazo (RENAMU / Sur en Ruta) — estructura propia `.sis-nodo*`, ya NO
+			     reusa `.op-bloque*` de P2 (2026-09-01, 3ª pasada, replicando una captura de
+			     referencia del mazo que pasó Ale: badge circular RELLENO + nombre grande en su
+			     propio renglón + descripción más chica debajo + conector con nodo/ícono en el medio).
+			     Ver el bloque de comentario largo antes de `.sis-nodos` en el <style>. -->
+			<div class="sis-nodos">
+				<div class="sis-nodo" style={`animation-range: ${rangoSisNodo(0)}`}>
+					<span class="sis-nodo-badge sis-nodo-badge--renamu">
+						<Icono nombre="institucional" tamano={44} />
+					</span>
+					<div class="sis-nodo-texto-grupo sis-nodo-texto-grupo--renamu">
+						<p class="sis-nodo-nombre sis-nodo-nombre--renamu">RENAMU</p>
+						<p class="sis-nodo-descripcion">Marco territorial e institucional.</p>
+					</div>
+				</div>
+				<!-- Conector rediseñado (2026-09-01, 2ª pasada) — ya no el ícono de eslabón: un nodo
+				     grande (mismo lenguaje visual que los nodos de HiloRuta y de la ruta de las 6
+				     tarjetas de abajo) con 2 tramos de línea punteada ANIMADOS (stroke-dashoffset,
+				     "se mueven") entrando desde cada lado — la unión de 2 tramos de ruta en un nodo. -->
+				<span class="sis-nodo-conector" aria-hidden="true">
+					<svg class="sis-nodo-conector-linea" viewBox="0 0 100 10" preserveAspectRatio="none">
+						<path d="M0 5 L100 5" />
+					</svg>
+					<span class="sis-nodo-conector-nodo">
+						<Icono nombre="adjuntar" tamano={20} />
+					</span>
+					<svg class="sis-nodo-conector-linea" viewBox="0 0 100 10" preserveAspectRatio="none">
+						<path d="M0 5 L100 5" />
+					</svg>
+				</span>
+				<div class="sis-nodo" style={`animation-range: ${rangoSisNodo(1)}`}>
+					<span class="sis-nodo-badge sis-nodo-badge--surenruta">
+						<Icono nombre="base-conectada" tamano={44} />
+					</span>
+					<div class="sis-nodo-texto-grupo sis-nodo-texto-grupo--surenruta">
+						<p class="sis-nodo-nombre sis-nodo-nombre--surenruta">Sur en Ruta</p>
+						<p class="sis-nodo-descripcion">Plataforma de conexión, comunicación y experiencia.</p>
+					</div>
+				</div>
+			</div>
+
+			<!-- Las 6 tarjetas numeradas (mazo pág. 3, componentes del sistema) — mismo mecanismo que
+			     los 4 chips de P2 (`.op-chips`/`.op-chip-nodo`/`.op-chip`, reusados tal cual), extendido
+			     a 6 paradas. Copy desde `componentes` (src/data/componentes.ts). Caen sobre la cuña
+			     diagonal → fondo oscuro (mismo `.op-chip` que ya quedó oscuro hoy en P2), no hace falta
+			     una variante nueva. -->
+			<div class="op-chips sis-chips" style="--op-chips-cols: 6; --op-chips-width: 100%">
+				<svg
+					class="op-chips-ruta"
+					viewBox="0 0 100 28"
+					preserveAspectRatio="none"
+					aria-hidden="true"
+					style={`animation-range: ${SIS_CHIPS_RUTA_RANGO}`}
+				>
+					<path d={dSisRuta} />
+				</svg>
+				{SIS_CHIPS.map((_, k) => (
+					<span
+						class="op-chip-nodo"
+						style={`left: ${SIS_RUTA_X0 + k * SIS_RUTA_SEPARACION}%; animation-range: ${rangoSisChip(k, 0, 1.6)}`}
+					/>
+				))}
+				{SIS_CHIPS.map((c, k) => (
+					<div class="op-chip" style={`animation-range: ${rangoSisChip(k, 0.8, 2.4)}`}>
+						<span class="op-chip-icono sis-chip-icono">
+							<Icono nombre={c.icono} tamano={112} acento="var(--color-verde)" />
+						</span>
+						<span class="op-chip-label">{c.label}</span>
+						<span class="sis-chip-numero">{k + 1}</span>
+					</div>
+				))}
+			</div>
+
+			<!-- Cierre de P3 ("Un sistema que conecta…", mazo pág. 3) — mismo mecanismo que el cierre
+			     de P2 (`.op-cierre`, reusado tal cual), ícono `comunidad` (el mismo que usa P1 para su
+			     frase "conecta viajeros..."). 4 palabras resaltadas en vez de un lead-in solo — mismo
+			     efecto celeste/bold, varios <strong> en la frase. -->
+			<div slot="footer" class="pie-footer">
+				<div class="op-cierre" style={`animation-range: ${SIS_CIERRE_RANGO}`}>
+					<span class="op-cierre-icono">
+						<Icono nombre="comunidad" tamano={34} acento="var(--color-verde)" />
+					</span>
+					<p class="op-cierre-texto">
+						Un sistema que conecta <strong>viajeros</strong>, <strong>destinos</strong>, <strong>servicios</strong> y <strong>comunidad</strong>.
+					</p>
+				</div>
+			</div>
+		</Lamina>
 	</Pantalla>
 	<Pantalla id="rutas">
 		<SlidePlaceholder color="var(--color-ruta-rural)" etiqueta="4 — Rutas + Pasaporte" />
@@ -502,16 +717,18 @@ const GALERIA = ['Faro', 'Viñedo', 'Cartel indicador', 'Feria local'];
 	@keyframes op-cabecera-desliza {
 		/* Parallax vertical: la caja entra desde abajo y sale por arriba, pasando por translateY(0)
 		 * justo cuando la P2 se centra (punto medio de la ventana). Bajado de 65vh a 22vh
-		 * (2026-08-31): con 65vh la caja descendía TANTO en la aproximación que tapaba la zona de
-		 * los 2 bloques + los 4 chips, y la entrada escalonada de los chips no se apreciaba. Con
-		 * 22vh apenas roza los bloques y nunca llega a los chips. Sigue siendo un movimiento amplio
-		 * (44vh de recorrido) y, sumado al deslizamiento horizontal de la cinta, se lee bien
-		 * diagonal. El horizontal lo pone la cinta, no este keyframe. */
+		 * (2026-08-31) y de 22vh a 6vh (2026-09-01): con 22vh la caja seguía tapando la primera
+		 * línea de los 2 bloques durante buena parte del tramo de ENTRADA (medido con scroll fino:
+		 * de ~25% a ~37% del progreso de la cinta, bien después de que la caja ya estaba asentada
+		 * horizontalmente) — mucho más que un "roce", el texto quedaba ilegible varios scrolls
+		 * seguidos. Con 6vh el recorrido vertical (12vh en total) se resuelve antes de que la caja
+		 * termine de entrar horizontalmente, así que en la práctica ya no llega a taparlo. Sigue
+		 * habiendo parallax (la caja se mueve, no queda estática) — solo que menos dramático. */
 		from {
-			transform: translateY(22vh);
+			transform: translateY(6vh);
 		}
 		to {
-			transform: translateY(-22vh);
+			transform: translateY(-6vh);
 		}
 	}
 
@@ -563,6 +780,294 @@ const GALERIA = ['Faro', 'Viñedo', 'Cartel indicador', 'Feria local'];
 		line-height: 1.25;
 		max-width: 30ch;
 		color: var(--color-marino);
+	}
+
+	/* === Título de P3 — "¿Qué es" chico + título en UNA línea (2026-09-01, 2ª pasada) ===
+	 * "¿Qué es" es solo el lead-in de la pregunta, no el título — mucho más chico. El título ya no
+	 * son 2 `<p class="op-titulo">` en bloque (una línea cada uno, como P2): pasa a un solo `<p>`
+	 * con 2 `<span>` inline, para liberar espacio vertical y agrandar los nodos/tarjetas de abajo
+	 * (pedido de Ale). Tamaño bajado bastante respecto de `.op-titulo` (tope 5rem) porque ahora las
+	 * 2 palabras comparten renglón. */
+	.sis-titulo-eyebrow {
+		margin: 0 0 var(--espacio-2xs);
+		font-family: var(--fuente-texto);
+		font-weight: 600;
+		font-size: clamp(1rem, 0.9rem + 0.3vw, 1.2rem);
+		color: var(--color-marino);
+	}
+
+	.sis-titulo-linea {
+		margin: 0;
+		line-height: 0.95;
+	}
+
+	/* "RENAMU /" — verde (subrayado propio, `.op-titulo--l2::after` no aplica a un `<span>`
+	 * inline). Mismo par tipográfico que el resto del título del sitio (Archivo 800). */
+	.sis-titulo-renamu {
+		position: relative;
+		font-family: var(--fuente-display);
+		font-weight: 800;
+		font-size: clamp(2rem, 1.3rem + 3vw, 3.75rem);
+		text-transform: uppercase;
+		color: var(--color-verde);
+		/* Aire hacia "Sur en Ruta?" — el espacio del source solo no alcanza, la letra siguiente
+		 * (Italiana, con word-spacing negativo) queda pegada. */
+		margin-right: 0.3em;
+	}
+
+	.sis-titulo-renamu::after {
+		content: '';
+		position: absolute;
+		left: 0;
+		bottom: -0.4rem;
+		width: 2.75rem;
+		height: 0.3rem;
+		border-radius: 999px;
+		background: var(--color-verde);
+	}
+
+	/* "Sur en Ruta?" — SIEMPRE azul de la paleta (nunca verde, pedido de Ale) + tipografía de marca
+	 * (--fuente-marca, Italiana, la misma que usa el wordmark de la Portada en
+	 * `.marca-sur-en-ruta`) — mismo tratamiento de letter/word-spacing que allá, ese Didone necesita
+	 * el ajuste o se lee demasiado abierto a este tamaño. */
+	.sis-titulo-marca {
+		font-family: var(--fuente-marca);
+		font-weight: 700;
+		font-size: clamp(2rem, 1.3rem + 3vw, 3.75rem);
+		text-transform: uppercase;
+		letter-spacing: 0.015em;
+		word-spacing: -0.15em;
+		color: var(--color-marino);
+	}
+
+	/* === Nodos de P3 (RENAMU / Sur en Ruta), 3ª pasada (2026-09-01) — estructura propia, ya NO
+	 * reusa `.op-bloques/.op-bloque*` de P2 ===
+	 * Ale pasó una captura de referencia del mazo (pág. 3) y pidió replicar esa estructura:
+	 * badge circular RELLENO (no un aro fino con ícono chico adentro) + nombre grande en su propio
+	 * renglón + descripción más chica debajo (no todo en una oración con guión) + un conector con
+	 * ícono de eslabón entre los 2 nodos (no solo la divisoria punteada de P2). "Sur en Ruta"
+	 * conserva su tipografía/color de marca ya decididos (Italiana, azul — nunca verde) cada vez
+	 * que se nombra, acá también; "RENAMU" usa el mismo tratamiento que en el título (Archivo 800,
+	 * verde). */
+	/* `justify-content: center` + `.sis-nodo` sin `flex:1` (2026-09-01, pedido de Ale: "centralos
+	 * mejor que se junten al ícono de unión del medio") — antes cada nodo ocupaba TODO el espacio
+	 * sobrante a cada lado del conector (flex:1), quedando pegados a los bordes izq/der en vez de
+	 * agrupados alrededor del nodo central. Ahora cada uno mide lo que su contenido necesita y el
+	 * conjunto se centra como grupo. */
+	.sis-nodos {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: clamp(1rem, 3vw, 2rem);
+		width: 100%;
+		margin-top: clamp(1rem, 3vh, 1.75rem);
+		position: relative;
+		z-index: 1;
+	}
+
+	.sis-nodo {
+		display: flex;
+		align-items: center;
+		gap: var(--espacio-sm);
+		flex: 0 1 auto;
+		min-width: 0;
+	}
+
+	/* Entrada desde arriba, al mando del scroll (2026-09-01, pedido de Ale) — anima el BLOQUE
+	 * entero (ícono + nombre + texto juntos), no solo el ícono; sin opacity (texto siempre nítido,
+	 * misma regla que la cabecera de P2). `animation-range` va inline (`rangoSisNodo`, calculado
+	 * en el frontmatter) — mismo motivo que el resto de los rangos de esta pantalla. */
+	@supports (animation-timeline: scroll(root)) {
+		.sis-nodo {
+			transform: translateY(-3rem);
+			animation: sis-nodo-entra linear both;
+			animation-timeline: --hz-progreso;
+		}
+	}
+
+	@keyframes sis-nodo-entra {
+		from {
+			transform: translateY(-3rem);
+		}
+		to {
+			transform: translateY(0);
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.sis-nodo {
+			animation: none !important;
+			transform: none;
+		}
+	}
+
+	/* Badge relleno (antes: aro fino verde con ícono chico) — RENAMU en navy, Sur en Ruta en verde
+	 * (inverso del color de su propio nombre al lado, como en la referencia). Ícono en blanco
+	 * (currentColor), sin `acento` — sobre un fondo sólido no hace falta 2ª tinta. */
+	.sis-nodo-badge {
+		flex-shrink: 0;
+		width: clamp(4.5rem, 4vw + 3rem, 6.5rem);
+		height: clamp(4.5rem, 4vw + 3rem, 6.5rem);
+		border-radius: 50%;
+		display: grid;
+		place-items: center;
+		color: var(--color-superficie);
+	}
+
+	.sis-nodo-badge--renamu {
+		background: var(--color-marino);
+	}
+
+	.sis-nodo-badge--surenruta {
+		background: var(--color-verde);
+	}
+
+	/* `max-width` (2026-09-01, arregla el centrado que notó Ale) — sin tope, un `<p>` en un flex
+	 * item sin `width` explícito se acomoda a su "max-content" (intenta una sola línea si entra):
+	 * la descripción de Sur en Ruta es más larga que la de RENAMU, así que ese bloque terminaba
+	 * mucho más ancho que el otro y el grupo entero (`.sis-nodos`, `justify-content: center`) se
+	 * veía descentrado — no era la propiedad `center` la que fallaba, era que los 2 bloques no
+	 * medían parecido. */
+	.sis-nodo-texto-grupo {
+		display: flex;
+		flex-direction: column;
+		gap: 0.2rem;
+		min-width: 0;
+	}
+
+	/* Tope DISTINTO por bloque (2026-09-01, pedido de Ale: "que ambos queden en 2 líneas... dale
+	 * más ancho al box del segundo bloque") — un solo `max-width` compartido no alcanza porque las
+	 * 2 oraciones tienen largos distintos: la de RENAMU es corta y con 32rem entraba en 1 sola
+	 * línea; la de Sur en Ruta es más larga y necesita bastante más ancho para entrar en 2. Los 2
+	 * valores están ajustados a mano para que cada uno corte en 2 líneas, ninguno en 1 ni en 3+. */
+	.sis-nodo-texto-grupo--renamu {
+		max-width: 19rem;
+	}
+
+	.sis-nodo-texto-grupo--surenruta {
+		max-width: 32rem;
+	}
+
+	/* Nombre al doble de tamaño (pedido de Ale) respecto de como estaba antes inline con la
+	 * descripción. */
+	.sis-nodo-nombre {
+		margin: 0;
+		font-size: clamp(1.75rem, 1.3rem + 1.8vw, 2.75rem);
+		line-height: 1;
+		text-transform: uppercase;
+	}
+
+	.sis-nodo-nombre--renamu {
+		font-family: var(--fuente-display);
+		font-weight: 800;
+		color: var(--color-verde);
+	}
+
+	/* Mismo tratamiento que `.sis-titulo-marca` del título — "Sur en Ruta" es SIEMPRE esta
+	 * tipografía/color, se nombre donde se nombre. */
+	.sis-nodo-nombre--surenruta {
+		font-family: var(--fuente-marca);
+		font-weight: 700;
+		letter-spacing: 0.015em;
+		word-spacing: -0.15em;
+		color: var(--color-marino);
+	}
+
+	/* Al doble de tamaño (pedido de Ale: "agrandá al doble las definiciones, no los nombres") —
+	 * antes clamp(1rem, 0.9rem + 0.4vw, 1.2rem). */
+	.sis-nodo-descripcion {
+		margin: 0;
+		font-family: var(--fuente-texto);
+		font-weight: 400;
+		font-size: clamp(2rem, 1.8rem + 0.8vw, 2.4rem);
+		line-height: 1.25;
+		color: var(--color-tinta);
+	}
+
+	/* === Conector entre los 2 nodos, rediseñado (2026-09-01, 2ª pasada) ===
+	 * Ya no un ícono de eslabón en un aro chico: un NODO grande (mismo lenguaje visual que los
+	 * nodos de HiloRuta y de la ruta de las 6 tarjetas de abajo — círculo marino lleno con borde
+	 * claro) con 2 tramos de línea PUNTEADA ANIMADA a los costados (`stroke-dasharray` +
+	 * `stroke-dashoffset` corriendo — "línea de trazos que se mueven"), representando la unión de
+	 * 2 tramos de ruta en un nodo. */
+	.sis-nodo-conector {
+		flex-shrink: 0;
+		display: flex;
+		align-items: center;
+		gap: 0;
+	}
+
+	.sis-nodo-conector-linea {
+		width: clamp(2rem, 4vw, 4rem);
+		height: 1.25rem;
+		overflow: visible;
+	}
+
+	.sis-nodo-conector-linea path {
+		fill: none;
+		stroke: var(--color-verde);
+		stroke-width: 3.5;
+		stroke-linecap: round;
+		stroke-dasharray: 7 7;
+		vector-effect: non-scaling-stroke;
+		animation: sis-conector-flujo 1s linear infinite;
+	}
+
+	@keyframes sis-conector-flujo {
+		to {
+			stroke-dashoffset: -28;
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.sis-nodo-conector-linea path {
+			animation: none;
+		}
+	}
+
+	/* Ícono `adjuntar` adentro (blanco, currentColor) + borde propio marcado (border, NO el aro
+	 * separado — ese es el ::after de abajo) + `position: relative` para contener el aro. */
+	.sis-nodo-conector-nodo {
+		position: relative;
+		flex-shrink: 0;
+		width: 3.25rem;
+		height: 3.25rem;
+		display: grid;
+		place-items: center;
+		border-radius: 50%;
+		background: var(--color-marino);
+		border: 3px solid var(--color-superficie);
+		box-shadow: 0 6px 14px -4px rgba(15, 43, 77, 0.4);
+		color: var(--color-superficie);
+	}
+
+	/* Aro separado del borde por unos px (`inset` negativo) + efecto de latido (pedido de Ale) —
+	 * el círculo sólido de arriba queda quieto y nítido; el que pulsa es este aro suelto. */
+	.sis-nodo-conector-nodo::after {
+		content: '';
+		position: absolute;
+		inset: -0.45rem;
+		border-radius: 50%;
+		border: 2.5px solid var(--color-verde);
+		animation: sis-nodo-latido 1.8s ease-in-out infinite;
+	}
+
+	@keyframes sis-nodo-latido {
+		0%,
+		100% {
+			transform: scale(1);
+			opacity: 0.9;
+		}
+		50% {
+			transform: scale(1.18);
+			opacity: 0.25;
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.sis-nodo-conector-nodo::after {
+			animation: none;
+		}
 	}
 
 	/* === Pantalla 2 · los 2 bloques (mazo pág. 2, 2026-08-31) ===
@@ -630,15 +1135,25 @@ const GALERIA = ['Faro', 'Viñedo', 'Cartel indicador', 'Feria local'];
 	 * .op-chips-ruta). Mucho más chicas que el box del título. z-index 3 → van POR ENCIMA de la caja
 	 * de la cabecera (z-index 2): su parallax pasa por DETRÁS y no esconde la entrada de los chips.
 	 * Los 2 bloques (z-index 1) sí quedan por debajo de la caja. */
+	/* `--op-chips-cols` (2026-09-01): P2 tiene 4 chips, P3 tiene 6 tarjetas — mismo grid, distinta
+	 * cantidad de columnas. Custom property con fallback a 4 en vez de una clase modificadora nueva
+	 * (P3 la pisa inline, `style="--op-chips-cols: 6"`). */
 	.op-chips {
 		position: relative;
 		z-index: 3;
 		display: grid;
-		grid-template-columns: repeat(4, 1fr);
+		grid-template-columns: repeat(var(--op-chips-cols, 4), minmax(0, 1fr));
 		gap: clamp(0.6rem, 1.4vw, 1.15rem);
-		width: min(48rem, 66vw);
+		width: var(--op-chips-width, min(48rem, 66vw));
 		/* aire arriba para la "ruta" que une los nodos (vive con top negativo dentro de .op-chips) */
 		margin-top: calc(clamp(0.85rem, 2.5vh, 1.5rem) + 1.75rem);
+	}
+
+	/* P3 baja las tarjetas un poco más (2026-09-01, pedido de Ale: "bajá más las cards en posición
+	 * para liberar más espacio arriba") — le hace lugar a los nodos ya agrandados. Solo P3
+	 * (`.sis-chips`), P2 se queda con el margin-top de arriba. */
+	.sis-chips {
+		margin-top: calc(clamp(2rem, 5vh, 3rem) + 1.75rem);
 	}
 
 	/* "Ruta" ondulada que une los 4 nodos — mismo lenguaje que HiloRuta (línea marino fina). */
@@ -662,7 +1177,12 @@ const GALERIA = ['Faro', 'Viñedo', 'Cartel indicador', 'Feria local'];
 		vector-effect: non-scaling-stroke;
 	}
 
+	/* Fondo oscuro + letras claras (2026-09-01, pedido de Ale) — antes tarjeta blanca con
+	 * ícono/label en marino, igual que el resto de la P2. `--color-marino-profundo` en vez de
+	 * `--color-marino`: es literalmente el tono que tokens.css documenta para "círculos de ícono
+	 * macizos" — el mismo uso que acá, a otra escala. */
 	.op-chip {
+		position: relative;
 		aspect-ratio: 1 / 1.06;
 		display: flex;
 		flex-direction: column;
@@ -670,10 +1190,35 @@ const GALERIA = ['Faro', 'Viñedo', 'Cartel indicador', 'Feria local'];
 		justify-content: center;
 		gap: clamp(0.5rem, 1.6vh, 0.9rem);
 		padding: clamp(0.6rem, 1.5vw, 1.1rem);
-		background: var(--color-superficie);
+		background: var(--color-marino-profundo);
 		border-radius: clamp(0.9rem, 1.8vw, 1.5rem);
 		box-shadow: 0 14px 28px -16px rgba(15, 43, 77, 0.3);
 		text-align: center;
+	}
+
+	/* Número de la tarjeta (P3, componentes numerados del mazo pág. 3) — 2026-09-01: se movió de
+	 * badge chico en la esquina (absolute) a debajo del label, centrado, al doble de tamaño
+	 * (pedido de Ale: "agrandar más... pasalos debajo de las palabras al centrado") — ahora es un
+	 * hijo más del flex de `.op-chip`, ya no necesita `position: absolute`. Verde de marca (no
+	 * `--color-verde-vivo`) + halo blanco, mismo truco de `text-shadow` apilado que
+	 * `.op-cierre-texto strong`. */
+	.sis-chip-numero {
+		margin-top: clamp(0.3rem, 1vh, 0.6rem);
+		width: 3.5rem;
+		height: 3.5rem;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		border-radius: 50%;
+		border: 2px solid var(--color-verde);
+		font-family: var(--fuente-texto);
+		font-weight: 700;
+		font-size: 1.7rem;
+		color: var(--color-verde);
+		text-shadow:
+			0 0 2px var(--color-superficie),
+			0 0 2px var(--color-superficie),
+			0 0 3px var(--color-superficie);
 	}
 
 	/* Nodo de la "ruta" — círculo marino LLENO, centrado SOBRE la línea de .op-chips-ruta (la línea
@@ -767,8 +1312,21 @@ const GALERIA = ['Faro', 'Viñedo', 'Cartel indicador', 'Feria local'];
 		}
 	}
 
+	/* Íconos/label en claro sobre la tarjeta oscura — `--color-verde-vivo` (no `--color-verde`) para
+	 * el acento del ícono: es el tono que tokens.css ya reserva para "acentos SOBRE fondo oscuro
+	 * (donde el oliva se empasta)", justo este caso. */
 	.op-chip-icono {
-		color: var(--color-marino);
+		color: var(--color-texto-sobre-foto);
+	}
+
+	/* Halo blanco en el ícono de P3 (2026-09-01, pedido de Ale) — mismo motivo que el número: el
+	 * acento pasó de `--color-verde-vivo` a `--color-verde` (más oscuro), así que las piezas
+	 * verdes del ícono necesitan el mismo refuerzo de contraste sobre navy que ya tiene el número
+	 * y las palabras del cierre. `filter: drop-shadow` (no `text-shadow`, esto es un SVG) apilado
+	 * por el mismo motivo: que quede marcado, no un blur grande. Solo P3 (`.sis-chip-icono`) — el
+	 * ícono de P2 sigue en `--color-verde-vivo`, ya tenía contraste de sobra. */
+	.sis-chip-icono {
+		filter: drop-shadow(0 0 1px var(--color-superficie)) drop-shadow(0 0 1px var(--color-superficie));
 	}
 
 	.op-chip-label {
@@ -777,10 +1335,13 @@ const GALERIA = ['Faro', 'Viñedo', 'Cartel indicador', 'Feria local'];
 		font-weight: 600;
 		font-size: var(--texto-base);
 		line-height: 1.2;
-		color: var(--color-marino);
+		color: var(--color-texto-sobre-foto);
 	}
 
-	/* Reglita verde bajo el label (mini versión de la del título — cada chip la tiene en el mazo). */
+	/* Reglita bajo el label (mini versión de la del título — cada chip la tiene en el mazo).
+	 * `--color-verde-vivo` es el de P2 (ya tenía contraste de sobra, se queda así). P3 lo pisa a
+	 * `--color-verde` (2026-09-01, código-basura encontrado: el ícono y el número de la tarjeta ya
+	 * habían pasado al verde nuevo, esta reglita se había quedado en el viejo). */
 	.op-chip-label::after {
 		content: '';
 		display: block;
@@ -788,38 +1349,118 @@ const GALERIA = ['Faro', 'Viñedo', 'Cartel indicador', 'Feria local'];
 		height: 0.18rem;
 		margin: 0.5rem auto 0;
 		border-radius: 999px;
+		background: var(--color-verde-vivo);
+	}
+
+	.sis-chips .op-chip-label::after {
 		background: var(--color-verde);
 	}
 
 	/* === Pantalla 2 · foto-cards de la derecha (mazo pág. 2, 2026-08-31) ===
-	 * 4 cards en diagonal (borde izquierdo en `/`, mismo ángulo, ligeramente rotadas y corridas a la
-	 * derecha para sangrar). Marco blanco (--color-superficie) por el padding. PLACEHOLDER: cada una
-	 * es un gradiente + label hasta tener las 4 fotos reales (faro / viñedo / cartel / feria).
-	 * Vive en .lamina__galeria (Lamina.astro), z-index 0, por detrás del texto. */
+	 * 4 cards en diagonal (borde izquierdo en `/`, mismo ángulo, corridas a la derecha para
+	 * sangrar). Marco blanco (--color-superficie) por el padding. PLACEHOLDER: cada una es un
+	 * gradiente + label hasta tener las 4 fotos reales (faro / viñedo / cartel / feria).
+	 * Vive en .lamina__galeria (Lamina.astro), z-index 0, por detrás del texto.
+	 *
+	 * Sin gap ni rotación propia (corregido 2026-09-01, pedido de Ale: "no debe haber margin o
+	 * espacios entre ellos"). Antes cada card tenía su PROPIO `rotate(-2deg)` — como cada una gira
+	 * sobre su propio centro, dos cards del mismo alto que antes de rotar quedaban perfectamente
+	 * pegadas (mismo `clip-path`, `gap: 0`) terminan con un corte en diagonal DISTINTO cada una,
+	 * abriendo un hueco en la costura. La rotación (y el corrimiento `translateX`) ahora vive en el
+	 * CONTENEDOR (acá abajo, `.op-galeria`): así las 4 cards giran juntas como un solo bloque
+	 * rígido — la costura entre cards sigue coincidiendo exacto, y las fotos que reemplacen el
+	 * gradiente (vienen en camino) no quedan deformadas (una rotación no distorsiona el contenido,
+	 * a diferencia de un `skew`). */
 	.op-galeria {
 		height: 100%;
 		display: flex;
 		flex-direction: column;
-		gap: clamp(0.45rem, 1.2vh, 0.85rem);
-		padding: clamp(0.75rem, 3vh, 2rem) 0 calc(var(--footer-alto) * 0.55);
-	}
-
-	.op-galeria-card {
-		flex: 1;
-		min-height: 0;
-		background: var(--color-superficie);
-		padding: 5px;
-		/* borde izquierdo en diagonal (/), borde derecho recto (sangra fuera de la lámina) */
-		clip-path: polygon(11% 0%, 100% 0%, 100% 100%, 0% 100%);
-		box-shadow: 0 20px 40px -24px rgba(15, 43, 77, 0.4);
+		gap: 0;
+		padding: clamp(0.75rem, 3vh, 2rem) 0
+			calc(var(--footer-alto) + clamp(0.5rem, 1.5vh, 1rem));
 		transform: translateX(6%) rotate(-2deg);
 	}
 
-	.op-galeria-ph {
-		display: flex;
-		align-items: flex-end;
-		width: 100%;
-		height: 100%;
+	/* Sin marco blanco (2026-09-01, pedido de Ale: "siguen estando separadas con borde… quiero que
+	 * estén pegadas") — el `padding: 5px` + `background: superficie` de antes armaba un marco tipo
+	 * Polaroid alrededor de cada foto; entre dos cards flush ese marco se veía como una franja/borde
+	 * de separación aunque el `gap` ya estuviera en 0. Ahora la foto ocupa el 100% del card, sin
+	 * aire alrededor — quedan realmente pegadas. `position: relative` porque adentro `.op-galeria-foto`
+	 * es `position: absolute` (ver abajo). */
+	/* Hover: crece la SOLAPITA entera, no solo la foto de adentro (2026-09-01, pedido de Ale —
+	 * primer intento escalaba nada más `.op-galeria-foto`; esta versión escala `.op-galeria-card`
+	 * completo, foto + label juntos). Con las 4 cards apiladas sin gap, escalar una desde su centro
+	 * la hace invadir un poco a sus vecinas arriba y abajo — por eso el `z-index` al hover, para que
+	 * quede claramente POR ENCIMA de ellas en vez de peleando el orden de pintado.
+	 *
+	 * La sombra usa `filter: drop-shadow()`, NO `box-shadow` (2026-09-01, pedido de Ale: sombra más
+	 * pronunciada) — `box-shadow` se pinta sobre el BORDE de la caja, y acá la caja tiene
+	 * `clip-path` (las puntas curvas): el `clip-path` recorta TODO lo que se pinta del elemento,
+	 * shadow incluido, así que un `box-shadow` grande quedaba invisible más allá del rectángulo
+	 * (no se notaba el "despegue"). `drop-shadow` es un filtro que se aplica DESPUÉS del recorte,
+	 * sobre la silueta ya clipeada — sigue el contorno diagonal real de la card y SÍ se ve por
+	 * fuera. Dos capas (una ceñida + una grande y difusa) para que la sombra se sienta con cuerpo. */
+	.op-galeria-card {
+		position: relative;
+		z-index: 0;
+		flex: 1;
+		min-height: 0;
+		/* Puntas curvas en vez de vértices filosos (2026-09-01) — recorte compartido definido en el
+		 * <svg><clipPath> del template, ver el comentario ahí. Escala junto con la card (mismo
+		 * elemento), así que la forma no se deforma al crecer. */
+		clip-path: url(#op-galeria-recorte);
+		transform: scale(1);
+		filter: drop-shadow(0 0 0 rgba(10, 20, 33, 0)) brightness(1);
+		transition:
+			transform 0.5s cubic-bezier(0.16, 1, 0.3, 1),
+			filter 0.5s ease,
+			opacity 0.5s ease;
+	}
+
+	.op-galeria-card:hover {
+		z-index: 5;
+		transform: scale(1.12);
+		filter: drop-shadow(0 14px 16px rgba(10, 20, 33, 0.45))
+			drop-shadow(0 46px 70px rgba(10, 20, 33, 0.6)) brightness(1);
+	}
+
+	/* Apaga las OTRAS 3 cards mientras hay una en hover (2026-09-01, pedido de Ale: "la sombra no
+	 * se aprecia" — el problema real es que las 4 fotos, todas a full brillo y bien contrastadas
+	 * entre sí, le ganan la atención a la sombra por más pronunciada que sea). Con las vecinas
+	 * opacadas, la que queda en hover se lee como la única "levantada" del stack — la sombra ahora
+	 * tiene ADEMÁS contraste de brillo a favor, no compite con 3 fotos a pleno color al lado.
+	 * `.op-galeria:hover` se dispara con el mouse sobre CUALQUIER card (así funciona `:hover` en un
+	 * contenedor); `:not(:hover)` en la card excluye a la que está siendo apuntada. */
+	.op-galeria:hover .op-galeria-card:not(:hover) {
+		opacity: 0.55;
+		filter: drop-shadow(0 0 0 rgba(10, 20, 33, 0)) brightness(0.55) saturate(0.6);
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.op-galeria-card {
+			transition: none;
+		}
+	}
+
+	/* Capa de la foto — separada del label (2026-09-01) para poder cargar cada `--foto` sin que el
+	 * texto se vea afectado. `position: absolute; inset: 0` = llena el card entero; ya no tiene
+	 * transform propio, crece junto con `.op-galeria-card`. */
+	.op-galeria-foto {
+		position: absolute;
+		inset: 0;
+		background-size: cover;
+		background-position: center;
+		/* Degradé oscuro abajo, encima de la foto — el text-shadow del label solo no alcanza para
+		 * que se lea sobre CUALQUIER foto (depende de qué tan clara sea la zona inferior). */
+		background-image: linear-gradient(to top, rgba(10, 20, 33, 0.55), rgba(10, 20, 33, 0) 60%), var(--foto);
+	}
+
+	.op-galeria-label {
+		position: absolute;
+		z-index: 1;
+		left: 0;
+		right: 0;
+		bottom: 0;
 		padding: 0.85rem 1.1rem 0.85rem 16%;
 		color: var(--color-superficie);
 		font-family: var(--fuente-texto);
@@ -829,19 +1470,19 @@ const GALERIA = ['Faro', 'Viñedo', 'Cartel indicador', 'Feria local'];
 		text-shadow: 0 1px 6px rgba(0, 0, 0, 0.4);
 	}
 
-	/* PLACEHOLDER — gradientes evocativos por card hasta tener las fotos reales (faro / viñedo /
-	 * cartel / feria). Usan los tonos terrosos de --color-ruta-*. */
-	.op-galeria-card:nth-child(1) .op-galeria-ph {
-		background: linear-gradient(155deg, var(--color-ruta-oceanica, #4a6b82), var(--color-marino));
+	/* PLACEHOLDER (2026-09-01, imágenes de prueba de Ale, todavía sin asignar foto real por card —
+	 * faro / viñedo / cartel / feria) — se reemplazan cuando estén las definitivas. */
+	.op-galeria-card:nth-child(1) .op-galeria-foto {
+		--foto: url('/img/oportunidad/s1.jpg');
 	}
-	.op-galeria-card:nth-child(2) .op-galeria-ph {
-		background: linear-gradient(155deg, var(--color-ruta-naturaleza, #3d7a5c), var(--color-verde));
+	.op-galeria-card:nth-child(2) .op-galeria-foto {
+		--foto: url('/img/oportunidad/s2.webp');
 	}
-	.op-galeria-card:nth-child(3) .op-galeria-ph {
-		background: linear-gradient(155deg, var(--color-ruta-rural, #6b7d3a), var(--color-marino-profundo, #0a2036));
+	.op-galeria-card:nth-child(3) .op-galeria-foto {
+		--foto: url('/img/oportunidad/s3.jpg');
 	}
-	.op-galeria-card:nth-child(4) .op-galeria-ph {
-		background: linear-gradient(155deg, var(--color-terracota), var(--color-ruta-rural, #6a4a2c));
+	.op-galeria-card:nth-child(4) .op-galeria-foto {
+		--foto: url('/img/oportunidad/s4.jpg');
 	}
 
 	/* === Reveal de entrada, por línea o por palabra (2026-08-28) ===
@@ -1110,5 +1751,78 @@ const GALERIA = ['Faro', 'Viñedo', 'Cartel indicador', 'Feria local'];
 		letter-spacing: 0.08em;
 		white-space: nowrap;
 		color: var(--color-texto-sobre-foto);
+	}
+
+	/* === Cierre de P2 — sobre la onda del footer (2026-09-01, mazo pág. 2) ===
+	 * Mismo lugar que `.pie-marca` (left: 25% = la cresta de la onda, ver el comentario largo de
+	 * `.pie-marca` más arriba — la función de la onda es la MISMA para todas las láminas, así que
+	 * la cresta cae en el mismo 25% acá también) y el MISMO efecto de entrada — pedido explícito de
+	 * Ale ("con el mismo efecto que el logo en el footer de p1"). Reusa el propio
+	 * `@keyframes pie-marca-choca` (genérico, no tiene nada específico del logo) en vez de
+	 * duplicarlo. `OP_CIERRE_RANGO` son los mismos números crudos de `PIE_MARCA_RANGO` reescalados a
+	 * p2 (ver el comentario en el frontmatter) — mismo timing relativo. */
+	.op-cierre {
+		position: absolute;
+		left: 25%;
+		/* Más separado del borde de abajo (2026-09-01, pedido de Ale) — antes clamp(0.75rem, 2vh,
+		 * 1.25rem), casi pegado al borde inferior del footer. */
+		bottom: clamp(1.75rem, 4.5vh, 2.75rem);
+		transform: translateX(-50%);
+		display: flex;
+		align-items: flex-start;
+		gap: var(--espacio-sm);
+		max-width: min(34rem, 64vw);
+	}
+
+	@supports (animation-timeline: scroll(root)) {
+		.op-cierre {
+			animation: pie-marca-choca linear both;
+			animation-timeline: --hz-progreso;
+			transform-origin: bottom center;
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.op-cierre {
+			animation: none !important;
+			transform: translateX(-50%);
+		}
+	}
+
+	/* Badge circular, más chico que `.pie-logo` (es un ícono de aviso, no el isotipo) — mismo
+	 * truco de fondo blanco para que se lea nítido sobre el degradé navy del footer. */
+	.op-cierre-icono {
+		flex-shrink: 0;
+		width: 3.5rem;
+		height: 3.5rem;
+		border-radius: 50%;
+		background: var(--color-superficie);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	.op-cierre-texto {
+		margin: 0.4rem 0 0;
+		font-family: var(--fuente-texto);
+		font-size: clamp(1.1rem, 0.95rem + 0.55vw, 1.35rem);
+		line-height: 1.35;
+		color: var(--color-texto-sobre-foto);
+	}
+
+	/* Verde en vez de celeste (2026-09-01, pedido de Ale — vale para el cierre de P2 y P3, comparten
+	 * esta clase). La razón original del celeste ya no aplica: era porque el `--color-verde` viejo
+	 * (oliva #5a6b2e) se empastaba sobre navy — el verde nuevo (#356a2c) tiene mejor cuerpo.
+	 * El fondo del footer es un degradé ANIMADO (marino-noche → marino → celeste, ver
+	 * Lamina.astro) — en los momentos en que pasa más claro, el verde solo pierde contraste. Halo
+	 * blanco PAREJO alrededor de cada letra (probado direccional hacia abajo-derecha primero, Ale
+	 * lo descartó: "queda mejor en el centro... toda la vuelta de una letra marcada") — apilado en
+	 * vez de un blur grande, para que quede marcado en vez de difuminado. */
+	.op-cierre-texto strong {
+		color: var(--color-verde);
+		text-shadow:
+			0 0 2px var(--color-superficie),
+			0 0 2px var(--color-superficie),
+			0 0 3px var(--color-superficie);
 	}
 </style>
