@@ -801,15 +801,19 @@ const SIS_CIERRE_RANGO = rango(19.5, 25, 3);
 		line-height: 0.95;
 	}
 
-	/* "RENAMU /" — verde (subrayado propio, `.op-titulo--l2::after` no aplica a un `<span>`
-	 * inline). Mismo par tipográfico que el resto del título del sitio (Archivo 800). */
+	/* "RENAMU /" — celeste (subrayado propio, `.op-titulo--l2::after` no aplica a un <span>
+	 * inline). Mismo par tipográfico que el resto del título del sitio (Archivo 800). Color:
+	 * regla de marca (2026-09-01, Ale) — "RENAMU" es SIEMPRE el celeste de `.marca-renamu` (P1,
+	 * Portada), cada vez que aparece, no solo ahí. Antes era verde acá (parte del intercambio de
+	 * colores RENAMU/Sur en Ruta pedido el mismo día) — Ale aclaró después que el celeste de P1 es
+	 * el color de marca correcto para "RENAMU", no el verde. */
 	.sis-titulo-renamu {
 		position: relative;
 		font-family: var(--fuente-display);
 		font-weight: 800;
 		font-size: clamp(2rem, 1.3rem + 3vw, 3.75rem);
 		text-transform: uppercase;
-		color: var(--color-verde);
+		color: var(--color-celeste);
 		/* Aire hacia "Sur en Ruta?" — el espacio del source solo no alcanza, la letra siguiente
 		 * (Italiana, con word-spacing negativo) queda pegada. */
 		margin-right: 0.3em;
@@ -823,7 +827,7 @@ const SIS_CIERRE_RANGO = rango(19.5, 25, 3);
 		width: 2.75rem;
 		height: 0.3rem;
 		border-radius: 999px;
-		background: var(--color-verde);
+		background: var(--color-celeste);
 	}
 
 	/* "Sur en Ruta?" — SIEMPRE azul de la paleta (nunca verde, pedido de Ale) + tipografía de marca
@@ -901,9 +905,8 @@ const SIS_CIERRE_RANGO = rango(19.5, 25, 3);
 		}
 	}
 
-	/* Badge relleno (antes: aro fino verde con ícono chico) — RENAMU en navy, Sur en Ruta en verde
-	 * (inverso del color de su propio nombre al lado, como en la referencia). Ícono en blanco
-	 * (currentColor), sin `acento` — sobre un fondo sólido no hace falta 2ª tinta. */
+	/* Badge relleno (antes: aro fino verde con ícono chico) — Ícono en blanco (currentColor), sin
+	 * `acento` — sobre un fondo sólido no hace falta 2ª tinta. */
 	.sis-nodo-badge {
 		flex-shrink: 0;
 		width: clamp(4.5rem, 4vw + 3rem, 6.5rem);
@@ -918,8 +921,12 @@ const SIS_CIERRE_RANGO = rango(19.5, 25, 3);
 		background: var(--color-marino);
 	}
 
+	/* Celeste — pedido puntual de Ale 2026-09-01 para el fondo del ícono/logo de "Sur en Ruta" acá
+	 * (antes verde). Puntual al badge — el TEXTO "Sur en Ruta" sigue con su regla de marca propia
+	 * (navy o blanco, nunca celeste ni verde, ver `.sis-titulo-marca`/`.sis-nodo-nombre--surenruta`
+	 * y [[proyecto-renamu-identidad-color]]) — este cambio no la toca. */
 	.sis-nodo-badge--surenruta {
-		background: var(--color-verde);
+		background: var(--color-celeste);
 	}
 
 	/* `max-width` (2026-09-01, arregla el centrado que notó Ale) — sin tope, un `<p>` en un flex
@@ -957,10 +964,11 @@ const SIS_CIERRE_RANGO = rango(19.5, 25, 3);
 		text-transform: uppercase;
 	}
 
+	/* Color: mismo celeste de marca que `.sis-titulo-renamu` — ver esa regla para el porqué. */
 	.sis-nodo-nombre--renamu {
 		font-family: var(--fuente-display);
 		font-weight: 800;
-		color: var(--color-verde);
+		color: var(--color-celeste);
 	}
 
 	/* Mismo tratamiento que `.sis-titulo-marca` del título — "Sur en Ruta" es SIEMPRE esta
