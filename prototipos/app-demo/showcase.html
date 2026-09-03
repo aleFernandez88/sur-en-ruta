@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sur en Ruta — App (showcase)</title>
+<!--
+  Escena para filmar/renderizar un video de 10 s: el celular con el mockup real adentro
+  (public/app-demo/index.html vía <iframe>), sobre fondo oscuro de la paleta (--marino-profundo),
+  girando en 3D mientras el contenido de la pantalla scrollea solo.
+
+  - Prototipo descartable (prototipos/ no se publica, ver CLAUDE.md §8).
+  - El contenido de pantalla es EXACTAMENTE el mockup, no algo generado con IA — por eso es fiel.
+  - Se sirve desde el mismo dev server de Astro que el mockup (mismo origen → el <iframe> se puede
+    manejar desde acá). Abrir en:
+      http://localhost:4321/sur-en-ruta/app-demo/showcase.html   (se anima solo, para grabar a mano)
+      ...?manual   (no se anima: lo maneja el script de render, render/render.mjs)
+  - El <iframe> apunta a ../../public/... NO: se sirve como /sur-en-ruta/app-demo/index.html.
+    Como este archivo vive en prototipos/ pero se abre por la ruta servida, uso ruta relativa
+    "index.html" que resuelve a /sur-en-ruta/app-demo/index.html SOLO si este showcase se copia a
+    public/app-demo/. Para no depender de eso, el src se setea por JS desde location.
+-->
+<style>
+  :root{
+    --marino:#0f2b4d;
+    --marino-profundo:#0a2036;
+    --marino-noche:#050b14;
+    --celeste:#6cace4;
+    --verde:#356a2c;
+    --arena:#e7dfc9;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{width:100%;height:100%;overflow:hidden;background:var(--marino-noche);}
+
+  #scene{
+    position:fixed;
+    inset:0;
+    overflow:hidden;
+    background:radial-gradient(140% 100% at 50% 38%, #163a5c 0%, #0a2036 46%, #050b14 100%);
+    background-color:var(--marino-profundo);
+    display:grid;
+    place-items:center;
+  }
+
+  /* halo de luz detrás del celular */
+  #glow{
+    position:absolute;
+    width:82%;
+    aspect-ratio:1;
+    left:50%;
+    top:40%;
+    transform:translate(-50%,-50%);
+    background:radial-gradient(circle, rgba(108,172,228,0.32) 0%, rgba(108,172,228,0.12) 33%, transparent 66%);
+    filter:blur(26px);
+    pointer-events:none;
+  }
+  #glow.b{
+    background:radial-gradient(circle, rgba(53,106,44,0.20) 0%, transparent 60%);
+    width:60%;
+    top:58%;
+  }
+  /* viñeta oscura en los bordes */
+  #vignette{
+    position:absolute;
+    inset:0;
+    pointer-events:none;
+    background:radial-gradient(120% 90% at 50% 42%, transparent 40%, rgba(3,7,14,0.55) 100%);
+  }
+
+  #stageWrap{
+    position:relative;
+    width:100%;
+    height:100%;
+    display:grid;
+    place-items:center;
+    perspective:1700px;
+    perspective-origin:50% 44%;
+  }
+
+  /* sombra de contacto en el "piso" */
+  #floor{
+    position:absolute;
+    left:50%;
+    top:50%;
+    width:46%;
+    height:9%;
+    background:radial-gradient(ellipse, rgba(0,0,0,0.55) 0%, transparent 70%);
+    filter:blur(14px);
+    transform:translate(-50%, 620%);
+    pointer-events:none;
+  }
+
+  #phone{
+    position:relative;
+    height:82%;
+    aspect-ratio:9 / 19.5;
+    transform-style:preserve-3d;
+    will-change:transform;
+  }
+
+  #phoneBody{
+    position:absolute;
+    inset:0;
+    border-radius:13.5% / 6.2%;
+    background:
+      linear-gradient(135deg, #3a4048 0%, #10131a 38%, #2c313a 62%, #0c0f15 100%);
+    padding:1.7%;
+    box-shadow:
+      0 60px 120px -30px rgba(0,0,0,0.75),
+      0 20px 50px -15px rgba(0,0,0,0.6),
+      inset 0 0 0 1.5px rgba(255,255,255,0.10),
+      inset 0 2px 6px rgba(255,255,255,0.16),
+      inset 0 -3px 8px rgba(0,0,0,0.5);
+  }
+
+  #screen{
+    position:absolute;
+    inset:1.7%;
+    border-radius:11.5% / 5.4%;
+    overflow:hidden;
+    background:#f1f0ee;
+    box-shadow:inset 0 0 0 2px #05080d;
+  }
+  /* el iframe se renderiza SIEMPRE a 390px de ancho (el ancho para el que está diseñado el
+     mockup) y se escala para calzar en la pantalla — así el layout no depende del tamaño del
+     celular en la escena. `--fit` y la altura los setea el JS. */
+  #screen iframe{
+    width:390px;
+    border:0;
+    display:block;
+    transform-origin:top left;
+    transform:scale(var(--fit,1));
+  }
+
+  /* isla dinámica */
+  #island{
+    position:absolute;
+    left:50%;
+    top:1.5%;
+    width:20%;
+    height:1.9%;
+    background:#05080d;
+    border-radius:999px;
+    transform:translateX(-50%);
+    z-index:3;
+    pointer-events:none;
+  }
+
+  /* reflejo / glare que se mueve con el giro */
+  #glare{
+    position:absolute;
+    inset:0;
+    border-radius:13.5% / 6.2%;
+    background:linear-gradient(115deg,
+      rgba(255,255,255,0.16) 0%,
+      rgba(255,255,255,0.05) 18%,
+      transparent 38%,
+      transparent 68%,
+      rgba(255,255,255,0.04) 86%,
+      rgba(255,255,255,0.12) 100%);
+    mix-blend-mode:screen;
+    pointer-events:none;
+    z-index:4;
+    will-change:transform,opacity;
+  }
+</style>
+</head>
+<body>
+<div id="scene">
+  <div id="glow"></div>
+  <div id="glow" class="b"></div>
+  <div id="vignette"></div>
+  <div id="stageWrap">
+    <div id="floor"></div>
+    <div id="phone">
+      <div id="phoneBody">
+        <div id="screen"><iframe id="app" scrolling="no" title="Sur en Ruta app"></iframe></div>
+        <div id="island"></div>
+        <div id="glare"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  var DUR = 10;                       // segundos, loopea
+  var phone  = document.getElementById('phone');
+  var glare  = document.getElementById('glare');
+  var iframe = document.getElementById('app');
+
+  // el mockup se sirve como .../app-demo/index.html — mismo directorio que este showcase servido
+  iframe.src = new URL('index.html', location.href).href;
+
+  var pantalla = null;
+  var maxScroll = 0;
+  window.__ready = false;
+
+  // ajusta el iframe a 390px de ancho lógico y lo escala para llenar la pantalla del celular
+  var screenEl = document.getElementById('screen');
+  function ajustarIframe(){
+    var w = screenEl.clientWidth, h = screenEl.clientHeight;
+    if (!w || !h) return;
+    var fit = w / 390;
+    iframe.style.setProperty('--fit', fit);
+    iframe.style.height = Math.ceil(h / fit) + 'px';
+  }
+  new ResizeObserver(ajustarIframe).observe(screenEl);
+  ajustarIframe();
+
+  function easeInOut(t){ return t < 0.5 ? 2*t*t : 1 - Math.pow(-2*t + 2, 2) / 2; }
+
+  function setSceneTime(t){
+    var p = (t % DUR) / DUR;                 // 0..1
+    var w = Math.sin(p * Math.PI * 2);       // -1..1, vuelve a 0 en p=0 y p=1  → loop limpio
+    var ry = w * 23;
+    var rx = 3.5 + Math.cos(p * Math.PI * 2) * 1.6;
+    var ty = Math.sin(p * Math.PI * 2 + Math.PI / 3) * 1.1;   // bob sutil (%)
+    phone.style.transform =
+      'translateY(' + ty.toFixed(3) + '%) rotateX(' + rx.toFixed(3) + 'deg) rotateY(' +
+      ry.toFixed(3) + 'deg) rotateZ(' + (w * -1.1).toFixed(3) + 'deg)';
+    glare.style.transform = 'translateX(' + (w * 16).toFixed(2) + '%)';
+    glare.style.opacity = (0.42 + 0.36 * Math.abs(w)).toFixed(3);
+
+    if (pantalla){
+      if (maxScroll <= 0) maxScroll = pantalla.scrollHeight - pantalla.clientHeight;
+    }
+    if (pantalla && maxScroll > 0){
+      // mantener arriba ~1s, bajar ~5.2s, mantener abajo ~0.8s, volver ~3s
+      var a = 0.10, b = 0.62, c = 0.70, s;
+      if (p < a)       s = 0;
+      else if (p < b)  s = easeInOut((p - a) / (b - a)) * maxScroll;
+      else if (p < c)  s = maxScroll;
+      else             s = (1 - easeInOut((p - c) / (1 - c))) * maxScroll;
+      pantalla.scrollTop = s;
+    }
+  }
+  window.setSceneTime = setSceneTime;
+
+  iframe.addEventListener('load', function(){
+    var d, w;
+    try { d = iframe.contentDocument; w = iframe.contentWindow; }
+    catch(e){ console.error('showcase: sin acceso al iframe', e); window.__ready = true; return; }
+
+    function hook(){
+      try{
+        var pre = d.getElementById('preloader');
+        if (pre){ pre.classList.add('is-fuera'); pre.classList.add('is-oculto'); }
+        var appEl = d.getElementById('app');
+        if (appEl){ appEl.classList.add('visible'); appEl.style.opacity = '1'; }
+
+        // ir a la pantalla Rutas (las 4 cards con foto)
+        var btn = d.querySelector('[data-ir="rutas"]');
+        if (btn) btn.click();
+        d.querySelectorAll('.pantalla').forEach(function(s){
+          s.classList.toggle('activa', s.dataset.pantalla === 'rutas');
+        });
+        pantalla = d.querySelector('.pantalla[data-pantalla="rutas"]');
+        // aire arriba para que la isla dinámica no tape el título/chips
+        if (pantalla) pantalla.style.paddingTop = '40px';
+
+        var fontsReady = d.fonts ? d.fonts.ready : Promise.resolve();
+        var settle = function(){
+          maxScroll = pantalla ? (pantalla.scrollHeight - pantalla.clientHeight) : 0;
+          setSceneTime(0);
+          window.__ready = true;
+        };
+        Promise.resolve(fontsReady).then(function(){ setTimeout(settle, 250); });
+        // red de seguridad: aunque el promise de fuentes no resuelva, marcar listo igual
+        setTimeout(settle, 1500);
+      } catch(e){ console.error('showcase hook error', e); window.__ready = true; }
+    }
+
+    if (d.readyState === 'complete') hook();
+    else w.addEventListener('load', hook, { once:true });
+  });
+
+  // modo "vivo" para grabar a mano; con ?manual lo maneja el script de render
+  var manual = new URLSearchParams(location.search).has('manual');
+  if (!manual){
+    var t0 = performance.now();
+    (function loop(now){ setSceneTime((now - t0) / 1000); requestAnimationFrame(loop); })(performance.now());
+  }
+})();
+</script>
+</body>
+</html>
