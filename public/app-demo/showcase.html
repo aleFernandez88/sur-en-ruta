@@ -97,6 +97,8 @@
     transform-style:preserve-3d;
     will-change:transform;
   }
+  /* modo captura plana: el celular de frente, un poco más grande */
+  #phone.plano{ height:90%; }
 
   #phoneBody{
     position:absolute;
@@ -312,6 +314,57 @@
   }
   window.setSceneTime = setSceneTime;
 
+  // ---- modo captura plana (stills) ----
+  // window.setStill({ screen:'mapa'|'rutas'|'perfil', scroll:0..1, pin:<n>, ficha:'expandida' })
+  // el celular queda de frente (sin giro) y se muestra UNA pantalla a la altura de scroll pedida.
+  var allPant = [];
+  window.setStill = function(opts){
+    opts = opts || {};
+    var d = window.__doc;
+    if (!d) return;
+    phone.classList.add('plano');
+    phone.style.transform = 'rotateX(0deg) rotateY(0deg) rotateZ(0deg)';
+    glare.style.transform = 'translateX(-4%)';
+    glare.style.opacity = '0.24';
+    tapEl.style.opacity = 0;
+
+    var target = opts.screen || 'mapa';
+    allPant.forEach(function(s){
+      var on = s.dataset.pantalla === target;
+      s.classList.toggle('activa', on);
+      s.style.opacity = on ? '1' : '0';
+      s.style.transform = 'none';
+      s.style.filter = 'none';
+      s.style.transition = 'none';
+      s.style.paddingTop = '40px';
+      s.style.background = '#f1f0ee';
+    });
+    if (nav.mapa)  nav.mapa.classList.toggle('activo', target === 'mapa');
+    if (nav.rutas) nav.rutas.classList.toggle('activo', target === 'rutas');
+    var navPerfil = d.querySelector('.navbar__item[data-ir="perfil"]');
+    if (navPerfil) navPerfil.classList.toggle('activo', target === 'perfil');
+
+    var pant = d.querySelector('.pantalla[data-pantalla="' + target + '"]');
+
+    // ficha de un punto del mapa
+    if (target === 'mapa'){
+      var pins = d.querySelectorAll('.pines .pin');
+      if (opts.pin != null && pins[opts.pin]) pins[opts.pin].click();
+      var toggle = d.getElementById('ficha-toggle');
+      var ficha = d.getElementById('ficha');
+      if (toggle && ficha){
+        var quiere = opts.pin != null && opts.ficha === 'expandida';
+        if (ficha.classList.contains('ficha--expandida') !== quiere) toggle.click();
+      }
+    }
+
+    // scroll (fracción del máximo de esa pantalla)
+    if (pant){
+      var max = pant.scrollHeight - pant.clientHeight;
+      pant.scrollTop = Math.max(0, Math.min(1, opts.scroll || 0)) * max;
+    }
+  };
+
   iframe.addEventListener('load', function(){
     var d, w;
     try { d = iframe.contentDocument; w = iframe.contentWindow; }
@@ -324,6 +377,8 @@
         var appEl = d.getElementById('app');
         if (appEl){ appEl.classList.add('visible'); appEl.style.opacity = '1'; }
 
+        window.__doc = d;
+        allPant = Array.prototype.slice.call(d.querySelectorAll('.pantalla'));
         scr.mapa  = d.querySelector('.pantalla[data-pantalla="mapa"]');
         scr.rutas = d.querySelector('.pantalla[data-pantalla="rutas"]');
         nav.mapa  = d.querySelector('.navbar__item[data-ir="mapa"]');
