@@ -93,7 +93,7 @@
   #phone{
     position:relative;
     height:82%;
-    aspect-ratio:9 / 19.5;
+    aspect-ratio:9 / 17;
     transform-style:preserve-3d;
     will-change:transform;
   }
@@ -146,6 +146,34 @@
     pointer-events:none;
   }
 
+  /* indicador de "toque" sobre la pantalla */
+  #tap{
+    position:absolute;
+    left:50%;
+    top:85%;
+    width:15%;
+    aspect-ratio:1;
+    transform:translate(-50%,-50%);
+    z-index:5;
+    pointer-events:none;
+    opacity:0;
+  }
+  #tapRing{
+    position:absolute;
+    inset:0;
+    border-radius:999px;
+    border:3px solid rgba(255,255,255,0.95);
+    box-shadow:0 0 12px rgba(108,172,228,0.9);
+  }
+  #tapDot{
+    position:absolute;
+    left:50%;top:50%;
+    width:34%;aspect-ratio:1;
+    border-radius:999px;
+    background:rgba(255,255,255,0.85);
+    transform:translate(-50%,-50%);
+  }
+
   /* reflejo / glare que se mueve con el giro */
   #glare{
     position:absolute;
@@ -176,6 +204,7 @@
       <div id="phoneBody">
         <div id="screen"><iframe id="app" scrolling="no" title="Sur en Ruta app"></iframe></div>
         <div id="island"></div>
+        <div id="tap"><div id="tapRing"></div><div id="tapDot"></div></div>
         <div id="glare"></div>
       </div>
     </div>
@@ -192,9 +221,26 @@
   // el mockup se sirve como .../app-demo/index.html — mismo directorio que este showcase servido
   iframe.src = new URL('index.html', location.href).href;
 
-  var pantalla = null;
-  var maxScroll = 0;
+  // recorrido: arranca en MAPA arriba (se ve "SUR EN RUTA" + logo), baja con scroll, "toca" para
+  // pasar a RUTAS, y sigue bajando en Rutas. Siempre hacia abajo, nunca vuelve.
+  var scr = { mapa: null, rutas: null };
+  var nav = { mapa: null, rutas: null };
+  var maxS = { mapa: 0, rutas: 0 };
+  var tapEl = document.getElementById('tap');
+  var tapRing = document.getElementById('tapRing');
+  var tapDot = document.getElementById('tapDot');
   window.__ready = false;
+
+  // hitos del recorrido, en fracción de DUR (0..1)
+  var T = {
+    mapaHold:  0.12,   // 0.0 – 1.2s : mapa arriba, quieto
+    mapaScroll:0.44,   // 1.2 – 4.4s : baja el mapa
+    tapIn:     0.44,   // 4.4s       : aparece el toque
+    switch:    0.49,   // 4.9s       : cambia a Rutas
+    tapOut:    0.54,   // 5.4s       : desaparece el toque
+    rutasHold: 0.60,   // 4.9 – 6.0s : rutas arriba, quieto
+    rutasEnd:  0.94    // 6.0 – 9.4s : baja Rutas; 9.4–10s queda abajo
+  };
 
   // ajusta el iframe a 390px de ancho lógico y lo escala para llenar la pantalla del celular
   var screenEl = document.getElementById('screen');
@@ -222,17 +268,46 @@
     glare.style.transform = 'translateX(' + (w * 16).toFixed(2) + '%)';
     glare.style.opacity = (0.42 + 0.36 * Math.abs(w)).toFixed(3);
 
-    if (pantalla){
-      if (maxScroll <= 0) maxScroll = pantalla.scrollHeight - pantalla.clientHeight;
-    }
-    if (pantalla && maxScroll > 0){
-      // mantener arriba ~1s, bajar ~5.2s, mantener abajo ~0.8s, volver ~3s
-      var a = 0.10, b = 0.62, c = 0.70, s;
-      if (p < a)       s = 0;
-      else if (p < b)  s = easeInOut((p - a) / (b - a)) * maxScroll;
-      else if (p < c)  s = maxScroll;
-      else             s = (1 - easeInOut((p - c) / (1 - c))) * maxScroll;
-      pantalla.scrollTop = s;
+    if (!scr.mapa || !scr.rutas) return;
+
+    // medición perezosa por si el layout todavía no estaba listo
+    if (maxS.mapa <= 0)  maxS.mapa  = scr.mapa.scrollHeight  - scr.mapa.clientHeight;
+    if (maxS.rutas <= 0) maxS.rutas = scr.rutas.scrollHeight - scr.rutas.clientHeight;
+
+    // transición determinista mapa→rutas: push estilo iOS (Rutas entra desde la derecha, el Mapa
+    // sale un poco a la izquierda y se oscurece). Las 2 pantallas quedan .activa siempre; el
+    // movimiento lo maneja el transform inline → render frame-a-frame reproducible.
+    var slideA = T.switch - 0.035, slideB = T.switch + 0.010;
+    var sl = p < slideA ? 0 : p > slideB ? 1 : (p - slideA) / (slideB - slideA);
+    var slE = easeInOut(sl);
+    scr.mapa.style.transform  = 'translateX(' + (slE * -22).toFixed(2) + '%)';
+    scr.mapa.style.filter     = 'brightness(' + (1 - slE * 0.28).toFixed(3) + ')';
+    scr.rutas.style.transform = 'translateX(' + ((1 - slE) * 100).toFixed(2) + '%)';
+    var enRutas = slE >= 0.5;
+    if (nav.mapa)  nav.mapa.classList.toggle('activo', !enRutas);
+    if (nav.rutas) nav.rutas.classList.toggle('activo', enRutas);
+
+    // --- scroll del MAPA (fase 1) ---
+    if (p < T.mapaHold)          scr.mapa.scrollTop = 0;
+    else if (p < T.mapaScroll)   scr.mapa.scrollTop = easeInOut((p - T.mapaHold) / (T.mapaScroll - T.mapaHold)) * maxS.mapa;
+    else                         scr.mapa.scrollTop = maxS.mapa;
+
+    // --- scroll de RUTAS (fase 2) ---
+    if (p < T.rutasHold)         scr.rutas.scrollTop = 0;
+    else if (p < T.rutasEnd)     scr.rutas.scrollTop = easeInOut((p - T.rutasHold) / (T.rutasEnd - T.rutasHold)) * maxS.rutas;
+    else                         scr.rutas.scrollTop = maxS.rutas;
+
+    // --- indicador de toque ---
+    if (p >= T.tapIn && p <= T.tapOut){
+      var q = (p - T.tapIn) / (T.tapOut - T.tapIn);          // 0..1
+      tapEl.style.opacity = 1;
+      var ring = 0.25 + q * 1.7;
+      tapRing.style.transform = 'scale(' + ring.toFixed(3) + ')';
+      tapRing.style.opacity = (1 - Math.abs(q - 0.35) * 1.6).toFixed(3);
+      tapDot.style.transform = 'translate(-50%,-50%) scale(' + (1 - q * 0.5).toFixed(3) + ')';
+      tapDot.style.opacity = (q < 0.5 ? 1 : (1 - (q - 0.5) * 2)).toFixed(3);
+    } else {
+      tapEl.style.opacity = 0;
     }
   }
   window.setSceneTime = setSceneTime;
@@ -249,19 +324,27 @@
         var appEl = d.getElementById('app');
         if (appEl){ appEl.classList.add('visible'); appEl.style.opacity = '1'; }
 
-        // ir a la pantalla Rutas (las 4 cards con foto)
-        var btn = d.querySelector('[data-ir="rutas"]');
-        if (btn) btn.click();
-        d.querySelectorAll('.pantalla').forEach(function(s){
-          s.classList.toggle('activa', s.dataset.pantalla === 'rutas');
+        scr.mapa  = d.querySelector('.pantalla[data-pantalla="mapa"]');
+        scr.rutas = d.querySelector('.pantalla[data-pantalla="rutas"]');
+        nav.mapa  = d.querySelector('.navbar__item[data-ir="mapa"]');
+        nav.rutas = d.querySelector('.navbar__item[data-ir="rutas"]');
+        // las dos pantallas del recorrido quedan montadas y "activa"; el crossfade lo maneja
+        // setSceneTime por opacidad. Sin transición CSS → render reproducible.
+        d.querySelectorAll('.pantalla').forEach(function(s){ s.classList.remove('activa'); });
+        [scr.mapa, scr.rutas].forEach(function(s){
+          if (!s) return;
+          s.classList.add('activa');
+          s.style.transition = 'none';
+          s.style.paddingTop = '40px';   // aire para que la isla dinámica no tape el contenido
+          s.style.background = '#f1f0ee'; // --fondo del mockup: cada pantalla OPACA, así no se
+                                          // transparenta la otra durante el push
         });
-        pantalla = d.querySelector('.pantalla[data-pantalla="rutas"]');
-        // aire arriba para que la isla dinámica no tape el título/chips
-        if (pantalla) pantalla.style.paddingTop = '40px';
+        scr.rutas.style.transform = 'translateX(100%)';   // Rutas empieza fuera de cuadro, a la derecha
 
         var fontsReady = d.fonts ? d.fonts.ready : Promise.resolve();
         var settle = function(){
-          maxScroll = pantalla ? (pantalla.scrollHeight - pantalla.clientHeight) : 0;
+          maxS.mapa  = scr.mapa  ? (scr.mapa.scrollHeight  - scr.mapa.clientHeight)  : 0;
+          maxS.rutas = scr.rutas ? (scr.rutas.scrollHeight - scr.rutas.clientHeight) : 0;
           setSceneTime(0);
           window.__ready = true;
         };
