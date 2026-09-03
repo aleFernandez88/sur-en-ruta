@@ -2,7 +2,8 @@
 
 **Reescritura completa 2026-09-03.** Reemplaza toda la versión anterior (landing mapeada 1:1 al
 mazo de Ana, con RENAMU y la diferenciación institucional). Esa versión queda en el historial de
-git. `docs/comparativa-mazo-vs-landing.md` queda **obsoleto**.
+git. `docs/comparativa-mazo-vs-landing.md` quedó **obsoleto** (movido a
+`docs/analisis/comparativa-mazo-vs-landing-OBSOLETO.md`).
 
 ---
 
@@ -35,11 +36,11 @@ Lora + Source Sans 3), íconos SVG propios. Ver `docs/decisiones/identidad-visua
   libre.
 
 ### Fuente de contenido
-PDF nuevo de Ana, **4 páginas** (capturas en `docs/fuentes/` / carpeta de referencia):
-- pág. 06 — "Rutas que cuentan Uruguay"
-- pág. 07 — "Herramientas que conectan la experiencia"
-- pág. 08 — "Una red que beneficia a todos"
-- pág. 04 — "Cómo funciona la red"
+PDF nuevo de Ana, **4 páginas** — guardadas en `docs/fuentes/deck-2026-09/`:
+- `pag-06-rutas.png` — "Rutas que cuentan Uruguay"
+- `pag-07-herramientas.png` — "Herramientas que conectan la experiencia"
+- `pag-08-beneficia-a-todos.png` — "Una red que beneficia a todos"
+- `pag-04-como-funciona.png` — "Cómo funciona la red"
 
 Se toman como **guía de info, no como plantilla**: se extrae lo necesario, no se replica el layout.
 
@@ -195,7 +196,7 @@ lista nueva. Se puede reservar como refuerzo de la Ruta Oceánica.
   oportunidad / sistema-RENAMU / como-funciona / placeholder). Todo eso se reemplaza por P1–P5.
 - **`CLAUDE.md`:** §1, §2 y §6 están escritos alrededor de RENAMU + el mazo. Hay que reescribirlos
   con este enfoque.
-- **`docs/comparativa-mazo-vs-landing.md`:** obsoleto — archivar o borrar.
+- ~~`docs/comparativa-mazo-vs-landing.md`: obsoleto — archivar~~ ✅ movido a `docs/analisis/…-OBSOLETO.md` (2026-09-03).
 - **P5 / CTA:** definir sobre el final.
 - **Animaciones de entrada:** una por pantalla, sin repetir. Se definen una a una con Ale.
 

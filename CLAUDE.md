@@ -1,47 +1,50 @@
-# CLAUDE.md — Sur en Ruta (landing de inversores)
+# CLAUDE.md — Sur en Ruta (landing / spot de la app)
 
 > **Este repo NO es la app ni la plataforma de Sur en Ruta.** La app (registro de viajeros y
 > vehículos, mapa de puntos, Pasaporte digital, Sello, integración con privados) es una etapa
-> posterior y, cuando exista, será un repo aparte. **Nada de eso se implementa acá.**
+> posterior y, cuando exista, será un repo aparte. **Nada de eso se implementa acá** — la app se
+> muestra con maquetas falsas.
 
 ## 1. Qué es este repo
 
-La **landing informativa** de Sur en Ruta, dirigida a **público general** (no solo inversores).
-Mucho show visual, comprensión inmediata. Es una pieza de comunicación/publicidad: muestra qué se
-llegaría a alcanzar con la app y el sistema RENAMU. **No es una propuesta de inversión** — nada de
-negocio, presupuesto ni modelo económico se publica acá; ese detalle se conversa cara a cara
-cuando haga falta.
+La **landing de Sur en Ruta**: un **spot publicitario de la app**, dirigido a público general.
+Mucho show visual, comprensión inmediata. La app **todavía no existe** — se muestra con **maquetas
+falsas** (`prototipos/app-demo/` + su video `sur-en-ruta-app-showcase.mp4` + las capturas en
+`prototipos/app-demo/capturas/`). **No es una propuesta de inversión** — nada de negocio,
+presupuesto ni modelo económico se publica acá.
 
-**Estructura — actualizada 2026-08-27:** Ale decidió seguir el mazo de Ana (`Presentacion Sur en
-Ruta RENAMU.pdf`, 10 páginas) **página por página** — ~10 pantallas de la "cinta" horizontal, no
-5. Pantalla 0 = hero propio ("El país entero, en una sola red"); Pantallas 1–9 mapean 1:1 a las
-páginas 2–10 del mazo, con su copy literal. Ver `docs/landing-contenido.md` (spec) y
-`docs/comparativa-mazo-vs-landing.md` (transcripción + comparación). Incluye la pantalla "¿Qué es
-RENAMU / Sur en Ruta?" (pág. 3) — es una **diferenciación** RENAMU/Sur en Ruta, no una explicación
-al detalle del aparato institucional, así que no choca con el pivot de audiencia.
+**Solo se habla de Sur en Ruta.** No se menciona **RENAMU** (ni el nombre, ni el marco
+institucional, ni la diferenciación RENAMU / Sur en Ruta). La "red" que se nombra es la red propia
+de Sur en Ruta: sus puntos, rutas y servicios.
 
-**Libertad sobre los templates del mazo (actualizado 2026-08-28):** el mazo de Ana (y cualquier
-otro material que entregue como referencia) se sigue **como guía**, no como plantilla obligatoria.
-Tenemos libertad total para modificar cualquier aspecto de diseño/layout de esas páginas —
-tipografía, color, composición, qué elementos se replican o se descartan — si lo consideramos
-necesario para la landing. Esto no afecta la regla de contenido (§6): los números y nombres siguen
-saliendo solo de los documentos fuente, no se inventan.
+**Estructura (2026-09-03):** la "cinta" horizontal. **Sin hero de apertura** — mostrar rápido para
+retener. Las primeras 4 pantallas responden 4 preguntas guía: **¿qué es? / ¿qué hace? / ¿cómo lo
+hace? / ¿dónde lo hace?** (las rutas turísticas entran en la 4ª). P5 = CTA. El detalle de
+contenido, pantalla por pantalla, vive en **`docs/landing-contenido.md`** (fuente única del
+contenido).
 
-> **Nota histórica:** hasta el 2026-08-25 este repo era una landing dirigida específicamente a
-> inversores, con una sección de presupuesto/inversión. El 2026-08-26 Ana pidió el pivot de
-> arriba tras revisar el contenido. Ver `docs/planes/2026-08-26-pivot-audiencia-general.md` para
-> el detalle completo del cambio.
+**Se mantiene** el andamiaje visual construido antes del pivot: cinta horizontal (scroll-como-
+slide), Preloader, HiloRuta lateral, **una animación de entrada propia por pantalla** (no se
+repite), e identidad visual cerrada (ver `docs/decisiones/identidad-visual.md`).
+
+> **Nota histórica:** hasta el 2026-08-25 esto era una landing para inversores con sección de
+> presupuesto. El 2026-08-26 Ana pidió el pivot a público general
+> (`docs/planes/2026-08-26-pivot-audiencia-general.md`). Entre el 2026-08-27 y el 2026-09-02 el
+> contenido se mapeó 1:1 al mazo `Presentacion Sur en Ruta RENAMU.pdf` (con RENAMU). El 2026-09-03
+> Ale **canceló ese enfoque**: pasa a spot de la app, sin RENAMU, guiado por 4 páginas de un mazo
+> nuevo. La comparativa del mazo viejo quedó en
+> `docs/analisis/comparativa-mazo-vs-landing-OBSOLETO.md`; el detalle en el historial de
+> `docs/landing-contenido.md`.
 
 ## 2. Qué NO es este repo
 
-- No es la app/plataforma completa (mapa consultable, registro de viajeros y vehículos, Pasaporte
-  de Ruta digital, Sello Viajero Responsable, valoraciones, reservas, panel de métricas). Eso es
-  **otro repo**, de una etapa posterior.
-- No tiene alta de privados ni onboarding de comercios — **sigue sin tenerlo** tras el pivot de
-  audiencia: hablarle a "todo público" es comunicación/publicidad, no un flujo transaccional de
-  registro.
-- No tiene dossier ni CTA de inversión — se eliminó con el pivot del 2026-08-26 (antes existía
-  como pieza aparte; hoy no hay dossier accesible desde la landing en esta etapa).
+- **No es la app / plataforma completa** (mapa consultable, registro de viajeros y vehículos,
+  Pasaporte de Ruta digital, Sello Viajero Responsable, valoraciones, reservas, panel de métricas).
+  Eso es **otro repo**, de una etapa posterior. Acá solo hay **maquetas** para el spot.
+- **No menciona RENAMU** — ni el marco institucional, ni la diferenciación RENAMU / Sur en Ruta.
+- **No tiene alta de privados ni onboarding de comercios** — es comunicación/publicidad, no un
+  flujo transaccional de registro.
+- **No tiene dossier ni CTA de inversión** — se eliminó con el pivot de audiencia del 2026-08-26.
 
 ## 3. Stack
 
@@ -82,12 +85,21 @@ publicarlo.**
 
 ## 6. Fuente de contenido
 
-Dos documentos son fuente válida de contenido (ninguno vive en este repo, ambos en `Downloads` —
-ver `docs/planes/` y la memoria del proyecto para el detalle): el documento de propuesta original
-(`Activa turismo propuesta.pdf`) y, desde el pivot de audiencia del 2026-08-26 (ver
-`docs/planes/2026-08-26-pivot-audiencia-general.md`), el mazo de referencia que armó Ana
-(`Presentacion Sur en Ruta RENAMU.pdf`). Regla: **todo número o nombre en la landing sale de
-alguno de estos dos documentos; lo que no está en ninguno de los dos no se inventa.**
+Desde el pivot del 2026-09-03 (ver `docs/landing-contenido.md` §1), el contenido de las 4 pantallas
+guía se apoya en **4 páginas de un mazo nuevo de Ana**, guardadas en `docs/fuentes/deck-2026-09/`:
+"Rutas que cuentan Uruguay", "Herramientas que conectan la experiencia", "Una red que beneficia a
+todos", "Cómo funciona la red". Se usan **como guía de info, no como plantilla**: se extrae lo
+necesario, no se replica el layout.
+
+Reglas:
+- Los **nombres propios** (rutas temáticas, herramientas) y cualquier **dato duro** salen de
+  documento fuente — el mazo nuevo, o el PDF de propuesta original (`Activa turismo propuesta.pdf`,
+  en `Downloads`) para datos que no estén en el mazo.
+- El **texto de spot** (titulares, bajadas, frases de cierre) se puede redactar libre.
+- Lo que no esté en ninguna fuente y no sea texto de spot **no se inventa** — se pregunta a Ale.
+
+El mazo viejo (`Presentacion Sur en Ruta RENAMU.pdf`, con RENAMU) **ya no es fuente** — quedó
+descartado con el pivot.
 
 ## 7. Regla de honestidad sobre tracción
 

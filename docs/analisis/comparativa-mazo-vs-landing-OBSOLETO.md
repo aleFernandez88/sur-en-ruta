@@ -1,3 +1,10 @@
+> **OBSOLETO desde 2026-09-03.** Este documento comparaba la landing contra el mazo
+> `Presentacion Sur en Ruta RENAMU.pdf` (10 páginas), enfoque que Ale canceló: la landing dejó de
+> mapearse al mazo y de mencionar RENAMU. Se conserva solo como registro de la transcripción de
+> ese mazo. El contenido vigente está en `docs/landing-contenido.md`.
+
+---
+
 # Comparativa — copy literal del mazo vs. copy propuesto para la landing
 
 **Fecha:** 2026-08-27
