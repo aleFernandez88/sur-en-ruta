@@ -1,0 +1,9 @@
+{
+  "name": "app-demo-render",
+  "private": true,
+  "type": "module",
+  "description": "Render del showcase del app-demo a video + capturas (puppeteer). Interno, no se deploya.",
+  "dependencies": {
+    "puppeteer": "^25.10.0"
+  }
+}
