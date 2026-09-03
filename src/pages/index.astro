@@ -1390,6 +1390,14 @@ const COMO_CIERRE_RANGO = rango(19.5, 25, 4);
 		vector-effect: non-scaling-stroke;
 	}
 
+	/* P4 (2026-09-02, pedido de Ale): la línea de la ruta pasa a trazos, para simular una ruta/
+	 * carretera — mismo lenguaje que la línea punteada de las tarjetas de P2/P3 (esa ya era a
+	 * trazos), acá solo faltaba en la línea de nodos. Scopeado a `.pasos-chips` (P4) nada más — no
+	 * toca la línea sólida de P2/P3. */
+	.pasos-chips .op-chips-ruta path {
+		stroke-dasharray: 6 6;
+	}
+
 	/* Fondo oscuro + letras claras (2026-09-01, pedido de Ale) — antes tarjeta blanca con
 	 * ícono/label en marino, igual que el resto de la P2. `--color-marino-profundo` en vez de
 	 * `--color-marino`: es literalmente el tono que tokens.css documenta para "círculos de ícono
@@ -1496,8 +1504,11 @@ const COMO_CIERRE_RANGO = rango(19.5, 25, 4);
 	.pasos-nodo {
 		position: absolute;
 		top: calc(-1.75rem + 15 / 28 * 1.75rem);
-		width: 2.2rem;
-		height: 2.2rem;
+		/* Agrandado (2026-09-02, pedido de Ale) — de 2.2rem a 3.1rem. `transform: translate(-50%,
+		 * -50%)` ya centra el círculo sobre la línea con %, así que agrandarlo no rompe la posición
+		 * vertical (el `top` de arriba sigue apuntando al mismo punto de la ruta). */
+		width: 3.1rem;
+		height: 3.1rem;
 		display: grid;
 		place-items: center;
 		transform: translate(-50%, -50%);
@@ -1506,7 +1517,7 @@ const COMO_CIERRE_RANGO = rango(19.5, 25, 4);
 		color: var(--color-superficie);
 		font-family: var(--fuente-texto);
 		font-weight: 700;
-		font-size: 0.85rem;
+		font-size: 1.05rem;
 		z-index: 2;
 	}
 
@@ -1823,6 +1834,10 @@ const COMO_CIERRE_RANGO = rango(19.5, 25, 4);
 		height: var(--pasos-foto-alto);
 		display: flex;
 		gap: 0;
+		/* `.lamina--columna .lamina__cuerpo` apaga pointer-events para todo su contenido (pensado
+		 * para texto no interactivo, ver Lamina.astro) — esta tira SÍ necesita hover (2026-09-02,
+		 * pedido de Ale), así que se reactiva acá y baja por herencia a las cards. */
+		pointer-events: auto;
 	}
 
 	.pasos-foto-card {
@@ -1836,10 +1851,41 @@ const COMO_CIERRE_RANGO = rango(19.5, 25, 4);
 			calc(100% - var(--pasos-foto-inclinacion)) 100%,
 			0 100%
 		);
+		/* Hover (2026-09-02, pedido de Ale: "que la solapa crezca en alto... y se opaquen las
+		 * demás") — mismo espíritu que el hover de `.op-galeria-card` en P2, no un mecanismo
+		 * nuevo: `scale()` UNIFORME (no `scaleY` solo) para no estirar la foto de adentro — un
+		 * transform no distorsiona el contenido si es proporcional, `transform-origin: bottom` para
+		 * que el crecimiento se lea sobre todo como "hacia arriba" (la solapa sigue apoyada en el
+		 * footer). El `clip-path` viaja con el transform (se aplica sobre la forma ya recortada),
+		 * así que el paralelogramo no se deforma al agrandarse. */
+		transform-origin: bottom;
+		transition:
+			transform 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+			filter 0.4s ease,
+			opacity 0.4s ease;
 	}
 
 	.pasos-foto-card:not(:first-child) {
 		margin-left: calc(-1 * var(--pasos-foto-inclinacion));
+	}
+
+	.pasos-foto-card:hover {
+		transform: scale(1.16);
+		z-index: 5;
+	}
+
+	/* Apaga las OTRAS 3 mientras hay una en hover — mismo patrón que `.op-galeria:hover
+	 * .op-galeria-card:not(:hover)` en P2 (el `:hover` del contenedor se dispara con el mouse sobre
+	 * cualquier hijo hit-testable). */
+	.pasos-fotos:hover .pasos-foto-card:not(:hover) {
+		opacity: 0.6;
+		filter: brightness(0.6) saturate(0.65);
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.pasos-foto-card {
+			transition: none;
+		}
 	}
 
 	.pasos-foto-img {
@@ -1863,33 +1909,34 @@ const COMO_CIERRE_RANGO = rango(19.5, 25, 4);
 		text-shadow: 0 1px 6px rgba(0, 0, 0, 0.4);
 	}
 
-	/* PLACEHOLDER — sin fotos reales todavía (Ale no pasó ninguna para esta pantalla), gradiente
-	 * plano con uno de los `--color-ruta-*` por card (mismo criterio que tuvo P2 antes de tener las
-	 * fotos reales). `linear-gradient(x, x)` en vez de un color sólido porque `--foto` tiene que
-	 * ser un valor de tipo imagen (lo usa `background-image` arriba). */
+	/* PLACEHOLDER (2026-09-02, pedido de Ale: "coloca las imágenes de placeholder que tenemos") —
+	 * reusa las MISMAS 4 fotos de prueba de la galería de P2 (`public/img/oportunidad/`), que son
+	 * las únicas que hay cargadas todavía — sin relación semántica con el label de cada card, igual
+	 * que en P2 antes de tener las fotos reales de P4. Se reemplazan cuando Ale pase las de esta
+	 * pantalla. */
 	.pasos-foto-card:nth-child(1) .pasos-foto-img {
-		--foto: linear-gradient(160deg, var(--color-ruta-oceanica), var(--color-ruta-oceanica));
+		--foto: url('/img/oportunidad/s1.jpg');
 	}
 	.pasos-foto-card:nth-child(2) .pasos-foto-img {
-		--foto: linear-gradient(160deg, var(--color-ruta-rural), var(--color-ruta-rural));
+		--foto: url('/img/oportunidad/s2.webp');
 	}
 	.pasos-foto-card:nth-child(3) .pasos-foto-img {
-		--foto: linear-gradient(160deg, var(--color-ruta-termal), var(--color-ruta-termal));
+		--foto: url('/img/oportunidad/s3.jpg');
 	}
 	.pasos-foto-card:nth-child(4) .pasos-foto-img {
-		--foto: linear-gradient(160deg, var(--color-ruta-naturaleza), var(--color-ruta-naturaleza));
+		--foto: url('/img/oportunidad/s4.jpg');
 	}
 
 	/* === Cabecera de P4 — pisa el diseño de caja de `.op-cabecera` (2026-09-02, pedido de Ale) ===
 	 * Logo como HERMANO en línea con el bloque de texto (fila), no apilado arriba (columna); y sin
 	 * la sombra de caja que sí tiene `.op-cabecera` en P2/P3.
 	 *
-	 * Centrada (2026-09-02, mismo día, pedido de Ale) — `.lamina--columna .lamina__cuerpo` ancla
-	 * TODO su contenido arriba-izquierda (`justify-items: start`, ver Lamina.astro) para el resto
-	 * de P4 (timeline, fotos), pero este bloque puntual necesita centrarse solo: `width: 100%` le
-	 * da el ancho completo de la columna disponible (si no, un flex sin ancho propio se achica al
-	 * contenido y queda pegado a la izquierda con el `start` del padre) + `justify-content: center`
-	 * centra el logo y el texto como un conjunto adentro de ese ancho.
+	 * Centrado revertido (2026-09-02, mismo día, pedido de Ale: "volvelos a colocar a la derecha")
+	 * — se probó centrar el conjunto (`width:100% + justify-content:center`), Ale no lo quiso.
+	 * `justify-self: end` en vez de eso: `.lamina__cuerpo` es un GRID (no flex), así que alinear
+	 * este ítem puntual a la derecha del track es una sola propiedad en el propio ítem — no hace
+	 * falta tocar `justify-items` del padre (que sigue en `start`, correcto para el resto de P4:
+	 * timeline, fotos) ni darle `width:100%` (el bloque vuelve a achicarse a su contenido).
 	 *
 	 * Sin fondo (2026-09-02, mismo día, pedido de Ale) — con la cuña diagonal (`fondoDiagonal`)
 	 * corriendo detrás del título, el `background: var(--color-fondo)` que trae `.op-cabecera` (ahí
@@ -1899,17 +1946,40 @@ const COMO_CIERRE_RANGO = rango(19.5, 25, 4);
 	.como-cabecera {
 		flex-direction: row;
 		align-items: center;
-		justify-content: center;
-		width: 100%;
+		justify-self: end;
 		gap: clamp(1rem, 3vw, 2rem);
 		background: none;
 		box-shadow: none;
 	}
 
+	/* Todo alineado a la derecha (2026-09-02, pedido de Ale, 2ª vuelta: "hablo de todo el box que
+	 * abarca logo y letras" — el `justify-self: end` de `.como-cabecera` ya empuja el CONJUNTO
+	 * contra el margen derecho de la columna, pero adentro cada línea seguía con `text-align`
+	 * default (izquierda): "CÓMO" (mucho más corta que "FUNCIONA LA RED", que es la que define el
+	 * ancho de la columna por `align-items: stretch`) y la bajada (`max-width: 30ch`, bastante más
+	 * angosta) quedaban colgando del lado izquierdo de sus propias cajas — a simple vista el
+	 * conjunto seguía leyéndose "pegado a la izquierda" aunque el contenedor exterior ya estuviera
+	 * bien posicionado. `text-align: right` alinea el texto DENTRO de cada línea; la bajada además
+	 * necesita `align-self: flex-end` porque su propia caja es más angosta que la columna (el
+	 * `max-width` la achica) y por default un flex item más chico que el stretch se queda pegado al
+	 * inicio del eje cruzado, no al texto — hay que mover la CAJA, no solo el texto de adentro. */
 	.como-cabecera-texto {
 		display: flex;
 		flex-direction: column;
+		align-items: flex-end;
 		gap: var(--espacio-xs);
+		text-align: right;
+	}
+
+	.como-cabecera-texto .op-subtitulo {
+		align-self: flex-end;
+	}
+
+	/* La reglita verde bajo "FUNCIONA LA RED" es un `::after` block-level — `text-align` del padre
+	 * no mueve cajas de bloque, solo texto/inline, así que necesita su propio empuje. */
+	.como-cabecera-texto .op-titulo--l2::after {
+		margin-left: auto;
+		margin-right: 0;
 	}
 
 	/* === Reveal de entrada, por línea o por palabra (2026-08-28) ===
