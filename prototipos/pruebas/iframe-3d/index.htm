@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Prueba — iframe 3D (Sur en Ruta)</title>
+<!--
+  Prototipo descartable (prototipos/ no se publica, CLAUDE.md §8). No es Astro, no hay build:
+  se sirve directo por el dev server de Vite/Astro corriendo `npx astro dev --host` desde la raíz
+  del repo — Vite sirve cualquier archivo del proyecto, no solo public/, así que esto se abre en
+  http://<ip-de-la-compu>:4321/prototipos/pruebas/iframe-3d/index.html (mismo puerto que la landing,
+  el --host es lo que lo hace alcanzable desde el celular en la misma red).
+
+  Qué prueba: si el mockup de la app (public/app-demo/index.html) se puede meter en un <iframe>
+  dentro de un contenedor con transform 3D (perspective + rotate3d) sin romperse en iOS Safari —
+  ver docs/planes/2026-09-22-recomposicion-ui-vertical.md §14.1 para el protocolo completo y el
+  porqué de cada test. Los valores de perspective/aspect-ratio/border-radius del celular están
+  copiados literal de public/app-demo/showcase.html:76-129 — si esta prueba pasa, pasa con la
+  escena real, no hace falta reinventar números.
+
+  Los 3 modos de falla conocidos de un iframe compositado dentro de un contexto 3D en WebKit/iOS:
+    (a) rasteriza a la resolución previa a la transformación y se ve borroso  → lo mide T2
+    (b) queda congelado como textura, no repinta cuando cambia el contenido  → lo mide T5
+    (c) se traga el gesto táctil, el scroll de la página se frena ahí        → lo mide T4
+
+  Resultado: se anota abajo del todo, en RESULTADOS-EN-CRUDO (editar este archivo a mano tras
+  probar), y además hay un botón "Copiar resumen" en la página para pasarlo por chat sin tener
+  que tocar el HTML desde el celular.
+-->
+<style>
+  :root{
+    --marino:#0f2b4d;
+    --marino-profundo:#0a2036;
+    --marino-noche:#050b14;
+    --celeste:#6cace4;
+    --verde:#356a2c;
+    --arena:#e7dfc9;
+    --ok:#4caf6b;
+    --fail:#e0574c;
+  }
+  *{ box-sizing:border-box; }
+  html,body{
+    margin:0; padding:0; width:100%;
+    background:var(--marino-noche);
+    color:var(--arena);
+    font:14px/1.4 -apple-system, "Segoe UI", Arial, sans-serif;
+    -webkit-text-size-adjust:100%;
+  }
+
+  /* ---- escena: idéntica en valores a showcase.html, fija sobre toda la ventana ---- */
+  #scene{
+    position:fixed; inset:0;
+    overflow:hidden;
+    background:radial-gradient(140% 100% at 50% 38%, #163a5c 0%, #0a2036 46%, #050b14 100%);
+    display:grid; place-items:center;
+    pointer-events:none;   /* baseline: nada de la escena capta gestos, salvo lo que reactivemos */
+    z-index:1;
+  }
+  #glow{
+    position:absolute; width:82%; aspect-ratio:1; left:50%; top:40%;
+    transform:translate(-50%,-50%);
+    background:radial-gradient(circle, rgba(108,172,228,0.32) 0%, rgba(108,172,228,0.12) 33%, transparent 66%);
+    filter:blur(26px);
+  }
+  #vignette{
+    position:absolute; inset:0;
+    background:radial-gradient(120% 90% at 50% 42%, transparent 40%, rgba(3,7,14,0.55) 100%);
+  }
+  #stageWrap{
+    position:relative; width:100%; height:100%;
+    display:grid; place-items:center;
+    perspective:1700px;
+    perspective-origin:50% 44%;
+  }
+  #floor{
+    position:absolute; left:50%; top:50%; width:46%; height:9%;
+    background:radial-gradient(ellipse, rgba(0,0,0,0.55) 0%, transparent 70%);
+    filter:blur(14px);
+    transform:translate(-50%, 620%);
+  }
+  #marco{
+    position:relative; height:56%; aspect-ratio:9/17;
+    transform-style:preserve-3d;
+    will-change:transform;
+  }
+  #phoneBody{
+    position:absolute; inset:0;
+    border-radius:13.5% / 6.2%;
+    background:linear-gradient(135deg, #3a4048 0%, #10131a 38%, #2c313a 62%, #0c0f15 100%);
+    padding:1.7%;
+    box-shadow:
+      inset 0 0 0 1.5px rgba(255,255,255,0.10),
+      inset 0 2px 6px rgba(255,255,255,0.16),
+      inset 0 -3px 8px rgba(0,0,0,0.5);
+  }
+  #screen{
+    position:absolute; inset:1.7%;
+    border-radius:11.5% / 5.4%;
+    overflow:hidden;
+    background:#f1f0ee;
+    box-shadow:inset 0 0 0 2px #05080d;
+  }
+  #screen, #screen iframe{ pointer-events:auto; }  /* único punto que capta gestos por defecto */
+  #screen iframe{
+    width:390px; height:844px; border:0; display:block;
+    transform-origin:top left;
+    transform:scale(var(--fit,1));
+  }
+
+  /* ---- modos de rotación ---- */
+  body.modo-t1 #marco{ transform:none; }
+  body.modo-t2 #marco{ transform:rotate3d(0,1,0,18deg); }
+  @keyframes girar-scroll{
+    0%{ transform:rotate3d(0,1,0,-18deg); }
+    50%{ transform:rotate3d(0,1,0,18deg); }
+    100%{ transform:rotate3d(0,1,0,-18deg); }
+  }
+  body.modo-t3 #marco{
+    animation:girar-scroll linear both;
+    animation-timeline:scroll(root);
+    animation-range:0% 100%;
+  }
+  @keyframes girar-idle{
+    from{ transform:rotate3d(0,1,0,-16deg); }
+    to{ transform:rotate3d(0,1,0,16deg); }
+  }
+  body.modo-t5 #marco{ animation:girar-idle 4s ease-in-out infinite alternate; }
+  /* T4: se prueba el gesto táctil con el marco quieto de frente y el mitigador (pointer-events:
+     none en el propio iframe) puesto — la pregunta es si YA con eso el scroll de la página anda */
+  body.modo-t4 #marco{ transform:none; }
+  body.modo-t4 #screen, body.modo-t4 #screen iframe{ pointer-events:none; }
+  /* T6: rotación suave constante, la variable es el tiempo, no el gesto */
+  body.modo-t6 #marco{ animation:girar-idle 6s ease-in-out infinite alternate; }
+
+  /* ---- HUD fijo (fuera de la escena, siempre clickeable) ---- */
+  #hud{
+    position:fixed; left:0; right:0; top:0;
+    z-index:10;
+    padding:10px 12px calc(10px + env(safe-area-inset-bottom, 0px));
+    background:linear-gradient(180deg, rgba(5,8,14,0.92) 0%, rgba(5,8,14,0.78) 80%, transparent 100%);
+    backdrop-filter:blur(6px);
+  }
+  #hud h1{ margin:0 0 4px; font-size:14px; color:#fff; }
+  #dispositivo{ font-size:11px; opacity:.7; word-break:break-all; margin-bottom:8px; }
+  #lecturas{ display:flex; gap:14px; font-size:12px; margin-bottom:8px; flex-wrap:wrap; }
+  #lecturas b{ color:#fff; }
+  .fila-tests{ display:flex; gap:6px; flex-wrap:wrap; margin-bottom:6px; }
+  .fila-tests button{
+    flex:1 1 auto; min-width:44px;
+    padding:8px 4px;
+    border-radius:8px; border:1px solid rgba(255,255,255,0.18);
+    background:rgba(255,255,255,0.06); color:var(--arena);
+    font-size:13px; font-weight:600;
+  }
+  .fila-tests button[aria-pressed="true"]{
+    background:var(--celeste); color:#04101f; border-color:var(--celeste);
+  }
+  #criterio{
+    font-size:12px; background:rgba(255,255,255,0.06); border-radius:8px;
+    padding:8px 10px; margin-bottom:8px;
+  }
+  #criterio b{ color:#fff; }
+  .fila-veredicto{ display:flex; gap:6px; align-items:center; flex-wrap:wrap; margin-bottom:4px; }
+  .fila-veredicto button{
+    padding:6px 12px; border-radius:20px; border:1px solid rgba(255,255,255,0.25);
+    background:transparent; color:var(--arena); font-size:12px; font-weight:600;
+  }
+  .fila-veredicto button.pass[aria-pressed="true"]{ background:var(--ok); border-color:var(--ok); color:#04160b; }
+  .fila-veredicto button.fail[aria-pressed="true"]{ background:var(--fail); border-color:var(--fail); color:#1a0402; }
+  .fila-veredicto button.na[aria-pressed="true"]{ background:#666; border-color:#666; color:#fff; }
+  #accion-extra{ margin-bottom:8px; }
+  #accion-extra button{
+    padding:8px 12px; border-radius:8px; border:1px solid rgba(255,255,255,0.25);
+    background:rgba(255,255,255,0.06); color:#fff; font-size:12px; font-weight:600;
+  }
+
+  /* panel de resumen, plegable, abajo del todo */
+  #panel-resumen{
+    position:fixed; left:0; right:0; bottom:0; z-index:10;
+    background:rgba(5,8,14,0.94); backdrop-filter:blur(6px);
+    border-top:1px solid rgba(255,255,255,0.12);
+    padding:8px 12px calc(8px + env(safe-area-inset-bottom, 0px));
+    max-height:42vh; overflow:auto;
+  }
+  #panel-resumen table{ width:100%; border-collapse:collapse; font-size:11px; margin-bottom:6px; }
+  #panel-resumen td, #panel-resumen th{ padding:3px 4px; text-align:left; border-bottom:1px solid rgba(255,255,255,0.08); }
+  #panel-resumen .v-PASS{ color:var(--ok); font-weight:700; }
+  #panel-resumen .v-FAIL{ color:var(--fail); font-weight:700; }
+  #panel-resumen .v-NA{ color:#888; }
+  #copiar, #reiniciar{
+    padding:7px 12px; border-radius:8px; border:1px solid rgba(255,255,255,0.25);
+    background:rgba(255,255,255,0.08); color:#fff; font-size:12px; font-weight:600; margin-right:6px;
+  }
+  #salidaCopiar{
+    width:100%; height:70px; margin-top:6px; font-size:10px;
+    background:#000; color:#8f8; border:1px solid rgba(255,255,255,0.2); border-radius:6px;
+    display:none;
+  }
+
+  /* espacio para poder scrollear (T3/T4/T6 necesitan recorrido) */
+  #relleno{ height:600vh; }
+</style>
+</head>
+<body class="modo-t1">
+
+<div id="scene">
+  <div id="glow"></div>
+  <div id="vignette"></div>
+  <div id="stageWrap">
+    <div id="floor"></div>
+    <div id="marco">
+      <div id="phoneBody">
+        <div id="screen"><iframe id="app" title="Sur en Ruta app (demo)" scrolling="no"></iframe></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="hud">
+  <h1>Prueba iframe 3D — T1 a T6</h1>
+  <div id="dispositivo"></div>
+  <div id="lecturas">
+    <span>FPS: <b id="fps">—</b></span>
+    <span>Scroll: <b id="scrollY">0</b>px (pico T4: <b id="scrollPico">0</b>px)</span>
+    <span id="lectura-extra"></span>
+  </div>
+  <div class="fila-tests" role="group" aria-label="Elegir test">
+    <button data-t="1" aria-pressed="true">T1</button>
+    <button data-t="2">T2</button>
+    <button data-t="3">T3</button>
+    <button data-t="4">T4</button>
+    <button data-t="5">T5</button>
+    <button data-t="6">T6</button>
+  </div>
+  <div id="criterio"></div>
+  <div id="accion-extra"></div>
+  <div class="fila-veredicto">
+    <span>Resultado de este test:</span>
+    <button class="pass" data-v="PASS">PASS</button>
+    <button class="fail" data-v="FAIL">FAIL</button>
+    <button class="na" data-v="N/A">N/A</button>
+  </div>
+</div>
+
+<div id="relleno"></div>
+
+<div id="panel-resumen">
+  <table id="tabla-resultados"><tbody></tbody></table>
+  <button id="copiar">Copiar resumen</button>
+  <button id="reiniciar">Reiniciar resultados</button>
+  <textarea id="salidaCopiar" readonly></textarea>
+</div>
+
+<script>
+(function(){
+  'use strict';
+
+  // ---- iframe: mismo host/puerto que este archivo, ruta absoluta bajo el base de Astro ----
+  var iframe = document.getElementById('app');
+  iframe.src = location.protocol + '//' + location.host + '/sur-en-ruta/app-demo/index.html';
+
+  function ajustarIframe(){
+    var el = document.getElementById('screen');
+    var w = el.clientWidth;
+    if (!w) return;
+    var fit = w / 390;
+    iframe.style.setProperty('--fit', fit);
+  }
+  new ResizeObserver(ajustarIframe).observe(document.getElementById('screen'));
+  ajustarIframe();
+
+  // ---- info del dispositivo ----
+  document.getElementById('dispositivo').textContent =
+    navigator.userAgent + ' · ' + window.innerWidth + 'x' + window.innerHeight +
+    ' · dpr' + (window.devicePixelRatio || 1);
+
+  // ---- FPS: rAF continuo, ventana rodante de ~500ms ----
+  var fpsEl = document.getElementById('fps');
+  var frames = [];
+  var medicion = null; // {inicio, cuenta, fin, activa}
+  function tick(t){
+    frames.push(t);
+    while (frames.length && t - frames[0] > 500) frames.shift();
+    fpsEl.textContent = frames.length ? Math.round(frames.length * 1000 / (t - frames[0] || 1)) : '—';
+    if (medicion && medicion.activa){
+      medicion.cuenta++;
+      if (t - medicion.inicio >= 5000){
+        medicion.activa = false;
+        var fpsProm = Math.round(medicion.cuenta * 1000 / (t - medicion.inicio));
+        var veredicto = fpsProm >= 50 ? 'PASS (' + fpsProm + ' fps)' : 'FAIL (' + fpsProm + ' fps)';
+        document.getElementById('lectura-extra').textContent = 'T3 medición: ' + veredicto;
+      }
+    }
+    requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+
+  // ---- fallback JS para navegadores sin animation-timeline: scroll() (Firefox, Safari viejo) ----
+  var soportaScrollTimeline = false;
+  try { soportaScrollTimeline = CSS.supports('animation-timeline', 'scroll(root)'); } catch(e){}
+  var modoActual = 1;
+  function onScrollFallbackT3(){
+    if (modoActual !== 3 || soportaScrollTimeline) return;
+    var doc = document.documentElement;
+    var max = doc.scrollHeight - doc.clientHeight;
+    var p = max > 0 ? window.scrollY / max : 0;
+    var angulo = Math.sin(p * Math.PI * 12) * 18; // varias oscilaciones a lo largo del relleno
+    document.getElementById('marco').style.transform = 'rotate3d(0,1,0,' + angulo.toFixed(2) + 'deg)';
+  }
+  window.addEventListener('scroll', onScrollFallbackT3, { passive:true });
+
+  // ---- lectura de scroll en vivo, + "pico" alcanzado desde que se entró a T4 (el gesto es
+  // rápido y puede pasar entre dos lecturas manuales, por eso se guarda el máximo, no solo el
+  // valor actual) ----
+  var scrollPicoT4 = 0;
+  function onScrollLectura(){
+    var y = Math.round(window.scrollY);
+    document.getElementById('scrollY').textContent = y;
+    if (modoActual === 4){
+      scrollPicoT4 = Math.max(scrollPicoT4, y);
+      document.getElementById('scrollPico').textContent = scrollPicoT4;
+    }
+  }
+  window.addEventListener('scroll', onScrollLectura, { passive:true });
+  onScrollLectura();
+
+  // ---- criterios de cada test (texto corto, se lee en el celular) ----
+  var CRITERIOS = {
+    1: '<b>T1 · control.</b> iframe plano, sin rotar. El texto de la app se lee nítido — esta es la referencia contra la que comparás T2.',
+    2: '<b>T2 · rotación estática.</b> El celular queda girado fijo (18°). PASS si el texto sigue tan nítido como en T1 (compará una captura de cada uno). FAIL = se ve borroso → modo (a), rasterización.',
+    3: '<b>T3 · rotación animada por scroll.</b> Scrolleá sin parar durante 5s y mirá el FPS. Tocá "Medir 5s" y scrolleá continuo hasta que el cartel diga PASS/FAIL. PASS = ≥50 fps sostenidos.',
+    4: '<b>T4 · gesto táctil.</b> El iframe tiene <code>pointer-events:none</code> puesto. Poné el dedo EXACTO sobre la imagen del celular (no sobre este texto ni sobre la tabla de abajo) y deslizá. Mirá "Scroll" arriba: si el número (o el "pico") cambia, scrolleó → PASS. Si se queda en 0 después de deslizar bien sobre el celular → FAIL, modo (c).',
+    5: '<b>T5 · repintado del contenido.</b> El celular gira solo. Tocá el botón de abajo para cambiar Mapa↔Rutas DESDE AFUERA mientras gira. PASS = el contenido del celular cambia a la vista. FAIL = queda congelado con el mapa viejo → modo (b).',
+    6: '<b>T6 · estabilidad.</b> Dejalo 5 minutos scrolleando arriba/abajo tranquilo. PASS = la pestaña no se recarga sola y no se pone lenta/se cuelga. Mirá el contador de recargas.'
+  };
+
+  function pintarCriterio(){
+    document.getElementById('criterio').innerHTML = CRITERIOS[modoActual];
+  }
+
+  // ---- acción extra por test (T3 medir, T5 cambiar pantalla, T6 timer) ----
+  var t6Inicio = null, t6Interval = null;
+  function pintarAccionExtra(){
+    var el = document.getElementById('accion-extra');
+    el.innerHTML = '';
+    if (modoActual === 3){
+      var b = document.createElement('button');
+      b.textContent = 'Medir 5s (scrolleá mientras tanto)';
+      b.onclick = function(){
+        medicion = { inicio: performance.now(), cuenta: 0, activa: true };
+        document.getElementById('lectura-extra').textContent = 'Midiendo…';
+      };
+      el.appendChild(b);
+    } else if (modoActual === 5){
+      var bm = document.createElement('button');
+      bm.textContent = 'Cambiar Mapa ↔ Rutas';
+      bm.style.marginRight = '6px';
+      bm.onclick = function(){
+        try {
+          var d = iframe.contentDocument;
+          var enRutas = d.querySelector('.pantalla[data-pantalla="rutas"]').classList.contains('activa');
+          var destino = enRutas ? 'mapa' : 'rutas';
+          var navBtn = d.querySelector('.navbar__item[data-ir="' + destino + '"]');
+          if (navBtn) navBtn.click();
+        } catch(e){ alert('No se pudo acceder al iframe: ' + e.message); }
+      };
+      el.appendChild(bm);
+    } else if (modoActual === 6){
+      var span = document.createElement('span');
+      span.id = 'timer-t6';
+      span.style.fontSize = '12px';
+      el.appendChild(span);
+      if (!t6Inicio){
+        t6Inicio = Date.now();
+        var recargas = parseInt(sessionStorage.getItem('t6_recargas') || '0', 10) + 1;
+        sessionStorage.setItem('t6_recargas', String(recargas));
+      }
+      clearInterval(t6Interval);
+      t6Interval = setInterval(function(){
+        var seg = Math.floor((Date.now() - t6Inicio) / 1000);
+        var mm = String(Math.floor(seg/60)).padStart(2,'0');
+        var ss = String(seg%60).padStart(2,'0');
+        var mem = (performance.memory && performance.memory.usedJSHeapSize)
+          ? (performance.memory.usedJSHeapSize / 1048576).toFixed(1) + ' MB'
+          : 'n/d (no Chrome)';
+        var recargas = sessionStorage.getItem('t6_recargas') || '1';
+        document.getElementById('timer-t6').textContent =
+          'Tiempo: ' + mm + ':' + ss + ' · memoria: ' + mem + ' · recargas en esta pestaña: ' + recargas;
+      }, 1000);
+    }
+  }
+
+  // ---- selección de test ----
+  var botonesTest = document.querySelectorAll('.fila-tests button');
+  botonesTest.forEach(function(btn){
+    btn.addEventListener('click', function(){
+      modoActual = parseInt(btn.dataset.t, 10);
+      botonesTest.forEach(function(b){ b.setAttribute('aria-pressed', b === btn ? 'true' : 'false'); });
+      document.body.className = 'modo-t' + modoActual;
+      document.getElementById('lectura-extra').textContent = '';
+      if (modoActual === 4){
+        scrollPicoT4 = 0;
+        document.getElementById('scrollPico').textContent = '0';
+        window.scrollTo(0, 0);
+      }
+      pintarCriterio();
+      pintarAccionExtra();
+      pintarVeredictoActivo();
+    });
+  });
+
+  // ---- resultados: persisten en localStorage para sobrevivir una recarga/backgrounding ----
+  var CLAVE = 'iframe3d_resultados_v1';
+  var resultados = {};
+  try { resultados = JSON.parse(localStorage.getItem(CLAVE) || '{}'); } catch(e){}
+
+  function guardar(){
+    try { localStorage.setItem(CLAVE, JSON.stringify(resultados)); } catch(e){}
+    pintarTabla();
+  }
+
+  function pintarVeredictoActivo(){
+    document.querySelectorAll('.fila-veredicto button[data-v]').forEach(function(b){
+      b.setAttribute('aria-pressed', resultados['t' + modoActual] === b.dataset.v ? 'true' : 'false');
+    });
+  }
+
+  document.querySelectorAll('.fila-veredicto button[data-v]').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      resultados['t' + modoActual] = btn.dataset.v;
+      pintarVeredictoActivo();
+      guardar();
+    });
+  });
+
+  function pintarTabla(){
+    var tbody = document.querySelector('#tabla-resultados tbody');
+    tbody.innerHTML = '';
+    for (var i = 1; i <= 6; i++){
+      var v = resultados['t' + i] || '—';
+      var tr = document.createElement('tr');
+      tr.innerHTML = '<td>T' + i + '</td><td class="v-' + (v === '—' ? '' : v.replace('/','')) + '">' + v + '</td>';
+      tbody.appendChild(tr);
+    }
+  }
+
+  document.getElementById('reiniciar').addEventListener('click', function(){
+    if (!confirm('¿Borrar los 6 resultados marcados en este celular?')) return;
+    resultados = {};
+    guardar();
+  });
+
+  document.getElementById('copiar').addEventListener('click', function(){
+    var lineas = ['| Test | Resultado |', '|---|---|'];
+    for (var i = 1; i <= 6; i++) lineas.push('| T' + i + ' | ' + (resultados['t' + i] || '—') + ' |');
+    var texto =
+      '**Dispositivo:** ' + navigator.userAgent + '\n' +
+      '**Viewport:** ' + window.innerWidth + 'x' + window.innerHeight + ' dpr' + (window.devicePixelRatio||1) + '\n' +
+      '**animation-timeline: scroll() soportado:** ' + (soportaScrollTimeline ? 'sí' : 'no (fallback JS)') + '\n\n' +
+      lineas.join('\n');
+    var salida = document.getElementById('salidaCopiar');
+    salida.value = texto;
+    salida.style.display = 'block';
+    salida.focus();
+    salida.select();
+    if (navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(texto).then(function(){
+        document.getElementById('copiar').textContent = 'Copiado ✓';
+      }).catch(function(){
+        document.getElementById('copiar').textContent = 'No se pudo copiar solo — seleccioná el texto de abajo a mano';
+      });
+    } else {
+      document.getElementById('copiar').textContent = 'Seleccioná el texto de abajo a mano y copialo';
+    }
+  });
+
+  pintarCriterio();
+  pintarAccionExtra();
+  pintarTabla();
+  pintarVeredictoActivo();
+})();
+</script>
+</body>
+</html>
+<!--
+RESULTADOS-EN-CRUDO — anotados a mano tras cada corrida real (§14.1, §14.7 paso 3)
+
+2026-09-22 · Android real (Chrome 153, Android 10, viewport 369x698 dpr3.25)
+  animation-timeline: scroll(root) soportado: sí
+  T1 (control)              — sin marcar (T2 pasó, referencia implícita OK)
+  T2 (rotación estática)     PASS
+  T3 (rotación por scroll)   PASS  (≥50fps sostenidos, timeline nativo)
+  T4 (gesto táctil)          PASS  — CORREGIDO tras re-prueba (ver nota abajo). El primer intento
+                                     dio FAIL, pero era un falso negativo de la herramienta: la
+                                     página no tenía ningún indicador visible de scroll (#scene,
+                                     #hud y #panel-resumen son los tres position:fixed, nada se
+                                     mueve a la vista). Se agregó un contador de scroll en vivo +
+                                     "pico" al HUD; con eso a la vista, el mismo gesto (dedo sobre
+                                     la imagen del celular) sí mueve el número — llegó a 304px en la
+                                     re-prueba. Confirmado: pointer-events:none en el iframe alcanza,
+                                     el gesto NO se traga. No hay hallazgo real acá.
+  T5 (repintado)              PASS  (nav.click() dentro del iframe cambió mapa→rutas a la vista)
+  T6 (estabilidad)            PASS  (sin recargas, sin datos de memoria — Chrome Android sí expone
+                                     performance.memory pero no se dejó corriendo los 5 min completos)
+
+  iPhone real: PENDIENTE (Ale no tiene iPhone a mano; se retoma cuando consiga uno o esté con
+  alguien que sí lo tenga, en la misma red — sin exponer el dev server a internet, decisión
+  2026-09-22).
+-->
+
