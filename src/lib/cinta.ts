@@ -15,7 +15,7 @@
  *
  * | Pantalla            | id             | k | Centro | Ventana de entrada          | Disparador       |
  * |----------------------|----------------|---|--------|------------------------------|-------------------|
- * | P1 · ¿Qué es?        | que-es         | 0 | 0 %    | — (entrada temporal) · permanencia `0%→8%` (scrub), colchón `8%→14%` | :root.entrada + --hz-progreso |
+ * | P1 · ¿Qué es?        | que-es         | 0 | 0 %    | — (entrada temporal) · permanencia `0%→8%` (velo/texto), colchón `8%→14%` | :root.entrada + --hz-progreso |
  * | P2 · ¿Qué hace?      | que-hace       | 1 | 25 %   | 14% → 24.5%                  | --hz-progreso     |
  * | P3 · ¿Cómo lo hace?  | como-lo-hace   | 2 | 50 %   | A: 39%→44% · B: 43.5%→49.5%  | --hz-progreso     |
  * | P4 · ¿Dónde?         | donde          | 3 | 75 %   | 64% → 74.5%                  | --hz-progreso     |
@@ -43,14 +43,7 @@
  *    cada pantalla (usando las funciones de este módulo).
  * 5. Verificar cualquier animación con `el.getAnimations()[0].effect.getKeyframes()` y con scroll
  *    REAL (setear `track.scrollTop` desde la consola no avanza el ScrollTimeline de forma fiable).
- * 6. El scrub de P1 (frames en <canvas>, docs/planes/2026-09-04-...md §15) usa `object-fit: contain`
- *    para no recortar el celular en ningún viewport — el sobrante lo cubre el `background` del
- *    propio contenedor (`--color-marino-noche`), no depende de que el borde del frame calce pixel
- *    a pixel.
- * 7. El scrub lee `scrollTop / (scrollHeight - clientHeight)` de `.hz-track`, NUNCA `--hz-progreso`
- *    desde JS — un `scroll-timeline-name` no es legible desde JavaScript. Ese cociente **es** el
- *    mismo número que mide el timeline declarado en `.hz-track` (base.css).
- * 8. Toda ruta a un asset de `public/` va con `import.meta.env.BASE_URL` (`astro.config.mjs` fija
+ * 6. Toda ruta a un asset de `public/` va con `import.meta.env.BASE_URL` (`astro.config.mjs` fija
  *    `base: '/sur-en-ruta/'`) — nunca `/algo/...` a secas, restricción ya documentada en el plan §12.
  */
 import { recorrido } from '../data/recorrido.ts';
@@ -62,22 +55,6 @@ export const N_PANTALLAS = recorrido.length;
 export function centro(k: number): number {
 	return (100 * k) / (N_PANTALLAS - 1);
 }
-
-/**
- * Scrub de P1 (docs/planes/2026-09-04-reescritura-index-p1-p5.md §15): % de `--hz-progreso` donde
- * termina el avance de frames (arranca en 0 %, que es donde P1 se centra). De 8 % a 14 % (donde
- * empieza la ventana de entrada de P2) queda un colchón sin código: el índice de frame se clampea
- * en el último y no se repinta.
- */
-export const P1_SCRUB_HASTA = 8;
-
-/**
- * Cantidad de frames de la secuencia de scrub. Duplicado A PROPÓSITO en
- * `prototipos/app-demo/render/scrub.mjs` — son dos lados de un límite de proceso (ese script corre
- * en Node suelto, este módulo se importa en el build de Astro) y no se pueden importar entre sí.
- * La verificación V12 del plan es la que detecta si se desincronizaron.
- */
-export const P1_SCRUB_FRAMES = 90;
 
 /**
  * Ventana de entrada "termina en el centrado" — la forma más común de animation-range de este

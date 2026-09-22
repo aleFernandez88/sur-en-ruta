@@ -2,11 +2,8 @@
 /**
  * P1QueEs.astro — P1 · ¿Qué es Sur en Ruta? (`que-es`, k=0, se centra en 0% de --hz-progreso).
  *
- * REESCRITA 2026-09-04 (addendum de scroll-scrub, docs/planes/2026-09-04-reescritura-index-p1-p5.md
- * §15). Reemplaza el diseño anterior (texto a la izquierda + panel lateral con <video> en loop):
- * ahora la escena de la app ocupa toda la pantalla, de fondo, avanzando cuadro a cuadro con el
- * scroll del usuario, con el texto encima. Copy literal de `docs/landing-contenido.md` § P1, sin
- * cambios respecto de lo implementado antes.
+ * Texto centrado sobre una escena de fondo full-bleed (`.p1-escena`, ver más abajo por qué está
+ * vacía ahora). Copy literal de `docs/landing-contenido.md` § P1.
  *
  * === Por qué esta pantalla tiene DOS mecanismos de animación, no uno ===
  * (a) ENTRADA TEMPORAL, disparada por :root.entrada — sigue siendo obligatoria: sin Hero de
@@ -16,20 +13,18 @@
  *     ya usaba Hero.astro (animación pausada bajo :root.js, puesta a correr cuando Preloader.astro
  *     agrega .entrada al abrir la cortina). **Los 4 textos + el rótulo entran TODOS acá** (ajuste
  *     2026-09-04, ver abajo) — nada del contenido de P1 depende de que el usuario scrollee.
- * (b) PERMANENCIA SCROLL-DRIVEN, tramo 0%→8% de --hz-progreso — SOLO el scrub del <canvas> (B0) y
- *     un gesto sutil secundario (el velo se afloja un poco, el bloque de texto se corre unos
- *     milímetros) avanzan con el scroll mientras P1 ya está centrada. Ninguno de los dos oculta ni
- *     revela contenido — son un plus mientras se lee, no una condición para leer. El colchón
- *     8%→14% no necesita código: el índice de frame queda clampeado en el último y no se repinta;
- *     en 14% ya empieza la ventana de entrada de P2 (cinta.ts).
+ * (b) PERMANENCIA SCROLL-DRIVEN, tramo 0%→8% de --hz-progreso — un gesto sutil (el velo se afloja
+ *     un poco, el bloque de texto se corre unos milímetros) avanza con el scroll mientras P1 ya
+ *     está centrada. No oculta ni revela contenido — es un plus mientras se lee, no una condición
+ *     para leer. El colchón 8%→14% no necesita código; en 14% ya empieza la ventana de entrada de
+ *     P2 (cinta.ts).
  *
  * **Corrección 2026-09-04 (feedback de Ale, probado en vivo):** el diseño original tenía la bajada
  * y la marca reveladas recién con scroll (`0%→8%` de --hz-progreso, "como quien lee mientras mira
  * el recorrido"). En la práctica eso violaba la regla de más peso del proyecto para esta pantalla
  * — CLAUDE.md §1: *"Sin hero de apertura — mostrar rápido para retener"* — el mensaje completo de
  * P1 no se leía hasta scrollear un par de veces. Las 4 líneas de texto entran ahora TODAS con la
- * entrada temporal, igual que el titular; el scrub del celular sigue atado al scroll (es la parte
- * que se pidió expresamente que lo esté), y el velo/corrimiento sutil (B3) sigue de fondo, sin
+ * entrada temporal, igual que el titular; el velo/corrimiento sutil (B3) sigue de fondo, sin
  * bloquear nada.
  *
  * === Por qué NO usa <Lamina> (a diferencia de P2-P5) ===
@@ -40,44 +35,21 @@
  * empieza recién en P2 (no rompe la continuidad, esa onda es una función global evaluada por
  * índice — P2 sigue enganchando con P3/P4/P5 igual).
  *
- * === El scrub: por qué <canvas> + frames y no <video currentTime> ===
- * Medido con ffprobe sobre el mp4 real: solo 2 keyframes en 300 frames (render.mjs no fija -g,
- * x264 usa su keyint por defecto de 250). Seekear eso se ve a saltos. Los 90 frames WebP en
- * public/p1-scrub/ (generados por prototipos/app-demo/render/scrub.mjs) son frame-exactos por
- * construcción. Esos frames CONGELAN el estado de public/app-demo/ — si ese mockup cambia
- * (rutas, fotos, colores), hay que volver a correr scrub.mjs.
+ * === Sobre .p1-escena (contenedor vacío, a propósito) ===
+ * Hasta el 2026-09-22 esto tenía un <canvas> con 90 cuadros WebP pintados a mano según el scroll
+ * (generados desde public/app-demo/ por una herramienta aparte) — se borró con el pivot a la
+ * Opción 3 "Demo viva" (docs/planes/2026-09-22-recomposicion-ui-vertical.md §14, Bloque B). El
+ * contenedor `.p1-escena` y su animación de entrada quedan vacíos a propósito: el
+ * Bloque E del mismo plan (paso 17) los llena con el `<Telefono modo="vivo">` real (iframe), no
+ * hace falta recrear el shell entonces.
  */
 import Pantalla from '../Pantalla.astro';
 import Icono from '../Icono.astro';
-import { P1_SCRUB_HASTA, P1_SCRUB_FRAMES } from '../../lib/cinta.ts';
-
-const base = import.meta.env.BASE_URL;
-const poster = `${base}p1-scrub/f00.webp`;
-const scrubBase = `${base}p1-scrub/`;
 ---
 
 <Pantalla id="que-es" completa>
 	<div class="p1">
-		<div class="p1-escena">
-			<img
-				class="p1-escena__poster"
-				src={poster}
-				alt="Vista conceptual de la app Sur en Ruta: mapa de puntos, fichas de servicios y rutas temáticas"
-				width="1200"
-				height="1800"
-				fetchpriority="high"
-				decoding="async"
-			/>
-			<canvas
-				class="p1-escena__lienzo"
-				width="1200"
-				height="1800"
-				aria-hidden="true"
-				data-scrub-base={scrubBase}
-				data-scrub-frames={P1_SCRUB_FRAMES}
-				data-scrub-hasta={P1_SCRUB_HASTA}
-			></canvas>
-		</div>
+		<div class="p1-escena"></div>
 
 		<div class="p1-velo"></div>
 
@@ -100,126 +72,6 @@ const scrubBase = `${base}p1-scrub/`;
 	</div>
 </Pantalla>
 
-<script>
-	// Scrub de P1: sin librerías (CLAUDE.md §3). Lee scrollTop de .hz-track (restricción 7 de
-	// cinta.ts) y dibuja el frame que corresponde en el <canvas>. Carga en 2 etapas: primero cada
-	// 6to frame (arma el scrub ya mismo con ~17% del peso), después el resto de fondo, cada uno
-	// pisando solo su propio slot.
-	(function () {
-		if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-
-		var track = document.querySelector('.hz-track');
-		var canvas = document.querySelector('.p1-escena__lienzo');
-		var escena = document.querySelector('.p1-escena');
-		if (!track || !canvas || !escena || !(canvas instanceof HTMLCanvasElement)) return;
-		var ctx = canvas.getContext('2d');
-		if (!ctx) return;
-
-		var base = canvas.dataset.scrubBase || '';
-		var frames = parseInt(canvas.dataset.scrubFrames || '0', 10);
-		var hasta = parseFloat(canvas.dataset.scrubHasta || '8') / 100;
-		if (!frames || !hasta) return;
-
-		var buffer = new Array(frames).fill(null);
-		var fino = new Array(frames).fill(false);
-		var ultimaImagen = null;
-		var pendiente = false;
-
-		function nombreFrame(i) {
-			return base + 'f' + String(i).padStart(2, '0') + '.webp';
-		}
-
-		function cargar(i) {
-			return new Promise(function (resolve, reject) {
-				var img = new Image();
-				var resuelto = false;
-				var terminar = function () {
-					if (!resuelto) {
-						resuelto = true;
-						resolve(img);
-					}
-				};
-				img.onload = function () {
-					// img.decode() puede no resolver NUNCA en algunos contextos (reproducido en
-					// pruebas: se cuelga sin error ni rechazo) — el timeout garantiza que el
-					// armado nunca queda bloqueado. La imagen ya está cargada (onload disparó),
-					// así que drawImage() funciona igual sin decode() previo, solo sin la
-					// optimización de decodificar por adelantado.
-					if (img.decode) {
-						img.decode().then(terminar, terminar);
-						setTimeout(terminar, 300);
-					} else {
-						terminar();
-					}
-				};
-				img.onerror = reject;
-				img.src = nombreFrame(i);
-			});
-		}
-
-		function pintar() {
-			pendiente = false;
-			var recorrido = track.scrollHeight - track.clientHeight;
-			var p = recorrido > 0 ? track.scrollTop / recorrido : 0;
-			var local = Math.min(1, Math.max(0, p / hasta));
-			var i = Math.round(local * (frames - 1));
-			var img = buffer[i];
-			if (!img || img === ultimaImagen) return;
-			ctx.clearRect(0, 0, canvas.width, canvas.height);
-			ctx.drawImage(img, 0, 0);
-			ultimaImagen = img;
-		}
-
-		// etapa 1: índices múltiplos de 6 — cada uno llena los 6 slots que le siguen, así los
-		// `frames` índices tienen imagen desde el primer momento (el scrub avanza de a 6 hasta
-		// que llegue la etapa 2, que los afina).
-		var gruesos = [];
-		for (var g = 0; g < frames; g += 6) gruesos.push(g);
-
-		Promise.all(gruesos.map(cargar)).then(function (imgs) {
-			gruesos.forEach(function (idx, n) {
-				for (var j = idx; j < Math.min(idx + 6, frames); j++) buffer[j] = imgs[n];
-			});
-			canvas.classList.add('p1-escena__lienzo--viva');
-			escena.classList.add('p1-escena--armado');
-			track.addEventListener('scroll', function () {
-				if (!pendiente) {
-					pendiente = true;
-					requestAnimationFrame(pintar);
-				}
-			}, { passive: true });
-			pintar();
-
-			// etapa 2: el resto, en tandas de 6, en orden — cada cuadro pisa SOLO su propio slot.
-			var finos = [];
-			for (var f = 0; f < frames; f++) {
-				if (f % 6 !== 0) finos.push(f);
-			}
-			var cursor = 0;
-			function tanda() {
-				var lote = finos.slice(cursor, cursor + 6);
-				if (!lote.length) return;
-				Promise.all(lote.map(cargar)).then(function (imgs) {
-					lote.forEach(function (idx, n) {
-						if (!fino[idx]) {
-							buffer[idx] = imgs[n];
-							fino[idx] = true;
-						}
-					});
-					cursor += 6;
-					tanda();
-				}, function () {
-					cursor += 6;
-					tanda();
-				});
-			}
-			tanda();
-		}).catch(function () {
-			// un frame de la etapa 1 no cargó (404 / red): queda el poster, nunca pantalla en blanco.
-		});
-	})();
-</script>
-
 <style>
 	/* Fondo — el MISMO degradé que ya tiene la escena del video (showcase.html #scene), no un
 	 * plano liso. Pedido de Ale (2026-09-04): con fondo plano el celular se leía como un "parche"
@@ -234,59 +86,11 @@ const scrubBase = `${base}p1-scrub/`;
 		background-color: var(--color-marino-noche);
 	}
 
-	/* === Capa 0 — la escena: poster (siempre presente) + canvas (encima, cuando arma) === */
+	/* === Capa 0 — la escena: vacía a propósito, ver "Sobre .p1-escena" en el frontmatter === */
 	.p1-escena {
 		position: absolute;
 		inset: 0;
 		z-index: 0;
-	}
-
-	.p1-escena__poster,
-	.p1-escena__lienzo {
-		position: absolute;
-		inset: 0;
-		width: 100%;
-		height: 100%;
-		/* 2:3 (1200×1800), entra entero en cualquier proporción de pantalla; el sobrante lo cubre
-		 * el background de .p1 (#050b14) — no depende de que el borde del frame calce pixel a
-		 * pixel (cinta.ts, restricción 6). */
-		object-fit: contain;
-		object-position: 78% center;
-	}
-
-	.p1-escena__lienzo {
-		opacity: 0;
-		transition: opacity 240ms ease-out;
-	}
-	.p1-escena__lienzo--viva {
-		opacity: 1;
-	}
-
-	/* El poster y el canvas tienen los DOS fondo transparente (frames con canal alfa, ver
-	 * scrub.mjs) — mientras conviven, donde el canvas está transparente (fuera de la silueta del
-	 * celular del frame ACTUAL) se ve el celular del poster por debajo, congelado en su propia
-	 * rotación (frame 0) — un "fantasma" fijo detrás del que gira de verdad. Encontrado en vivo
-	 * (2026-09-04, Ale) y corregido: apenas el canvas arma y empieza a dibujar frames reales, el
-	 * poster se apaga del todo — deja de competir por esa transparencia compartida. Antes de armar
-	 * (sin JS, reduced-motion, o mientras carga la etapa 1) el poster sigue siendo la única imagen,
-	 * como corresponde.
-	 * OJO: NO usar `.p1-escena:has(.p1-escena__lienzo--viva) .p1-escena__poster` — matchea
-	 * (confirmado con `.matches()`), pero Chrome no repinta la opacidad cuando la clase que lo
-	 * dispara se agrega por JS en un elemento DESCENDIENTE del ancla del :has() (bug/límite real de
-	 * invalidación de :has(), encontrado en vivo). El propio <script> de más abajo agrega la clase
-	 * `.p1-escena--armado` al mismo tiempo que arma el canvas — 100% confiable, sin :has(). */
-	.p1-escena__poster {
-		transition: opacity 240ms ease-out;
-	}
-	.p1-escena--armado .p1-escena__poster {
-		opacity: 0;
-	}
-
-	@media (max-width: 1100px) {
-		.p1-escena__poster,
-		.p1-escena__lienzo {
-			object-position: center 100%;
-		}
 	}
 
 	/* === Capa 1 — velo de contraste (scrim direccional, nunca parejo: taparía la escena) ===
@@ -322,8 +126,8 @@ const scrubBase = `${base}p1-scrub/`;
 	/* === Capa 2 — texto ===
 	 * Dos elementos: .p1-texto (posicionamiento/centrado, sin animación) y .p1-texto__cuerpo (la
 	 * columna real, que SÍ anima `transform` en el beat B3) — separados a propósito para que el
-	 * `translateY(-50%)` de centrado (desktop) y el `translateY(-0.9rem)` del scrub no compitan
-	 * por la misma propiedad del mismo elemento. */
+	 * `translateY(-50%)` de centrado (desktop) y el `translateY(-0.9rem)` del corrimiento por
+	 * scroll (B3) no compitan por la misma propiedad del mismo elemento. */
 	.p1-texto {
 		position: absolute;
 		z-index: 2;
