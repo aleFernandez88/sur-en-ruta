@@ -1,0 +1,334 @@
+---
+/**
+ * P2QueHace.astro — P2 · ¿Qué hace? (`que-hace`, k=1, se centra en 25% de --hz-progreso).
+ *
+ * Copy literal de `docs/landing-contenido.md` § P2 (deck `pag-08-beneficia-a-todos.png`), datos en
+ * `src/data/beneficios.ts`. Componente dueño de su propia <Pantalla>/<Lamina> (mismo criterio que
+ * P1QueEs.astro) — index.astro solo lo compone.
+ *
+ * === Ventana de entrada — tabla del plan (docs/planes/2026-09-04-reescritura-index-p1-p5.md §5) ===
+ * Centro 25%, ventana 14% → 24.5% (= `ventana(1)` de cinta.ts, N=5). Los sub-rangos de abajo
+ * (columnas / ítems / regla del cierre) son un desglose DENTRO de esa ventana, copiados literal
+ * del plan §7 · P2 — no se recalculan acá.
+ *
+ * === Animación — "las 3 columnas convergen" ===
+ * Única pantalla que mueve algo en X (P1 es clip-path centro→afuera, P3/P4/P5 no traen
+ * translateX): columna izquierda entra desde -45%, columna derecha desde +45%, columna del medio
+ * desde abajo (+28% en Y) — las tres convergen al centro, 14% → 21%. Coherente con el copy: "una
+ * red que beneficia a TODOS", tres públicos que convergen. Dentro de cada columna, los 3 ítems se
+ * descubren con UN SOLO wipe vertical por columna (no 9 sueltos), escalonado por columna
+ * (19%→22% / 19.7%→22.7% / 20.4%→23.4%). El cierre del footer subraya con una regla verde que se
+ * dibuja izquierda→derecha, 22% → 24.5%.
+ */
+import Pantalla from '../Pantalla.astro';
+import Lamina from '../Lamina.astro';
+import Icono from '../Icono.astro';
+import { beneficios } from '../../data/beneficios.ts';
+---
+
+<Pantalla id="que-hace" completa>
+	<Lamina indice={1} distribucion="columna">
+		<h2 class="p2-titular">Una red que beneficia a todos</h2>
+
+		<div class="p2-columnas">
+			{
+				beneficios.map((bloque, i) => (
+					<div class={`p2-columna p2-columna--${i}`}>
+						<span class="p2-columna-icono">
+							<Icono nombre={bloque.icono} tamano={40} acento="var(--color-verde)" />
+						</span>
+						<h3 class="p2-columna-titulo">{bloque.titulo}</h3>
+						<ul class="p2-columna-items">
+							{bloque.items.map((item) => (
+								<li>{item}</li>
+							))}
+						</ul>
+					</div>
+				))
+			}
+		</div>
+
+		<Fragment slot="footer">
+			<div class="pie-footer">
+				<div class="p2-cierre">
+					<p class="p2-cierre-texto">
+						La red transforma <strong>el paso del viajero en valor para cada lugar.</strong>
+					</p>
+					<p class="p2-firma">URUGUAY — <em>conecta · ordena · potencia</em></p>
+				</div>
+			</div>
+		</Fragment>
+	</Lamina>
+</Pantalla>
+
+<style>
+	.p2-titular {
+		margin: 0 0 var(--espacio-lg);
+		font-family: var(--fuente-display);
+		font-weight: 800;
+		font-size: clamp(2rem, 1.4rem + 3vw, 3.5rem);
+		line-height: 1.05;
+		color: var(--color-marino);
+		max-width: 20ch;
+	}
+
+	.p2-columnas {
+		display: grid;
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+		gap: clamp(1.25rem, 3vw, 2.5rem);
+		width: 100%;
+	}
+
+	@media (max-width: 900px) {
+		.p2-columnas {
+			grid-template-columns: minmax(0, 1fr);
+		}
+	}
+
+	.p2-columna {
+		display: flex;
+		flex-direction: column;
+		align-items: flex-start;
+		gap: var(--espacio-xs);
+	}
+
+	.p2-columna-icono {
+		display: grid;
+		place-items: center;
+		width: 3.2rem;
+		height: 3.2rem;
+		border-radius: 50%;
+		border: 1.5px solid var(--color-verde);
+		color: var(--color-verde);
+	}
+
+	.p2-columna-titulo {
+		margin: 0;
+		font-family: var(--fuente-texto);
+		font-weight: 700;
+		font-size: clamp(1.05rem, 0.95rem + 0.5vw, 1.3rem);
+		color: var(--color-marino);
+	}
+
+	/* Un solo wipe (clip-path) por columna, no uno por ítem — ver .p2-columna-items abajo. */
+	.p2-columna-items {
+		margin: 0;
+		padding: 0;
+		list-style: none;
+		display: flex;
+		flex-direction: column;
+		gap: var(--espacio-2xs);
+	}
+
+	.p2-columna-items li {
+		font-family: var(--fuente-texto);
+		font-size: var(--texto-base);
+		line-height: 1.4;
+		color: var(--color-tinta-suave);
+		padding-left: 1.1em;
+		position: relative;
+	}
+
+	.p2-columna-items li::before {
+		content: '';
+		position: absolute;
+		left: 0;
+		top: 0.55em;
+		width: 0.4rem;
+		height: 0.4rem;
+		border-radius: 50%;
+		background: var(--color-verde);
+	}
+
+	/* === Animación — las 3 columnas convergen (14% → 21% de --hz-progreso) ===
+	 * Restricción 1 del plan: envuelto en @supports, estado final legible fuera. */
+	@keyframes p2-columna-izq-entra {
+		from {
+			opacity: 0;
+			transform: translateX(-45%);
+		}
+		40% {
+			opacity: 1;
+		}
+		to {
+			opacity: 1;
+			transform: translateX(0);
+		}
+	}
+
+	@keyframes p2-columna-der-entra {
+		from {
+			opacity: 0;
+			transform: translateX(45%);
+		}
+		40% {
+			opacity: 1;
+		}
+		to {
+			opacity: 1;
+			transform: translateX(0);
+		}
+	}
+
+	@keyframes p2-columna-medio-entra {
+		from {
+			opacity: 0;
+			transform: translateY(28%);
+		}
+		40% {
+			opacity: 1;
+		}
+		to {
+			opacity: 1;
+			transform: translateY(0);
+		}
+	}
+
+	@supports (animation-timeline: scroll(root)) {
+		.p2-columna--0 {
+			animation: p2-columna-izq-entra linear both;
+			animation-timeline: --hz-progreso;
+			animation-range: 14% 21%;
+		}
+		.p2-columna--1 {
+			animation: p2-columna-medio-entra linear both;
+			animation-timeline: --hz-progreso;
+			animation-range: 14% 21%;
+		}
+		.p2-columna--2 {
+			animation: p2-columna-der-entra linear both;
+			animation-timeline: --hz-progreso;
+			animation-range: 14% 21%;
+		}
+
+		/* Wipe vertical, uno por columna, escalonado. */
+		.p2-columna--0 .p2-columna-items {
+			clip-path: inset(0 0 100% 0);
+			animation: p2-columna-items-wipe linear both;
+			animation-timeline: --hz-progreso;
+			animation-range: 19% 22%;
+		}
+		.p2-columna--1 .p2-columna-items {
+			clip-path: inset(0 0 100% 0);
+			animation: p2-columna-items-wipe linear both;
+			animation-timeline: --hz-progreso;
+			animation-range: 19.7% 22.7%;
+		}
+		.p2-columna--2 .p2-columna-items {
+			clip-path: inset(0 0 100% 0);
+			animation: p2-columna-items-wipe linear both;
+			animation-timeline: --hz-progreso;
+			animation-range: 20.4% 23.4%;
+		}
+	}
+
+	@keyframes p2-columna-items-wipe {
+		from {
+			clip-path: inset(0 0 100% 0);
+		}
+		to {
+			clip-path: inset(0 0 0 0);
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.p2-columna--0,
+		.p2-columna--1,
+		.p2-columna--2 {
+			animation: none !important;
+			opacity: 1;
+			transform: none;
+		}
+		.p2-columna--0 .p2-columna-items,
+		.p2-columna--1 .p2-columna-items,
+		.p2-columna--2 .p2-columna-items {
+			animation: none !important;
+			clip-path: none;
+		}
+	}
+
+	/* === Cierre de P2 — sobre la onda del footer (mismo lugar que .pie-marca/.op-cierre del
+	 * enfoque viejo: left 25% = la cresta de la onda de Lamina, ver el comentario largo en
+	 * index.astro histórico). Regla verde que se dibuja izquierda→derecha, 22% → 24.5%. */
+	.pie-footer {
+		position: relative;
+		height: 100%;
+	}
+
+	.p2-cierre {
+		position: absolute;
+		left: 25%;
+		bottom: clamp(1.5rem, 4vh, 2.5rem);
+		transform: translateX(-50%);
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: var(--espacio-2xs);
+		max-width: min(34rem, 64vw);
+		text-align: center;
+	}
+
+	.p2-cierre-texto {
+		margin: 0;
+		font-family: var(--fuente-texto);
+		font-size: clamp(1.1rem, 0.95rem + 0.55vw, 1.35rem);
+		line-height: 1.35;
+		color: var(--color-texto-sobre-foto);
+	}
+
+	.p2-cierre-texto strong {
+		color: var(--color-verde);
+		text-shadow:
+			0 0 2px var(--color-superficie),
+			0 0 2px var(--color-superficie),
+			0 0 3px var(--color-superficie);
+	}
+
+	.p2-firma {
+		position: relative;
+		margin: var(--espacio-2xs) 0 0;
+		font-family: var(--fuente-texto);
+		font-size: var(--texto-xs);
+		letter-spacing: 0.18em;
+		color: var(--color-texto-sobre-foto);
+		padding-bottom: var(--espacio-2xs);
+	}
+
+	.p2-firma::after {
+		content: '';
+		position: absolute;
+		left: 50%;
+		bottom: 0;
+		width: 2.5rem;
+		height: 2px;
+		border-radius: 999px;
+		background: var(--color-verde);
+		transform: translateX(-50%);
+		/* Wipe izquierda→derecha del propio ancho de la regla. */
+		clip-path: inset(0 100% 0 0);
+	}
+
+	@supports (animation-timeline: scroll(root)) {
+		.p2-firma::after {
+			animation: p2-regla-dibuja linear both;
+			animation-timeline: --hz-progreso;
+			animation-range: 22% 24.5%;
+		}
+	}
+
+	@keyframes p2-regla-dibuja {
+		from {
+			clip-path: inset(0 100% 0 0);
+		}
+		to {
+			clip-path: inset(0 0 0 0);
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.p2-firma::after {
+			animation: none !important;
+			clip-path: inset(0 0 0 0);
+		}
+	}
+</style>

@@ -1,65 +1,74 @@
 /**
- * rutas.ts — las 6 rutas temáticas de Sur en Ruta.
+ * rutas.ts — las 6 rutas temáticas de Sur en Ruta (P4 · ¿Dónde lo hace?).
  *
- * Nombres y descripciones verificados contra el documento de propuesta original
- * (`Activa turismo propuesta.pdf`, secc. 4.4) el 2026-08-24: condensan a una línea los dos
- * párrafos que trae el PDF por ruta, sin agregar contenido que no esté ahí.
+ * Nombres, `bajada` y orden verificados contra el deck nuevo de Ana
+ * (`docs/fuentes/deck-2026-09/pag-06-rutas.png`, "Rutas que cuentan Uruguay") — es la misma lista
+ * canónica que ya usa `prototipos/app-demo` (alineada por decisión de Ale, 2026-09-03), ver
+ * `docs/landing-contenido.md` § 3.
  *
  * `colorTrazo` apunta a los custom properties `--color-ruta-*` de src/styles/tokens.css (no hex
  * sueltos acá): cuando se revisen esos colores, se cambian en un solo archivo.
+ *
+ * `foto` queda en `null` a propósito: las 6 imágenes de `public/app-demo/rutas/` (2 generadas con
+ * IA, 4 reales sin `FUENTE.md` ni licencia registrada) están bloqueadas hasta que Ale resuelva la
+ * decisión D2 del plan (`docs/planes/2026-09-04-reescritura-index-p1-p5.md`, paso 13.2). Mientras
+ * tanto, cada tarjeta de P4 se renderiza sin foto (fondo tintado + ícono).
  */
 
 export interface RutaTematica {
-  /** Nombre de la ruta temática (ej. Vino, Oceánica, Termal). */
-  nombre: string;
-  /** Descripción de una línea. */
-  descripcion: string;
-  /**
-   * Color de trazo sobre el mapa SVG: referencia `var(--color-ruta-*)`, definida en
-   * src/styles/tokens.css. PROVISORIO hasta la identidad definitiva
-   * (docs/decisiones/identidad-visual.md, paso 13 del plan) — son 6 valores distinguibles
-   * entre sí, no una decisión de marca.
-   */
-  colorTrazo: string;
-  /** Sección del documento de propuesta de donde sale este dato. */
-  fuente: string;
+	/** Nombre de la ruta temática (ej. Ruta del Vino, Ruta Oceánica). */
+	nombre: string;
+	/** Bajada corta de spot (deck, no el párrafo largo del PDF de propuesta). */
+	bajada: string;
+	/** Color de trazo/fondo tintado: referencia `var(--color-ruta-*)`, definida en src/styles/tokens.css. */
+	colorTrazo: string;
+	/** Ícono de `Icono.astro` para esta ruta. */
+	icono: 'uva' | 'ola' | 'termal' | 'granja' | 'columnas' | 'montana';
+	/** Ruta de la foto (relativa a `public/`) — `null` mientras la decisión D2 siga bloqueada. */
+	foto: string | null;
 }
 
 export const rutas: RutaTematica[] = [
-  {
-    nombre: 'Ruta del Vino',
-    descripcion: 'Conecta bodegas, viñedos, experiencias gastronómicas, alojamientos rurales y Puntos Amigos en paisajes productivos.',
-    colorTrazo: 'var(--color-ruta-vino)',
-    fuente: 'secc. 4.4',
-  },
-  {
-    nombre: 'Ruta Oceánica',
-    descripcion: 'Integra playas, pueblos costeros, faros, puertos, marinas y gastronomía de mar a lo largo de la costa.',
-    colorTrazo: 'var(--color-ruta-oceanica)',
-    fuente: 'secc. 4.4',
-  },
-  {
-    nombre: 'Ruta Termal',
-    descripcion: 'Vincula el corredor termal con servicios, comercios y experiencias de bienestar, con potencial en temporada media y baja.',
-    colorTrazo: 'var(--color-ruta-termal)',
-    fuente: 'secc. 4.4',
-  },
-  {
-    nombre: 'Ruta Rural',
-    descripcion: 'Promueve estancias, productores locales, pueblos pequeños, ferias y gastronomía casera fuera de los circuitos masificados.',
-    colorTrazo: 'var(--color-ruta-rural)',
-    fuente: 'secc. 4.4',
-  },
-  {
-    nombre: 'Ruta Patrimonial y Cultural',
-    descripcion: 'Integra ciudades históricas, museos, arquitectura, fiestas locales y artesanos que cuentan a Uruguay desde su historia.',
-    colorTrazo: 'var(--color-ruta-patrimonial)',
-    fuente: 'secc. 4.4',
-  },
-  {
-    nombre: 'Ruta de Naturaleza y Aventura',
-    descripcion: 'Conecta sierras, lagunas, áreas protegidas, senderos y actividades náuticas para el viajero que busca experiencias al aire libre.',
-    colorTrazo: 'var(--color-ruta-naturaleza)',
-    fuente: 'secc. 4.4',
-  },
+	{
+		nombre: 'Ruta del Vino',
+		bajada: 'Bodegas, gastronomía y paisaje productivo',
+		colorTrazo: 'var(--color-ruta-vino)',
+		icono: 'uva',
+		foto: null,
+	},
+	{
+		nombre: 'Ruta Oceánica',
+		bajada: 'Costa, pueblos, mar y naturaleza',
+		colorTrazo: 'var(--color-ruta-oceanica)',
+		icono: 'ola',
+		foto: null,
+	},
+	{
+		nombre: 'Ruta Termal',
+		bajada: 'Bienestar, descanso y servicios',
+		colorTrazo: 'var(--color-ruta-termal)',
+		icono: 'termal',
+		foto: null,
+	},
+	{
+		nombre: 'Ruta Rural',
+		bajada: 'Estancias, productores y vida de campo',
+		colorTrazo: 'var(--color-ruta-rural)',
+		icono: 'granja',
+		foto: null,
+	},
+	{
+		nombre: 'Ruta Patrimonial y Cultural',
+		bajada: 'Historia, identidad y pueblos',
+		colorTrazo: 'var(--color-ruta-patrimonial)',
+		icono: 'columnas',
+		foto: null,
+	},
+	{
+		nombre: 'Ruta de Naturaleza y Aventura',
+		bajada: 'Sierras, lagunas y aire libre',
+		colorTrazo: 'var(--color-ruta-naturaleza)',
+		icono: 'montana',
+		foto: null,
+	},
 ];

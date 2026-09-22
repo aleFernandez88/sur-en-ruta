@@ -1,0 +1,592 @@
+---
+/**
+ * P1QueEs.astro — P1 · ¿Qué es Sur en Ruta? (`que-es`, k=0, se centra en 0% de --hz-progreso).
+ *
+ * REESCRITA 2026-09-04 (addendum de scroll-scrub, docs/planes/2026-09-04-reescritura-index-p1-p5.md
+ * §15). Reemplaza el diseño anterior (texto a la izquierda + panel lateral con <video> en loop):
+ * ahora la escena de la app ocupa toda la pantalla, de fondo, avanzando cuadro a cuadro con el
+ * scroll del usuario, con el texto encima. Copy literal de `docs/landing-contenido.md` § P1, sin
+ * cambios respecto de lo implementado antes.
+ *
+ * === Por qué esta pantalla tiene DOS mecanismos de animación, no uno ===
+ * (a) ENTRADA TEMPORAL, disparada por :root.entrada — sigue siendo obligatoria: sin Hero de
+ *     apertura (CLAUDE.md §1), P1 es el bloque 0 de la cinta, se centra en 0% de --hz-progreso y
+ *     está en pantalla apenas carga la página. No hay tramo de scroll de "aproximación" antes de
+ *     ese instante, así que ningún `animation-range` puede animar su entrada. Mismo mecanismo que
+ *     ya usaba Hero.astro (animación pausada bajo :root.js, puesta a correr cuando Preloader.astro
+ *     agrega .entrada al abrir la cortina). **Los 4 textos + el rótulo entran TODOS acá** (ajuste
+ *     2026-09-04, ver abajo) — nada del contenido de P1 depende de que el usuario scrollee.
+ * (b) PERMANENCIA SCROLL-DRIVEN, tramo 0%→8% de --hz-progreso — SOLO el scrub del <canvas> (B0) y
+ *     un gesto sutil secundario (el velo se afloja un poco, el bloque de texto se corre unos
+ *     milímetros) avanzan con el scroll mientras P1 ya está centrada. Ninguno de los dos oculta ni
+ *     revela contenido — son un plus mientras se lee, no una condición para leer. El colchón
+ *     8%→14% no necesita código: el índice de frame queda clampeado en el último y no se repinta;
+ *     en 14% ya empieza la ventana de entrada de P2 (cinta.ts).
+ *
+ * **Corrección 2026-09-04 (feedback de Ale, probado en vivo):** el diseño original tenía la bajada
+ * y la marca reveladas recién con scroll (`0%→8%` de --hz-progreso, "como quien lee mientras mira
+ * el recorrido"). En la práctica eso violaba la regla de más peso del proyecto para esta pantalla
+ * — CLAUDE.md §1: *"Sin hero de apertura — mostrar rápido para retener"* — el mensaje completo de
+ * P1 no se leía hasta scrollear un par de veces. Las 4 líneas de texto entran ahora TODAS con la
+ * entrada temporal, igual que el titular; el scrub del celular sigue atado al scroll (es la parte
+ * que se pidió expresamente que lo esté), y el velo/corrimiento sutil (B3) sigue de fondo, sin
+ * bloquear nada.
+ *
+ * === Por qué NO usa <Lamina> (a diferencia de P2-P5) ===
+ * Lamina es el shell de las pantallas de contenido del deck: fondo claro, padding reservado para
+ * el footer. P1 es full-bleed oscura (--color-marino-noche) de punta a punta — se posee entera
+ * (<Pantalla completa> + su propio shell), sin tocar Lamina.astro ni ninguna de las 4 pantallas que
+ * ya lo usan. Consecuencia honesta: P1 pierde la onda continua del footer; la banda navy de Lamina
+ * empieza recién en P2 (no rompe la continuidad, esa onda es una función global evaluada por
+ * índice — P2 sigue enganchando con P3/P4/P5 igual).
+ *
+ * === El scrub: por qué <canvas> + frames y no <video currentTime> ===
+ * Medido con ffprobe sobre el mp4 real: solo 2 keyframes en 300 frames (render.mjs no fija -g,
+ * x264 usa su keyint por defecto de 250). Seekear eso se ve a saltos. Los 90 frames WebP en
+ * public/p1-scrub/ (generados por prototipos/app-demo/render/scrub.mjs) son frame-exactos por
+ * construcción. Esos frames CONGELAN el estado de public/app-demo/ — si ese mockup cambia
+ * (rutas, fotos, colores), hay que volver a correr scrub.mjs.
+ */
+import Pantalla from '../Pantalla.astro';
+import Icono from '../Icono.astro';
+import { P1_SCRUB_HASTA, P1_SCRUB_FRAMES } from '../../lib/cinta.ts';
+
+const base = import.meta.env.BASE_URL;
+const poster = `${base}p1-scrub/f00.webp`;
+const scrubBase = `${base}p1-scrub/`;
+---
+
+<Pantalla id="que-es" completa>
+	<div class="p1">
+		<div class="p1-escena">
+			<img
+				class="p1-escena__poster"
+				src={poster}
+				alt="Vista conceptual de la app Sur en Ruta: mapa de puntos, fichas de servicios y rutas temáticas"
+				width="1200"
+				height="1800"
+				fetchpriority="high"
+				decoding="async"
+			/>
+			<canvas
+				class="p1-escena__lienzo"
+				width="1200"
+				height="1800"
+				aria-hidden="true"
+				data-scrub-base={scrubBase}
+				data-scrub-frames={P1_SCRUB_FRAMES}
+				data-scrub-hasta={P1_SCRUB_HASTA}
+			></canvas>
+		</div>
+
+		<div class="p1-velo"></div>
+
+		<div class="p1-texto">
+			<div class="p1-texto__cuerpo">
+				<h1 class="p1-titular">¿Qué es Sur en Ruta?</h1>
+				<p class="p1-respuesta">
+					Una forma nueva de recorrer Uruguay: <strong>por etapas, conectada, a tu ritmo.</strong>
+				</p>
+				<p class="p1-bajada">
+					La app y la red que conecta a quien viaja con los puntos, servicios y rutas del país.
+				</p>
+				<p class="p1-marca">Explorá. Conectá. Viví.</p>
+				<p class="p1-rotulo">
+					<Icono nombre="app" tamano={14} />
+					Vista conceptual de la app
+				</p>
+			</div>
+		</div>
+	</div>
+</Pantalla>
+
+<script>
+	// Scrub de P1: sin librerías (CLAUDE.md §3). Lee scrollTop de .hz-track (restricción 7 de
+	// cinta.ts) y dibuja el frame que corresponde en el <canvas>. Carga en 2 etapas: primero cada
+	// 6to frame (arma el scrub ya mismo con ~17% del peso), después el resto de fondo, cada uno
+	// pisando solo su propio slot.
+	(function () {
+		if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+		var track = document.querySelector('.hz-track');
+		var canvas = document.querySelector('.p1-escena__lienzo');
+		var escena = document.querySelector('.p1-escena');
+		if (!track || !canvas || !escena || !(canvas instanceof HTMLCanvasElement)) return;
+		var ctx = canvas.getContext('2d');
+		if (!ctx) return;
+
+		var base = canvas.dataset.scrubBase || '';
+		var frames = parseInt(canvas.dataset.scrubFrames || '0', 10);
+		var hasta = parseFloat(canvas.dataset.scrubHasta || '8') / 100;
+		if (!frames || !hasta) return;
+
+		var buffer = new Array(frames).fill(null);
+		var fino = new Array(frames).fill(false);
+		var ultimaImagen = null;
+		var pendiente = false;
+
+		function nombreFrame(i) {
+			return base + 'f' + String(i).padStart(2, '0') + '.webp';
+		}
+
+		function cargar(i) {
+			return new Promise(function (resolve, reject) {
+				var img = new Image();
+				var resuelto = false;
+				var terminar = function () {
+					if (!resuelto) {
+						resuelto = true;
+						resolve(img);
+					}
+				};
+				img.onload = function () {
+					// img.decode() puede no resolver NUNCA en algunos contextos (reproducido en
+					// pruebas: se cuelga sin error ni rechazo) — el timeout garantiza que el
+					// armado nunca queda bloqueado. La imagen ya está cargada (onload disparó),
+					// así que drawImage() funciona igual sin decode() previo, solo sin la
+					// optimización de decodificar por adelantado.
+					if (img.decode) {
+						img.decode().then(terminar, terminar);
+						setTimeout(terminar, 300);
+					} else {
+						terminar();
+					}
+				};
+				img.onerror = reject;
+				img.src = nombreFrame(i);
+			});
+		}
+
+		function pintar() {
+			pendiente = false;
+			var recorrido = track.scrollHeight - track.clientHeight;
+			var p = recorrido > 0 ? track.scrollTop / recorrido : 0;
+			var local = Math.min(1, Math.max(0, p / hasta));
+			var i = Math.round(local * (frames - 1));
+			var img = buffer[i];
+			if (!img || img === ultimaImagen) return;
+			ctx.clearRect(0, 0, canvas.width, canvas.height);
+			ctx.drawImage(img, 0, 0);
+			ultimaImagen = img;
+		}
+
+		// etapa 1: índices múltiplos de 6 — cada uno llena los 6 slots que le siguen, así los
+		// `frames` índices tienen imagen desde el primer momento (el scrub avanza de a 6 hasta
+		// que llegue la etapa 2, que los afina).
+		var gruesos = [];
+		for (var g = 0; g < frames; g += 6) gruesos.push(g);
+
+		Promise.all(gruesos.map(cargar)).then(function (imgs) {
+			gruesos.forEach(function (idx, n) {
+				for (var j = idx; j < Math.min(idx + 6, frames); j++) buffer[j] = imgs[n];
+			});
+			canvas.classList.add('p1-escena__lienzo--viva');
+			escena.classList.add('p1-escena--armado');
+			track.addEventListener('scroll', function () {
+				if (!pendiente) {
+					pendiente = true;
+					requestAnimationFrame(pintar);
+				}
+			}, { passive: true });
+			pintar();
+
+			// etapa 2: el resto, en tandas de 6, en orden — cada cuadro pisa SOLO su propio slot.
+			var finos = [];
+			for (var f = 0; f < frames; f++) {
+				if (f % 6 !== 0) finos.push(f);
+			}
+			var cursor = 0;
+			function tanda() {
+				var lote = finos.slice(cursor, cursor + 6);
+				if (!lote.length) return;
+				Promise.all(lote.map(cargar)).then(function (imgs) {
+					lote.forEach(function (idx, n) {
+						if (!fino[idx]) {
+							buffer[idx] = imgs[n];
+							fino[idx] = true;
+						}
+					});
+					cursor += 6;
+					tanda();
+				}, function () {
+					cursor += 6;
+					tanda();
+				});
+			}
+			tanda();
+		}).catch(function () {
+			// un frame de la etapa 1 no cargó (404 / red): queda el poster, nunca pantalla en blanco.
+		});
+	})();
+</script>
+
+<style>
+	/* Fondo — el MISMO degradé que ya tiene la escena del video (showcase.html #scene), no un
+	 * plano liso. Pedido de Ale (2026-09-04): con fondo plano el celular se leía como un "parche"
+	 * pegado encima; con este glow radial detrás, el letterbox de object-fit:contain queda dentro
+	 * de la misma atmósfera y el celular se lee como si flotara sobre la pantalla. */
+	.p1 {
+		position: relative;
+		width: 100%;
+		height: 100%;
+		overflow: hidden;
+		background: radial-gradient(140% 100% at 50% 38%, #163a5c 0%, #0a2036 46%, #050b14 100%);
+		background-color: var(--color-marino-noche);
+	}
+
+	/* === Capa 0 — la escena: poster (siempre presente) + canvas (encima, cuando arma) === */
+	.p1-escena {
+		position: absolute;
+		inset: 0;
+		z-index: 0;
+	}
+
+	.p1-escena__poster,
+	.p1-escena__lienzo {
+		position: absolute;
+		inset: 0;
+		width: 100%;
+		height: 100%;
+		/* 2:3 (1200×1800), entra entero en cualquier proporción de pantalla; el sobrante lo cubre
+		 * el background de .p1 (#050b14) — no depende de que el borde del frame calce pixel a
+		 * pixel (cinta.ts, restricción 6). */
+		object-fit: contain;
+		object-position: 78% center;
+	}
+
+	.p1-escena__lienzo {
+		opacity: 0;
+		transition: opacity 240ms ease-out;
+	}
+	.p1-escena__lienzo--viva {
+		opacity: 1;
+	}
+
+	/* El poster y el canvas tienen los DOS fondo transparente (frames con canal alfa, ver
+	 * scrub.mjs) — mientras conviven, donde el canvas está transparente (fuera de la silueta del
+	 * celular del frame ACTUAL) se ve el celular del poster por debajo, congelado en su propia
+	 * rotación (frame 0) — un "fantasma" fijo detrás del que gira de verdad. Encontrado en vivo
+	 * (2026-09-04, Ale) y corregido: apenas el canvas arma y empieza a dibujar frames reales, el
+	 * poster se apaga del todo — deja de competir por esa transparencia compartida. Antes de armar
+	 * (sin JS, reduced-motion, o mientras carga la etapa 1) el poster sigue siendo la única imagen,
+	 * como corresponde.
+	 * OJO: NO usar `.p1-escena:has(.p1-escena__lienzo--viva) .p1-escena__poster` — matchea
+	 * (confirmado con `.matches()`), pero Chrome no repinta la opacidad cuando la clase que lo
+	 * dispara se agrega por JS en un elemento DESCENDIENTE del ancla del :has() (bug/límite real de
+	 * invalidación de :has(), encontrado en vivo). El propio <script> de más abajo agrega la clase
+	 * `.p1-escena--armado` al mismo tiempo que arma el canvas — 100% confiable, sin :has(). */
+	.p1-escena__poster {
+		transition: opacity 240ms ease-out;
+	}
+	.p1-escena--armado .p1-escena__poster {
+		opacity: 0;
+	}
+
+	@media (max-width: 1100px) {
+		.p1-escena__poster,
+		.p1-escena__lienzo {
+			object-position: center 100%;
+		}
+	}
+
+	/* === Capa 1 — velo de contraste (scrim direccional, nunca parejo: taparía la escena) ===
+	 * Aflojado 2026-09-04 (pedido de Ale): con el fondo real de la escena (glow + viñeta, ver
+	 * .p1 arriba) el velo fuerte quedaba oscureciendo de más — la app se ve mejor casi natural.
+	 * Se deja un velo mínimo (no se saca del todo) como red de seguridad de contraste para el
+	 * texto sobre la parte más clara del degradé (#163a5c), que sigue dando 11,8:1 igual —
+	 * el velo es un plus, no una necesidad. */
+	.p1-velo {
+		position: absolute;
+		inset: 0;
+		z-index: 1;
+		pointer-events: none;
+		background: linear-gradient(
+			100deg,
+			color-mix(in srgb, var(--color-marino-noche) 38%, transparent) 0%,
+			color-mix(in srgb, var(--color-marino-noche) 22%, transparent) 34%,
+			transparent 58%
+		);
+	}
+
+	@media (max-width: 1100px) {
+		.p1-velo {
+			background: linear-gradient(
+				180deg,
+				color-mix(in srgb, var(--color-marino-noche) 42%, transparent) 0%,
+				color-mix(in srgb, var(--color-marino-noche) 24%, transparent) 36%,
+				transparent 56%
+			);
+		}
+	}
+
+	/* === Capa 2 — texto ===
+	 * Dos elementos: .p1-texto (posicionamiento/centrado, sin animación) y .p1-texto__cuerpo (la
+	 * columna real, que SÍ anima `transform` en el beat B3) — separados a propósito para que el
+	 * `translateY(-50%)` de centrado (desktop) y el `translateY(-0.9rem)` del scrub no compitan
+	 * por la misma propiedad del mismo elemento. */
+	.p1-texto {
+		position: absolute;
+		z-index: 2;
+		left: calc(var(--ancho-hilo-ruta) + clamp(2rem, 6vw, 7rem));
+		top: 50%;
+		transform: translateY(-50%);
+	}
+
+	.p1-texto__cuerpo {
+		display: flex;
+		flex-direction: column;
+		gap: var(--espacio-sm);
+		max-width: 34rem;
+		text-shadow: 0 1px 16px color-mix(in srgb, var(--color-marino-noche) 70%, transparent);
+	}
+
+	@media (max-width: 1100px) {
+		.p1-texto {
+			left: clamp(1.5rem, 6vw, 3rem);
+			right: clamp(1.5rem, 6vw, 3rem);
+			top: clamp(2rem, 6vh, 4rem);
+			transform: none;
+			text-align: center;
+		}
+		.p1-texto__cuerpo {
+			align-items: center;
+			max-width: none;
+		}
+	}
+
+	.p1-titular {
+		margin: 0;
+		font-family: var(--fuente-display);
+		font-weight: 800;
+		font-size: clamp(2.25rem, 1.5rem + 3vw, 4rem);
+		line-height: 1.02;
+		color: var(--color-texto-sobre-foto);
+	}
+
+	.p1-respuesta {
+		margin: 0;
+		font-family: var(--fuente-display);
+		font-weight: 500;
+		font-size: clamp(1.35rem, 1.1rem + 1vw, 1.85rem);
+		line-height: 1.3;
+		color: color-mix(in srgb, var(--color-texto-sobre-foto) 92%, transparent);
+	}
+
+	.p1-respuesta strong {
+		font-weight: 700;
+		/* --color-verde (#356a2c) da 2,9:1 sobre #050b14 y falla AA — --color-verde-vivo existe
+		 * en tokens.css exactamente para "acentos sobre fondo oscuro" (da 6,4:1). */
+		color: var(--color-verde-vivo);
+	}
+
+	.p1-bajada {
+		margin: var(--espacio-xs) 0 0;
+		font-family: var(--fuente-texto);
+		font-weight: 400;
+		font-size: var(--texto-lg);
+		line-height: 1.45;
+		max-width: 32ch;
+		color: color-mix(in srgb, var(--color-texto-sobre-foto) 80%, transparent);
+	}
+
+	@media (max-width: 1100px) {
+		.p1-bajada {
+			max-width: none;
+		}
+	}
+
+	.p1-marca {
+		margin: var(--espacio-xs) 0 0;
+		font-family: var(--fuente-display);
+		font-weight: 800;
+		font-size: var(--texto-sm);
+		letter-spacing: 0.14em;
+		text-transform: uppercase;
+		color: var(--color-celeste);
+	}
+
+	.p1-rotulo {
+		margin: var(--espacio-sm) 0 0;
+		display: flex;
+		align-items: center;
+		gap: var(--espacio-2xs);
+		font-family: var(--fuente-texto);
+		font-size: var(--texto-xs);
+		letter-spacing: 0.02em;
+		color: color-mix(in srgb, var(--color-texto-sobre-foto) 70%, transparent);
+	}
+
+	/* ============================================================================
+	 * (a) Entrada TEMPORAL, disparada por :root.entrada — mismo mecanismo que Hero.astro usaba.
+	 * ============================================================================ */
+
+	@keyframes p1-escena-enciende {
+		from {
+			opacity: 0;
+			transform: scale(1.06);
+		}
+		to {
+			opacity: 1;
+			transform: scale(1);
+		}
+	}
+	:global(:root.js) .p1-escena {
+		opacity: 0;
+		transform: scale(1.06);
+		animation: p1-escena-enciende 1100ms cubic-bezier(0.2, 0.7, 0.2, 1) both paused;
+	}
+	:global(:root.entrada) .p1-escena {
+		animation-play-state: running;
+	}
+
+	/* Titular: wipe de clip-path DEL CENTRO HACIA AFUERA — exclusivo de P1 (P4 hace wipe
+	 * horizontal, P2 no anima clip-path en el texto). */
+	@keyframes p1-texto-centro {
+		from {
+			clip-path: inset(0 50% 0 50%);
+		}
+		to {
+			clip-path: inset(0 0 0 0);
+		}
+	}
+	:global(:root.js) .p1-titular {
+		clip-path: inset(0 50% 0 50%);
+		animation: p1-texto-centro 720ms cubic-bezier(0.2, 0.7, 0.2, 1) 120ms both paused;
+	}
+	:global(:root.entrada) .p1-titular {
+		animation-play-state: running;
+	}
+
+	@keyframes p1-texto-sube {
+		from {
+			opacity: 0;
+			transform: translateY(0.9rem);
+		}
+		to {
+			opacity: 1;
+			transform: translateY(0);
+		}
+	}
+	:global(:root.js) .p1-respuesta {
+		opacity: 0;
+		transform: translateY(0.9rem);
+		animation: p1-texto-sube 620ms cubic-bezier(0.2, 0.7, 0.2, 1) 300ms both paused;
+	}
+	:global(:root.entrada) .p1-respuesta {
+		animation-play-state: running;
+	}
+
+	/* Bajada y marca — sumadas acá el 2026-09-04 (antes esperaban al scroll, ver el comentario
+	 * grande del frontmatter). Mismo keyframe que la respuesta, delays siguientes en la secuencia. */
+	:global(:root.js) .p1-bajada,
+	:global(:root.js) .p1-marca {
+		opacity: 0;
+		transform: translateY(0.9rem);
+	}
+	:global(:root.js) .p1-bajada {
+		animation: p1-texto-sube 620ms cubic-bezier(0.2, 0.7, 0.2, 1) 460ms both paused;
+	}
+	:global(:root.js) .p1-marca {
+		animation: p1-texto-sube 620ms cubic-bezier(0.2, 0.7, 0.2, 1) 610ms both paused;
+	}
+	:global(:root.entrada) .p1-bajada,
+	:global(:root.entrada) .p1-marca {
+		animation-play-state: running;
+	}
+
+	@keyframes p1-rotulo-entra {
+		from {
+			opacity: 0;
+		}
+		to {
+			opacity: 1;
+		}
+	}
+	:global(:root.js) .p1-rotulo {
+		opacity: 0;
+		animation: p1-rotulo-entra 500ms cubic-bezier(0.2, 0.7, 0.2, 1) 760ms both paused;
+	}
+	:global(:root.entrada) .p1-rotulo {
+		animation-play-state: running;
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		:global(:root.js) .p1-escena {
+			animation: none !important;
+			opacity: 1;
+			transform: none;
+		}
+		:global(:root.js) .p1-titular {
+			animation: none !important;
+			clip-path: none;
+		}
+		:global(:root.js) .p1-respuesta,
+		:global(:root.js) .p1-bajada,
+		:global(:root.js) .p1-marca,
+		:global(:root.js) .p1-rotulo {
+			animation: none !important;
+			opacity: 1;
+			transform: none;
+		}
+	}
+
+	/* ============================================================================
+	 * (b) Permanencia SCROLL-DRIVEN, tramo 0%→8% de --hz-progreso. Nada de esto es una entrada:
+	 * ocurre con P1 ya centrada, mientras el usuario la lee (excepción declarada en cinta.ts §5).
+	 * El canvas (B0) lo maneja el <script> de arriba, no CSS. Bajada y marca YA NO están acá — se
+	 * movieron a la entrada temporal (2026-09-04, ver el comentario grande del frontmatter): solo
+	 * queda el gesto sutil (velo + corrimiento), que nunca oculta contenido.
+	 *
+	 * Default FUERA de @supports = estado FINAL/visible (restricción 1 de cinta.ts): sin
+	 * animation-timeline (Firefox estable) o sin JS, el velo se ve en su estado de reposo.
+	 * ============================================================================ */
+
+	.p1-velo {
+		opacity: 1;
+	}
+
+	@supports (animation-timeline: scroll(root)) {
+		/* El velo se afloja (nunca desaparece del todo) — la app pasa a primer plano sin perder
+		 * el piso de contraste. */
+		@keyframes p1-velo-afloja {
+			from {
+				opacity: 1;
+			}
+			to {
+				opacity: 0.7;
+			}
+		}
+		.p1-velo {
+			animation: p1-velo-afloja linear both;
+			animation-timeline: --hz-progreso;
+			animation-range: 5.40% 8.00%;
+		}
+
+		/* El texto "se corre" un poco — nunca desvanece: si el usuario frena a mitad del tramo,
+		 * el mensaje central de P1 sigue legible completo (se descartó bajar su opacidad). */
+		@keyframes p1-texto-corre {
+			from {
+				transform: translateY(0);
+			}
+			to {
+				transform: translateY(-0.9rem);
+			}
+		}
+		.p1-texto__cuerpo {
+			animation: p1-texto-corre linear both;
+			animation-timeline: --hz-progreso;
+			animation-range: 5.40% 8.00%;
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.p1-velo {
+			animation: none !important;
+			opacity: 1;
+		}
+		.p1-texto__cuerpo {
+			animation: none !important;
+			transform: none;
+		}
+	}
+</style>

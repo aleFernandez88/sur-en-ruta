@@ -1,0 +1,191 @@
+---
+/**
+ * P5Cierre.astro — P5 · Cierre / CTA (`cierre`, k=4, se centra en 100% de --hz-progreso — el fin
+ * del scroll).
+ *
+ * === Contenido: PROVISORIO — bloqueado por Ale (decisión D1 del plan) ===
+ * `docs/landing-contenido.md` § P5 solo fija el titular *"Sur en Ruta está en camino."* y deja el
+ * sub/acción como `[a definir]`. La app no existe, así que el CTA no puede decir "descargala"
+ * (regla explícita del documento). Hasta que Ale defina el CTA (D1), va SOLO el titular, sin
+ * bloque de acción — es el criterio por defecto que el propio plan fija si no hay respuesta
+ * (docs/planes/2026-09-04-reescritura-index-p1-p5.md §9, D1). `SlidePlaceholder.astro` sigue vivo
+ * hasta que el paso 15 del plan cierre esta pantalla con el CTA real y lo borre.
+ *
+ * === Animación — "el hilo llega y el cierre se enciende" ===
+ * Única pantalla con gesto de ZOOM-OUT (todas las demás entran desde afuera): el bloque de
+ * contenido entero arranca en scale(1.1) y se asienta en scale(1), 89%→97% — sensación de
+ * "llegar". El titular se "enciende" con un barrido de color (gradient-text animado en
+ * background-position, 91%→98%) — única pantalla que anima color/gradiente de texto; fallback
+ * obligatorio fuera de @supports y en prefers-reduced-motion: color sólido, sin background-clip.
+ * El isotipo hace el "choque" que ya usaba la vieja Pantalla 1 (`@keyframes …-choca`) en
+ * 96%→99.5%, cerrando el círculo visual con P1 (memoria `feedback_animacion_por_pantalla`).
+ */
+import Pantalla from '../Pantalla.astro';
+import Lamina from '../Lamina.astro';
+import logoUrl from '../../assets/logo/isotipo-original.svg?url';
+import { tramo } from '../../lib/cinta.ts';
+
+// Restricción 4 del plan: `animation-range` nunca con var() — va inline, literal, calculado acá.
+const RANGO_CONTENIDO = tramo(89, 97);
+const RANGO_TITULAR = tramo(91, 98);
+const RANGO_ISOTIPO = tramo(96, 99.5);
+---
+
+<Pantalla id="cierre" completa>
+	<Lamina indice={4}>
+		<div class="p5-contenido" style={`animation-range: ${RANGO_CONTENIDO}`}>
+			<img
+				class="p5-isotipo"
+				src={logoUrl}
+				alt=""
+				width="96"
+				height="88"
+				style={`animation-range: ${RANGO_ISOTIPO}`}
+			/>
+			<h2 class="p5-titular" style={`animation-range: ${RANGO_TITULAR}`}>
+				Sur en Ruta está en camino.
+			</h2>
+			<!--
+				TODO: CTA — bloqueado, ver docs/planes/2026-09-04-reescritura-index-p1-p5.md (decisión
+				D1). Con el CTA definido por Ale, completar este bloque de acción y borrar
+				src/components/SlidePlaceholder.astro (paso 15 del plan — su último consumidor real
+				desapareció en el paso 10, pero se conserva hasta que P5 quede cerrada de verdad).
+			-->
+		</div>
+	</Lamina>
+</Pantalla>
+
+<style>
+	.p5-contenido {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: var(--espacio-md);
+		text-align: center;
+	}
+
+	.p5-isotipo {
+		width: clamp(4.5rem, 4vw + 3.5rem, 7rem);
+		height: auto;
+	}
+
+	.p5-titular {
+		margin: 0;
+		font-family: var(--fuente-display);
+		font-weight: 800;
+		font-size: clamp(2.25rem, 1.6rem + 3.2vw, 4.25rem);
+		line-height: 1.05;
+		max-width: 22ch;
+		/* Estado final / fallback (sin scroll-driven, o prefers-reduced-motion): color sólido, sin
+		 * background-clip — restricción 1 del plan. */
+		color: var(--color-marino);
+	}
+
+	/* === "El bloque llega" — único zoom-out de toda la cinta === */
+	@keyframes p5-contenido-asienta {
+		from {
+			transform: scale(1.1);
+		}
+		to {
+			transform: scale(1);
+		}
+	}
+
+	@supports (animation-timeline: scroll(root)) {
+		.p5-contenido {
+			transform: scale(1.1);
+			animation: p5-contenido-asienta linear both;
+			animation-timeline: --hz-progreso;
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.p5-contenido {
+			animation: none !important;
+			transform: none;
+		}
+	}
+
+	/* === "El titular se enciende" — barrido de color, único gradient-text del sitio === */
+	@keyframes p5-titular-enciende {
+		from {
+			background-position: 140% 0;
+		}
+		to {
+			background-position: 0% 0;
+		}
+	}
+
+	@supports (animation-timeline: scroll(root)) {
+		.p5-titular {
+			background-image: linear-gradient(
+				100deg,
+				var(--color-marino) 0%,
+				var(--color-marino) 35%,
+				var(--color-verde) 50%,
+				var(--color-marino) 65%,
+				var(--color-marino) 100%
+			);
+			background-size: 260% 100%;
+			background-position: 140% 0;
+			-webkit-background-clip: text;
+			background-clip: text;
+			color: transparent;
+			animation: p5-titular-enciende linear both;
+			animation-timeline: --hz-progreso;
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.p5-titular {
+			animation: none !important;
+			background-image: none;
+			-webkit-background-clip: unset;
+			background-clip: unset;
+			color: var(--color-marino);
+		}
+	}
+
+	/* === El isotipo "choca" — mismo gesto que ya aprobó Ale en la vieja Pantalla 1 (pie-marca) ===
+	 * Cierra el círculo visual con P1: es el mismo @keyframes conceptual, calcado a mano acá porque
+	 * P1QueEs.astro ya no tiene footer de marca (ver su comentario) — este es su único consumidor
+	 * hoy, vive scopeado a este componente. */
+	@keyframes p5-isotipo-choca {
+		0% {
+			transform: translateY(125%);
+		}
+		48% {
+			transform: translateY(0%);
+		}
+		58% {
+			transform: translateY(-20%) scaleY(1.12);
+		}
+		72% {
+			transform: translateY(7%) scaleY(0.84);
+		}
+		84% {
+			transform: translateY(-6%) scaleY(1.06);
+		}
+		93% {
+			transform: translateY(2%) scaleY(0.98);
+		}
+		100% {
+			transform: translateY(0%) scaleY(1);
+		}
+	}
+
+	@supports (animation-timeline: scroll(root)) {
+		.p5-isotipo {
+			transform-origin: bottom center;
+			animation: p5-isotipo-choca linear both;
+			animation-timeline: --hz-progreso;
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.p5-isotipo {
+			animation: none !important;
+			transform: none;
+		}
+	}
+</style>

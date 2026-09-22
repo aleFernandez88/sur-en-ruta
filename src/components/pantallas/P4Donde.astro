@@ -1,0 +1,236 @@
+---
+/**
+ * P4Donde.astro — P4 · ¿Dónde lo hace? (`donde`, k=3, se centra en 75% de --hz-progreso).
+ *
+ * Copy literal de `docs/landing-contenido.md` § P4 (deck `pag-06-rutas.png`, "Rutas que cuentan
+ * Uruguay"). Datos: `src/data/rutas.ts`.
+ *
+ * === Fotos — BLOQUEADAS (plan, paso 13.2 / decisión D2) ===
+ * Las 6 imágenes de `public/app-demo/rutas/` no se cablean acá: 2 son generadas con IA
+ * (Pollinations) y las otras 4 son fotos reales sin `FUENTE.md` ni licencia registrada — publicar
+ * eso en una pantalla que dice "rutas que CUENTAN Uruguay" es la decisión D2, todavía sin resolver
+ * con Ale. Mientras tanto (`rutas.ts`, `foto: null`), cada tarjeta se renderiza SIN foto: fondo
+ * tintado con `color-mix()` sobre `--color-ruta-*` + el ícono grande — presentable y no obliga a
+ * rehacer el layout después (basta con reemplazar el bloque de fondo por un <img> cuando D2 se
+ * resuelva).
+ *
+ * === Animación — "las 6 rutas se van trazando" ===
+ * Wipe horizontal por tarjeta (izquierda→derecha, como un trazo de ruta avanzando) + scale(0.97)→1,
+ * escalonadas cada 1,3 puntos, 3 puntos de duración: 64%→67%, 65.3%→68.3%, 66.6%→69.6%,
+ * 67.9%→70.9%, 69.2%→72.2%, 70.5%→73.5% (= `escalonado(64, i, 1.3, 3)`). El titular hace
+ * *tracking-in* (letter-spacing 0.16em→0.01em, 64%→68%) — única propiedad no-transform animada en
+ * todo el plan, mitigado con `white-space: nowrap` + ancho fijo para que no empuje layout.
+ * Ninguna otra pantalla anima algo tipográfico ni hace wipe horizontal por tarjeta (P1 es
+ * centro→afuera, P2 es vertical por columna) — memoria `feedback_animacion_por_pantalla`.
+ *
+ * La cuña diagonal es la MISMA recta continua que P3ComoLoHace.astro (mismos 4 anclajes).
+ */
+import Pantalla from '../Pantalla.astro';
+import Lamina from '../Lamina.astro';
+import Icono from '../Icono.astro';
+import { rutas } from '../../data/rutas.ts';
+import { escalonado } from '../../lib/cinta.ts';
+---
+
+<Pantalla id="donde" completa>
+	<Lamina
+		indice={3}
+		distribucion="columna"
+		fondoDiagonal
+		diagDesdeIndice={2}
+		diagDesdeValor={95}
+		diagHastaIndice={4}
+		diagHastaValor={5}
+	>
+		<div class="p4-cabecera">
+			<h2 class="p4-titular">Rutas que cuentan Uruguay</h2>
+			<p class="p4-bajada">Experiencias temáticas para descubrir el país a otro ritmo.</p>
+		</div>
+
+		<div class="p4-rutas">
+			{
+				rutas.map((r, i) => (
+					<div class="p4-ruta" style={`animation-range: ${escalonado(64, i, 1.3, 3)}`}>
+						<div
+							class="p4-ruta-visual"
+							style={`background: color-mix(in srgb, ${r.colorTrazo} 22%, var(--color-fondo))`}
+						>
+							<Icono nombre={r.icono} tamano={48} acento={r.colorTrazo} />
+						</div>
+						<p class="p4-ruta-nombre">{r.nombre}</p>
+						<p class="p4-ruta-bajada">{r.bajada}</p>
+					</div>
+				))
+			}
+		</div>
+
+		<Fragment slot="footer">
+			<div class="pie-footer">
+				<div class="p4-cierre">
+					<p class="p4-cierre-texto">
+						Cada ruta conecta <strong>puntos, servicios, paisajes y experiencias.</strong>
+					</p>
+				</div>
+			</div>
+		</Fragment>
+	</Lamina>
+</Pantalla>
+
+<style>
+	.p4-cabecera {
+		margin-bottom: var(--espacio-lg);
+		width: 100%;
+		/* Ancho fijo + nowrap: mitigación obligatoria del plan — el tracking-in no puede empujar
+		 * layout (única propiedad no-transform animada de todo el plan). */
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		text-align: center;
+	}
+
+	.p4-titular {
+		margin: 0 0 var(--espacio-xs);
+		font-family: var(--fuente-display);
+		font-weight: 800;
+		font-size: clamp(2rem, 1.4rem + 3vw, 3.25rem);
+		line-height: 1.05;
+		color: var(--color-marino);
+		white-space: nowrap;
+		letter-spacing: 0.01em;
+	}
+
+	.p4-bajada {
+		margin: 0;
+		font-family: var(--fuente-texto);
+		font-size: var(--texto-base);
+		color: var(--color-tinta-suave);
+	}
+
+	@keyframes p4-titular-tracking {
+		from {
+			letter-spacing: 0.16em;
+		}
+		to {
+			letter-spacing: 0.01em;
+		}
+	}
+
+	@supports (animation-timeline: scroll(root)) {
+		.p4-titular {
+			letter-spacing: 0.16em;
+			animation: p4-titular-tracking linear both;
+			animation-timeline: --hz-progreso;
+			animation-range: 64% 68%;
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.p4-titular {
+			animation: none !important;
+			letter-spacing: 0.01em;
+		}
+	}
+
+	.p4-rutas {
+		display: grid;
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+		gap: clamp(0.75rem, 1.8vw, 1.5rem);
+		width: 100%;
+	}
+
+	@media (max-width: 1100px) {
+		.p4-rutas {
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+		}
+	}
+
+	.p4-ruta {
+		display: flex;
+		flex-direction: column;
+		gap: var(--espacio-2xs);
+		overflow: hidden;
+		border-radius: var(--radio-md);
+	}
+
+	.p4-ruta-visual {
+		display: grid;
+		place-items: center;
+		aspect-ratio: 16 / 10;
+		border-radius: var(--radio-md);
+	}
+
+	.p4-ruta-nombre {
+		margin: var(--espacio-2xs) 0 0;
+		font-family: var(--fuente-texto);
+		font-weight: 700;
+		font-size: clamp(0.95rem, 0.88rem + 0.35vw, 1.1rem);
+		color: var(--color-marino);
+	}
+
+	.p4-ruta-bajada {
+		margin: 0;
+		font-family: var(--fuente-texto);
+		font-size: clamp(0.78rem, 0.74rem + 0.2vw, 0.88rem);
+		line-height: 1.3;
+		color: var(--color-tinta-suave);
+	}
+
+	/* === Animación — wipe horizontal por tarjeta (izq→der, como un trazo de ruta) === */
+	@keyframes p4-ruta-traza {
+		from {
+			clip-path: inset(0 100% 0 0);
+			transform: scale(0.97);
+		}
+		to {
+			clip-path: inset(0 0 0 0);
+			transform: scale(1);
+		}
+	}
+
+	@supports (animation-timeline: scroll(root)) {
+		.p4-ruta {
+			clip-path: inset(0 100% 0 0);
+			transform: scale(0.97);
+			animation: p4-ruta-traza linear both;
+			animation-timeline: --hz-progreso;
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.p4-ruta {
+			animation: none !important;
+			clip-path: inset(0 0 0 0);
+			transform: none;
+		}
+	}
+
+	.pie-footer {
+		position: relative;
+		height: 100%;
+	}
+
+	.p4-cierre {
+		position: absolute;
+		left: 25%;
+		bottom: clamp(1.5rem, 4vh, 2.5rem);
+		transform: translateX(-50%);
+		max-width: min(30rem, 60vw);
+		text-align: center;
+	}
+
+	.p4-cierre-texto {
+		margin: 0;
+		font-family: var(--fuente-texto);
+		font-size: clamp(1.05rem, 0.9rem + 0.5vw, 1.25rem);
+		line-height: 1.35;
+		color: var(--color-texto-sobre-foto);
+	}
+
+	.p4-cierre-texto strong {
+		color: var(--color-verde);
+		text-shadow:
+			0 0 2px var(--color-superficie),
+			0 0 2px var(--color-superficie),
+			0 0 3px var(--color-superficie);
+	}
+</style>

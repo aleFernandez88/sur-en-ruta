@@ -1,0 +1,451 @@
+---
+/**
+ * P3ComoLoHace.astro — P3 · ¿Cómo lo hace? (`como-lo-hace`, k=2, se centra en 50% de --hz-progreso).
+ *
+ * Dos bloques en la misma pantalla, dos beats dentro de la misma ventana — copy literal de
+ * `docs/landing-contenido.md` § P3 (deck `pag-07-herramientas.png` + `pag-04-como-funciona.png`).
+ *
+ * === Bloque A — 4 herramientas ===
+ * Datos: `src/data/herramientas.ts`. Animación "4 paneles que se despliegan": `perspective` en el
+ * contenedor, cada tarjeta gira en X desde -78° (transform-origin: top center) + opacity 0→1,
+ * escalonadas cada 1,1 puntos, 2,4 puntos de duración cada una — números literales del plan §7·P3:
+ * 39%→41.4%, 40.1%→42.5%, 41.2%→43.6%, 42.3%→44.7% (= `escalonado(39, i, 1.1, 2.4)`).
+ * **Mitigación de densidad obligatoria (plan §7·P3):** tira HORIZONTAL compacta (ícono a la
+ * izquierda del texto, no tarjetas cuadradas) y el cierre del bloque A NO se renderiza — su idea ya
+ * está en el titular.
+ *
+ * === Bloque B — 5 pasos ===
+ * Datos: `src/data/pasos.ts`. Traslada el patrón YA APROBADO de la vieja Pantalla 4 (ruta ondulada
+ * que se dibuja + nodos numerados que hacen pop + tarjetas que suben) — mismo mecanismo, mismo
+ * copy, nueva ventana (más corta: la B ya no es la pantalla entera).
+ * Ruta: 43.5%→49.5%. Nodo k: `escalonado(43.5, k, 1.0, 1.6)`. Tarjeta k:
+ * `escalonado(44.0, k, 1.0, 1.5)`. El cierre del bloque B va en el `slot="footer"`.
+ * **Recalibrado 2026-09-04** (verificado en vivo, scroll real hasta el 50% exacto): con los
+ * valores originales del plan (`paso 1.1`, tarjeta `escalonado(44.3, k, 1.1, 2.4)`), la 5ª tarjeta
+ * (k=4) terminaba en 51,1% — DESPUÉS del centrado de P3 (50%). Se veía a mitad de camino (opacity
+ * intermedia) al llegar. Viola la regla de `cinta.ts` §5 ("la secuencia tiene que terminar en el
+ * instante de centrado, no después"). Con los valores nuevos, nodo k=4 termina en 49,1% y tarjeta
+ * k=4 en 49,5% — la misma ventana que la ruta, todo asentado antes del centrado.
+ *
+ * No se repite el gesto entre A (rotación en X, despliegue) y B (pop + subida sobre línea que se
+ * dibuja) — memoria `feedback_animacion_por_pantalla`.
+ *
+ * La cuña diagonal (`fondoDiagonal`) es la MISMA recta continua que P4Donde.astro (mismos 4
+ * anclajes `diagDesde*`/`diagHasta*`) — no cambiar un lado sin cambiar el otro, ver el comentario
+ * largo en Lamina.astro.
+ */
+import Pantalla from '../Pantalla.astro';
+import Lamina from '../Lamina.astro';
+import Icono from '../Icono.astro';
+import { herramientas } from '../../data/herramientas.ts';
+import { pasos } from '../../data/pasos.ts';
+import { escalonado, tramo } from '../../lib/cinta.ts';
+
+// Línea ondulada de la ruta de los 5 pasos — misma fórmula que ya usaba la vieja Pantalla 4
+// (index.astro histórico, líneas 310-322): un seno cuyo semiperíodo coincide con la separación
+// entre nodos cruza la línea de base exacto en cada nodo.
+const RUTA_Y = 15;
+const RUTA_AMP = 7;
+const RUTA_SEPARACION = 100 / pasos.length;
+const RUTA_X0 = RUTA_SEPARACION / 2;
+const rutaY = (x: number): number =>
+	RUTA_Y + RUTA_AMP * Math.sin((2 * Math.PI * (x - RUTA_X0)) / (2 * RUTA_SEPARACION));
+let dRuta = `M 2 ${rutaY(2).toFixed(2)}`;
+for (let i = 1; i <= 60; i++) {
+	const x = 2 + (96 * i) / 60;
+	dRuta += ` L ${x.toFixed(2)} ${rutaY(x).toFixed(2)}`;
+}
+---
+
+<Pantalla id="como-lo-hace" completa>
+	<Lamina
+		indice={2}
+		distribucion="columna"
+		fondoDiagonal
+		diagDesdeIndice={2}
+		diagDesdeValor={95}
+		diagHastaIndice={4}
+		diagHastaValor={5}
+	>
+		<!-- Bloque A — 4 herramientas -->
+		<div class="p3-bloque-a">
+			<h2 class="p3-titular">Herramientas que conectan la experiencia</h2>
+			<p class="p3-idea">Con herramientas que trabajan juntas.</p>
+			<div class="p3-herramientas">
+				{
+					herramientas.map((h, i) => (
+						<div class="p3-herramienta" style={`animation-range: ${escalonado(39, i, 1.1, 2.4)}`}>
+							<span class="p3-herramienta-icono">
+								<Icono nombre={h.icono} tamano={30} acento="var(--color-verde)" />
+							</span>
+							<div class="p3-herramienta-texto">
+								<p class="p3-herramienta-nombre">{h.nombre}</p>
+								<p class="p3-herramienta-que">{h.que}</p>
+							</div>
+						</div>
+					))
+				}
+			</div>
+		</div>
+
+		<!-- Bloque B — 5 pasos -->
+		<div class="p3-bloque-b">
+			<p class="p3-subtitulo">Una experiencia simple, organizada y conectada.</p>
+			<div class="p3-pasos">
+				<svg
+					class="p3-pasos-ruta"
+					viewBox="0 0 100 28"
+					preserveAspectRatio="none"
+					aria-hidden="true"
+					style={`animation-range: ${tramo(43.5, 49.5)}`}
+				>
+					<path d={dRuta} />
+				</svg>
+				{
+					pasos.map((_, k) => (
+						<span
+							class="p3-pasos-nodo"
+							style={`left: ${RUTA_X0 + k * RUTA_SEPARACION}%; animation-range: ${escalonado(43.5, k, 1.0, 1.6)}`}
+						>
+							{String(k + 1).padStart(2, '0')}
+						</span>
+					))
+				}
+				{
+					pasos.map((p, k) => (
+						<div class="p3-pasos-card" style={`animation-range: ${escalonado(44.0, k, 1.0, 1.5)}`}>
+							<span class="p3-pasos-card-icono">
+								<Icono nombre={p.icono} tamano={38} acento="var(--color-verde)" />
+							</span>
+							<h3 class="p3-pasos-card-titulo">{p.titulo}</h3>
+							<p class="p3-pasos-card-frase">{p.frase}</p>
+						</div>
+					))
+				}
+			</div>
+		</div>
+
+		<Fragment slot="footer">
+			<div class="pie-footer">
+				<div class="p3-cierre">
+					<p class="p3-cierre-texto">
+						Una red que <strong>organiza el viaje</strong> y <strong>potencia los destinos</strong>.
+					</p>
+				</div>
+			</div>
+		</Fragment>
+	</Lamina>
+</Pantalla>
+
+<style>
+	.p3-titular {
+		margin: 0 0 var(--espacio-2xs);
+		font-family: var(--fuente-display);
+		font-weight: 800;
+		font-size: clamp(1.65rem, 1.25rem + 1.8vw, 2.5rem);
+		line-height: 1.05;
+		color: var(--color-marino);
+		max-width: 26ch;
+	}
+
+	.p3-idea {
+		margin: 0 0 var(--espacio-sm);
+		font-family: var(--fuente-texto);
+		font-weight: 600;
+		font-size: var(--texto-base);
+		color: var(--color-verde);
+	}
+
+	/* === Bloque A — tira horizontal compacta (mitigación de densidad, plan §7·P3) ===
+	 * NO son tarjetas cuadradas tipo .op-chip: ícono a la izquierda del texto, bajas. */
+	.p3-herramientas {
+		display: grid;
+		grid-template-columns: repeat(4, minmax(0, 1fr));
+		gap: clamp(0.6rem, 1.4vw, 1rem);
+		width: 100%;
+		perspective: 900px;
+	}
+
+	@media (max-width: 900px) {
+		.p3-herramientas {
+			grid-template-columns: minmax(0, 1fr);
+		}
+	}
+
+	.p3-herramienta {
+		display: flex;
+		align-items: center;
+		gap: var(--espacio-xs);
+		padding: clamp(0.55rem, 1.4vh, 0.85rem) clamp(0.7rem, 1.6vw, 1.1rem);
+		background: var(--color-superficie);
+		border-radius: var(--radio-md);
+		box-shadow: 0 10px 22px -14px rgba(15, 43, 77, 0.28);
+		transform-origin: top center;
+	}
+
+	.p3-herramienta-icono {
+		flex-shrink: 0;
+		display: grid;
+		place-items: center;
+		width: 2.6rem;
+		height: 2.6rem;
+		border-radius: 50%;
+		background: color-mix(in srgb, var(--color-verde) 12%, var(--color-superficie));
+		color: var(--color-marino);
+	}
+
+	.p3-herramienta-nombre {
+		margin: 0;
+		font-family: var(--fuente-texto);
+		font-weight: 700;
+		font-size: clamp(0.8rem, 0.75rem + 0.3vw, 0.95rem);
+		line-height: 1.2;
+		color: var(--color-marino);
+	}
+
+	.p3-herramienta-que {
+		margin: 0.15rem 0 0;
+		font-family: var(--fuente-texto);
+		font-weight: 400;
+		font-size: clamp(0.7rem, 0.66rem + 0.2vw, 0.8rem);
+		line-height: 1.25;
+		color: var(--color-tinta-suave);
+	}
+
+	/* Despliegue: rotación en X, no opacity-fade suelto — gesto distinto al de B (pop+subida). */
+	@keyframes p3-herramienta-despliega {
+		from {
+			opacity: 0;
+			transform: rotateX(-78deg);
+		}
+		to {
+			opacity: 1;
+			transform: rotateX(0deg);
+		}
+	}
+
+	@supports (animation-timeline: scroll(root)) {
+		.p3-herramienta {
+			opacity: 0;
+			transform: rotateX(-78deg);
+			animation: p3-herramienta-despliega linear both;
+			animation-timeline: --hz-progreso;
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.p3-herramienta {
+			animation: none !important;
+			opacity: 1;
+			transform: none;
+		}
+	}
+
+	/* === Bloque B — 5 pasos (patrón trasladado de la vieja Pantalla 4) === */
+	.p3-bloque-b {
+		margin-top: clamp(1.5rem, 4vh, 2.5rem);
+		width: 100%;
+	}
+
+	.p3-subtitulo {
+		margin: 0 0 var(--espacio-sm);
+		font-family: var(--fuente-display);
+		font-weight: 500;
+		font-size: clamp(1.05rem, 0.95rem + 0.5vw, 1.35rem);
+		color: var(--color-marino);
+	}
+
+	.p3-pasos {
+		position: relative;
+		display: grid;
+		grid-template-columns: repeat(5, minmax(0, 1fr));
+		gap: clamp(0.5rem, 1.2vw, 1rem);
+		width: 100%;
+		margin-top: calc(clamp(1.75rem, 4.5vh, 2.75rem) + 2.75rem);
+	}
+
+	@media (max-width: 1100px) {
+		.p3-pasos {
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+		}
+	}
+
+	.p3-pasos-ruta {
+		position: absolute;
+		top: -1.75rem;
+		left: 0;
+		right: 0;
+		height: 1.75rem;
+		width: 100%;
+		pointer-events: none;
+		clip-path: inset(0 0 0 0);
+	}
+
+	.p3-pasos-ruta path {
+		fill: none;
+		stroke: var(--color-marino);
+		stroke-width: 2;
+		stroke-linecap: round;
+		stroke-dasharray: 6 6;
+		vector-effect: non-scaling-stroke;
+	}
+
+	.p3-pasos-nodo {
+		position: absolute;
+		top: calc(-1.75rem + 15 / 28 * 1.75rem);
+		width: 3.1rem;
+		height: 3.1rem;
+		display: grid;
+		place-items: center;
+		/* Estado final / fallback sin scroll-driven: visible, tamaño real (restricción 1 del plan —
+		 * el "scale(0)" de arranque va SOLO dentro de @supports, más abajo). */
+		transform: translate(-50%, -50%);
+		border-radius: 50%;
+		background: var(--color-verde);
+		color: var(--color-superficie);
+		font-family: var(--fuente-texto);
+		font-weight: 700;
+		font-size: 1.05rem;
+		z-index: 2;
+	}
+
+	.p3-pasos-card {
+		position: relative;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: clamp(0.5rem, 1.4vh, 0.75rem);
+		padding: clamp(1rem, 2.2vw, 1.6rem) clamp(0.85rem, 1.8vw, 1.25rem);
+		background: var(--color-superficie);
+		border-radius: clamp(0.9rem, 1.8vw, 1.5rem);
+		box-shadow: 0 14px 28px -16px rgba(15, 43, 77, 0.22);
+		text-align: center;
+		/* Estado final / fallback sin scroll-driven: visible (el opacity:0 de arranque va SOLO
+		 * dentro de @supports, más abajo — restricción 1 del plan). */
+	}
+
+	.p3-pasos-card-icono {
+		color: var(--color-marino);
+	}
+
+	.p3-pasos-card-titulo {
+		margin: 0;
+		font-family: var(--fuente-texto);
+		font-weight: 700;
+		font-size: clamp(0.95rem, 0.85rem + 0.4vw, 1.15rem);
+		line-height: 1.25;
+		color: var(--color-marino);
+	}
+
+	.p3-pasos-card-frase {
+		margin: 0;
+		font-family: var(--fuente-texto);
+		font-weight: 400;
+		font-size: clamp(0.8rem, 0.75rem + 0.2vw, 0.9rem);
+		line-height: 1.35;
+		color: var(--color-tinta-suave);
+	}
+
+	@supports (animation-timeline: scroll(root)) {
+		.p3-pasos-ruta {
+			clip-path: inset(0 100% 0 0);
+			animation: p3-ruta-dibuja linear both;
+			animation-timeline: --hz-progreso;
+		}
+		.p3-pasos-nodo {
+			transform: translate(-50%, -50%) scale(0);
+			animation: p3-nodo-pop linear both;
+			animation-timeline: --hz-progreso;
+		}
+		.p3-pasos-card {
+			opacity: 0;
+			transform: translateY(2rem) scale(0.9);
+			animation: p3-card-entra linear both;
+			animation-timeline: --hz-progreso;
+		}
+	}
+
+	@keyframes p3-ruta-dibuja {
+		from {
+			clip-path: inset(0 100% 0 0);
+		}
+		to {
+			clip-path: inset(0 0 0 0);
+		}
+	}
+
+	@keyframes p3-nodo-pop {
+		0% {
+			transform: translate(-50%, -50%) scale(0);
+		}
+		70% {
+			transform: translate(-50%, -50%) scale(1.28);
+		}
+		100% {
+			transform: translate(-50%, -50%) scale(1);
+		}
+	}
+
+	@keyframes p3-card-entra {
+		0% {
+			opacity: 0;
+			transform: translateY(2rem) scale(0.9);
+		}
+		70% {
+			opacity: 1;
+		}
+		100% {
+			opacity: 1;
+			transform: translateY(0) scale(1);
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.p3-pasos-ruta {
+			animation: none !important;
+			clip-path: inset(0 0 0 0);
+		}
+		.p3-pasos-nodo {
+			animation: none !important;
+			transform: translate(-50%, -50%) scale(1);
+		}
+		.p3-pasos-card {
+			animation: none !important;
+			opacity: 1;
+			transform: none;
+		}
+	}
+
+	/* === Cierre de bloque B (footer) — mismo lugar/criterio que el resto de las pantallas: cresta
+	 * de la onda (left: 25%). Estático (sin animación propia) a propósito: P3 ya mete 2 bloques
+	 * completos de entrada escalonada, un tercer gesto acá sumaría densidad sin sumar claridad. */
+	.pie-footer {
+		position: relative;
+		height: 100%;
+	}
+
+	.p3-cierre {
+		position: absolute;
+		left: 25%;
+		bottom: clamp(1.5rem, 4vh, 2.5rem);
+		transform: translateX(-50%);
+		max-width: min(30rem, 60vw);
+		text-align: center;
+	}
+
+	.p3-cierre-texto {
+		margin: 0;
+		font-family: var(--fuente-texto);
+		font-size: clamp(1.05rem, 0.9rem + 0.5vw, 1.25rem);
+		line-height: 1.35;
+		color: var(--color-texto-sobre-foto);
+	}
+
+	.p3-cierre-texto strong {
+		color: var(--color-verde);
+		text-shadow:
+			0 0 2px var(--color-superficie),
+			0 0 2px var(--color-superficie),
+			0 0 3px var(--color-superficie);
+	}
+</style>

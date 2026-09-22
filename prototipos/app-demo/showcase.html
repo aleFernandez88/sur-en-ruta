@@ -107,9 +107,13 @@
     background:
       linear-gradient(135deg, #3a4048 0%, #10131a 38%, #2c313a 62%, #0c0f15 100%);
     padding:1.7%;
+    /* Solo bisel interno — el gran box-shadow exterior que había acá (2 capas, 0 60px 120px y
+       0 20px 50px) NO rota junto con #phone bajo transform-style:preserve-3d: Chrome lo
+       compone en el plano de frente y lo va re-rasterizando con retraso mientras el celular
+       gira, así que queda un "fantasma" rectangular de la silueta de frente detrás del celular
+       ya girado, que se desvanece de a poco (reportado por Ale, verificado en vivo 2026-09-22).
+       #glow + #floor ya dan la sensación de elevación/flotación sin este problema. */
     box-shadow:
-      0 60px 120px -30px rgba(0,0,0,0.75),
-      0 20px 50px -15px rgba(0,0,0,0.6),
       inset 0 0 0 1.5px rgba(255,255,255,0.10),
       inset 0 2px 6px rgba(255,255,255,0.16),
       inset 0 -3px 8px rgba(0,0,0,0.5);
@@ -175,6 +179,32 @@
     background:rgba(255,255,255,0.85);
     transform:translate(-50%,-50%);
   }
+
+  /* === Modo "transparente" (?fondo=transparente) — para prototipos/app-demo/render/scrub.mjs ===
+   * El scrub de P1 (docs/planes/2026-09-04-reescritura-index-p1-p5.md §15, ajuste 2026-09-04) NO
+   * hornea el fondo en el frame: el <canvas> se dibuja sobre el mismo degradé que ya tiene .p1
+   * como CSS (P1QueEs.astro), así el celular "flota" de verdad sobre lo que sea que haya detrás,
+   * sin depender de que los dos degradés (el del frame y el del contenedor) calcen. Se saca el
+   * fondo del propio #scene (Puppeteer captura con `omitBackground:true`) y se apaga #vignette
+   * (oscurece bordes contra un fondo opaco — no tiene sentido sin uno). #glow y #floor SE
+   * CONSERVAN: son el aura y la sombra de contacto que hacen que el celular se lea flotando, no
+   * "cortado" a su silueta exacta.
+   * COSTO REAL (corrige una medición mal hecha del mismo día, ver el comentario grande en
+   * prototipos/app-demo/render/scrub.mjs): con esta escena, la transparencia real pesa ~7,4 MB el
+   * set completo (90 frames × 900×1350), contra ~3,4 MB de la versión con fondo horneado — no
+   * "prácticamente igual" como decía una medición anterior rota (comparaba contra un frame que en
+   * realidad seguía opaco, por dos bugs: showcase.html sin sincronizar a public/, y el fondo de
+   * html/body sin apagar — los dos ya corregidos acá). Ale decidió el 2026-09-04 mantener la
+   * transparencia con ese costo.
+   */
+  /* html Y body, no solo body: html,body{background:var(--marino-noche)} más arriba en este mismo
+   * archivo es OPACO — con solo #scene transparente, ese fondo de html/body seguía tapando todo
+   * (bug real, encontrado en vivo: el canal alfa daba 255 en toda la imagen). La clase se agrega
+   * a los dos elementos por JS, ver más abajo. */
+  html.fondo-transparente,
+  body.fondo-transparente,
+  body.fondo-transparente #scene{ background:transparent; }
+  body.fondo-transparente #vignette{ display:none; }
 
   /* reflejo / glare que se mueve con el giro */
   #glare{
@@ -412,6 +442,13 @@
     if (d.readyState === 'complete') hook();
     else w.addEventListener('load', hook, { once:true });
   });
+
+  // modo "transparente" (sin fondo horneado, para el scrub de P1, ver el bloque CSS de arriba) —
+  // se agrega la clase temprano, antes de que nada se pinte.
+  if (new URLSearchParams(location.search).get('fondo') === 'transparente') {
+    document.documentElement.classList.add('fondo-transparente');
+    document.body.classList.add('fondo-transparente');
+  }
 
   // modo "vivo" para grabar a mano; con ?manual lo maneja el script de render
   var manual = new URLSearchParams(location.search).has('manual');

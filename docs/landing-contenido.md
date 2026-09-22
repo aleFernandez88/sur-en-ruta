@@ -11,7 +11,8 @@ git. `docs/comparativa-mazo-vs-landing.md` quedó **obsoleto** (movido a
 
 La landing es un **spot publicitario de la app Sur en Ruta**. La app todavía no existe — por eso
 se usan **maquetas falsas** (el prototipo `prototipos/app-demo/` + el video
-`sur-en-ruta-app-showcase.mp4` + las capturas en `prototipos/app-demo/capturas/`).
+`sur-en-ruta-app-showcase.mp4` + las capturas en `prototipos/app-demo/capturas/` + la secuencia de
+90 frames en `public/p1-scrub/` que usa P1 para su scroll-scrub, ver §15 del plan de addendum).
 
 - **Solo se habla de Sur en Ruta.** Cero menciones a RENAMU (ni el nombre, ni la diferenciación
   institucional, ni el aparato). La "red" que se nombra es la red propia de Sur en Ruta: sus
@@ -70,10 +71,27 @@ Cada pantalla es un `<Pantalla completa>`. Al sumar/quitar pantallas se toca `N_
   > Una forma nueva de recorrer Uruguay: **por etapas, conectada, a tu ritmo.**
 - **Bajada:** La app y la red que conecta a quien viaja con los puntos, servicios y rutas del país.
 - **Marca:** "Explorá. Conectá. Viví."
-- **Elemento visual:** el **video del celular** (`sur-en-ruta-app-showcase.mp4`) — celular sobre
-  fondo marino, girando, con el recorrido de la app. Puede ir en loop.
-- **Animación de entrada:** por definir (distinta a las demás). El video ya aporta movimiento, así
-  que la entrada del texto puede ser sobria.
+- **Elemento visual — rediseñado 2026-09-04 (addendum de scroll-scrub):** full-bleed, no panel
+  lateral. Una secuencia de **90 frames WebP** (`public/p1-scrub/`, generados por
+  `prototipos/app-demo/render/scrub.mjs` a partir de la misma escena `showcase.html`) dibujada en
+  `<canvas>` y atada al scroll — el celular gira y el recorrido de la app avanza cuadro a cuadro
+  mientras el usuario scrollea, **no** en loop automático. Detalle técnico completo en
+  `docs/planes/2026-09-04-reescritura-index-p1-p5.md` §15.
+- **Animación — implementada 2026-09-04, ajustada el mismo día tras probarla en vivo, dos
+  mecanismos:**
+  1. **Entrada TEMPORAL** (disparada por `:root.entrada`, sin scroll — P1 se centra en 0%, sin
+     tramo de aproximación): "cortina desde el centro" — la escena se enciende (opacity+scale), el
+     titular hace wipe de `clip-path` centro→afuera, la respuesta sube con fade, y **las 4 líneas
+     de texto (titular, respuesta, bajada, marca) más el rótulo "Vista conceptual de la app" entran
+     todas acá, escalonadas** — nada del contenido de P1 depende de scrollear. *(Ajuste: el diseño
+     original tenía la bajada y la marca reveladas recién con scroll, "como quien lee mientras mira
+     el recorrido" — probado en vivo no funcionaba: violaba la regla de más peso de esta pantalla,
+     CLAUDE.md §1 "mostrar rápido para retener". Se sacó.)*
+  2. **Permanencia SCROLL-DRIVEN, tramo `0%→8%` de `--hz-progreso`** (con P1 ya centrada — no es
+     una entrada): el scrub del canvas avanza con el scroll; el velo de contraste se afloja y el
+     bloque de texto se corre levemente hacia el final del tramo — un plus mientras se lee, nunca
+     algo de lo que dependa ver el contenido. De 8% a 14% queda un colchón: el scrub se congela en
+     el último frame. Ver `src/components/pantallas/P1QueEs.astro`.
 
 ---
 
@@ -93,7 +111,11 @@ Cada pantalla es un `<Pantalla completa>`. Al sumar/quitar pantallas se toca `N_
   | **Para el territorio** | Circulación ordenada · Activación de economías locales · Mejor conexión entre destinos |
 
 - **Firma de pie:** URUGUAY — *conecta · ordena · potencia*.
-- **Animación de entrada:** por definir (distinta).
+- **Animación de entrada — implementada 2026-09-04:** "las 3 columnas convergen" — columna
+  izquierda y derecha entran desde ±45% en X, la del medio desde abajo; único movimiento en X de
+  toda la cinta. Los 3 ítems de cada columna se descubren con un wipe vertical, uno por columna. El
+  cierre subraya con una regla verde que se dibuja izquierda→derecha. Ver
+  `src/components/pantallas/P2QueHace.astro`.
 
 ---
 
@@ -127,8 +149,11 @@ pantalla.**
   | 05 | Viajá de forma responsable | Las buenas prácticas fortalecen el cuidado y la convivencia. |
 
 - **Cierre del bloque:** Una red que organiza el viaje y potencia los destinos.
-- **Animación de entrada:** por definir (distinta). Los 5 pasos piden una entrada escalonada al
-  ritmo del scroll (patrón que ya existe en el proyecto).
+- **Animación de entrada — implementada 2026-09-04:** dos gestos distintos, uno por bloque. Bloque
+  A ("4 paneles que se despliegan"): cada tarjeta gira en X desde -78° (perspectiva + rotación), en
+  tira horizontal compacta. Bloque B: patrón trasladado de la vieja Pantalla 4 (ruta ondulada que
+  se dibuja + nodos numerados que hacen pop + tarjetas que suben). Ver
+  `src/components/pantallas/P3ComoLoHace.astro`.
 
 ---
 
@@ -150,7 +175,10 @@ pantalla.**
   | **Ruta de Naturaleza y Aventura** | Sierras, lagunas y aire libre |
 
 - **Cierre:** Cada ruta conecta puntos, servicios, paisajes y experiencias.
-- **Animación de entrada:** por definir (distinta).
+- **Animación de entrada — implementada 2026-09-04:** "las 6 rutas se van trazando" — cada tarjeta
+  se descubre con un wipe horizontal izquierda→derecha (como un trazo de ruta avanzando), y el
+  titular hace *tracking-in* (letter-spacing que se cierra). Único wipe horizontal por tarjeta y
+  única animación tipográfica de toda la cinta. Ver `src/components/pantallas/P4Donde.astro`.
 
 ---
 
@@ -162,6 +190,11 @@ La app todavía no existe, así que el CTA **no puede decir "descargala"**. Plac
 
 - **Titular:** Sur en Ruta está en camino.
 - **Sub / acción:** [CTA genérico — "Muy pronto" / "Seguí el proyecto" / form de contacto — a definir]
+- **Animación de entrada — implementada 2026-09-04 (titular sin CTA todavía, ver arriba):** "el
+  hilo llega y el cierre se enciende" — único gesto de zoom-out de toda la cinta (el bloque de
+  contenido arranca en `scale(1.1)` y se asienta), el titular se "enciende" con un barrido de color
+  (gradient-text animado), y el isotipo hace el mismo "choque" que ya usaba la vieja Pantalla 1. Ver
+  `src/components/pantallas/P5Cierre.astro`.
 
 ---
 
@@ -182,28 +215,45 @@ pantalla "Rutas" del `app-demo` (nombres alineados por decisión de Ale, 2026-09
 `faros.jpg` (faro de Cabo Polonio) **queda sin uso directo** — no hay "Ruta de los Faros" en la
 lista nueva. Se puede reservar como refuerzo de la Ruta Oceánica.
 
-**Faltan 2 fotos:** Ruta del Vino y Ruta Termal.
+**Corrección 2026-09-04 — ya no faltan 2 fotos, el problema es otro y es peor.** Las 6 imágenes
+existen (`public/app-demo/rutas/` y `prototipos/app-demo/rutas/`), pero **no son deployables tal
+cual**: `vino.jpg` y `termal.jpg` están **generadas con IA** (Pollinations, ver el commit `0bd39f5`)
+y las otras 4 son fotos reales **sin `FUENTE.md` ni licencia registrada**. Publicarlas en una
+pantalla que dice "rutas que **cuentan** Uruguay" es la decisión **D2** de
+`docs/planes/2026-09-04-reescritura-index-p1-p5.md` (paso 13.2), todavía sin resolver con Ale.
+Hasta que se resuelva, `src/data/rutas.ts` tiene `foto: null` y P4 se renderiza sin foto (fondo
+tintado + ícono).
 
 ---
 
 ## 4. Pendientes / notas de implementación
 
-- **`app-demo`:** renombrar las 4 rutas actuales (Atlántico / Faros / Sierras y Lagunas / Pueblos
-  del Interior) a la lista canónica de §3. Definir si la pantalla "Rutas" del demo muestra las 6 o
-  un subconjunto. Conseguir las 2 fotos que faltan (Vino, Termal). El teaser "Rutas destacadas" de
-  la pantalla Mapa también hay que ajustarlo.
-- **`src/pages/index.astro`:** hoy tiene 6 `<Pantalla>` con el contenido viejo (hero / portada /
-  oportunidad / sistema-RENAMU / como-funciona / placeholder). Todo eso se reemplaza por P1–P5.
-- **`CLAUDE.md`:** §1, §2 y §6 están escritos alrededor de RENAMU + el mazo. Hay que reescribirlos
-  con este enfoque.
+- **`app-demo`:** las 4 rutas ya están renombradas a la lista canónica de §3 y alineadas con
+  `src/data/rutas.ts`. Sigue pendiente: conseguir fotos deployables (ver la corrección de §3 —
+  decisión D2) y definir si la pantalla "Rutas" del demo muestra las 6 o un subconjunto.
+- ~~**`src/pages/index.astro`:** hoy tiene 6 `<Pantalla>` con el contenido viejo (hero / portada /
+  oportunidad / sistema-RENAMU / como-funciona / placeholder). Todo eso se reemplaza por P1–P5.~~ ✅
+  reescrito completo el 2026-09-04 (`docs/planes/2026-09-04-reescritura-index-p1-p5.md`, pasos 1-12
+  y 14) — P1-P5 en `src/components/pantallas/`, matemática de la cinta en `src/lib/cinta.ts`. El
+  CTA de P5 (D1) y las fotos de P4 (D2) siguen bloqueados por Ale.
+- ~~**`CLAUDE.md`:** §1, §2 y §6 están escritos alrededor de RENAMU + el mazo. Hay que reescribirlos
+  con este enfoque.~~ ✅ ya reescritos (ver el propio `CLAUDE.md`, sin RENAMU, enfoque de spot).
 - ~~`docs/comparativa-mazo-vs-landing.md`: obsoleto — archivar~~ ✅ movido a `docs/analisis/…-OBSOLETO.md` (2026-09-03).
-- **P5 / CTA:** definir sobre el final.
-- **Animaciones de entrada:** una por pantalla, sin repetir. Se definen una a una con Ale.
+- **P5 / CTA:** definir sobre el final — sigue pendiente (decisión D1 del plan de reescritura).
+- **Animaciones de entrada:** una por pantalla, sin repetir — ✅ implementadas las 5 (ver §5
+  Historial y la tabla de abajo).
 
 ---
 
 ## 5. Historial
 
+- **2026-09-04** — `src/pages/index.astro` reescrito con P1-P5 reales
+  (`docs/planes/2026-09-04-reescritura-index-p1-p5.md`, pasos 1-12 y 14). Componente por pantalla
+  en `src/components/pantallas/`, matemática de la cinta centralizada en `src/lib/cinta.ts`, cada
+  pantalla con su animación de entrada propia (ver §§ P1-P5 arriba). Limpieza del código muerto del
+  enfoque de inversores (`Hero`/`Sistema`/`Problema`/`Rutas`/`Inversion`/`MapaPlaceholder`/
+  `Marcador`.astro y sus data files). Siguen bloqueados por Ale: el CTA de P5 (D1), las fotos de P4
+  (D2) y el video de P1 (D4) — P1 usa la captura plana `01-mapa-inicio.png` mientras tanto.
 - **2026-09-03** — reescritura completa. Pivot a spot de la app, 4 preguntas guía, sin RENAMU,
   sin mapeo al mazo. Los 5 pasos de "Cómo funciona la red" entran en P3. Nombres de ruta del
   `app-demo` se alinean a la lista del deck. CTA genérico provisorio.

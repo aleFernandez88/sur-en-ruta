@@ -33,9 +33,19 @@
  * la posición real de cada sección en el scroll necesitaría JS midiendo layout, fuera de alcance
  * a propósito. La `distancia` (y el instante en que el nodo "llega") se reparte pareja según el
  * instante de centrado de cada bloque de la cinta: k/(N-1). Cuando se sumen las pantallas que
- * faltan del mazo (ver `docs/landing-contenido.md`), agregar la entrada acá y subir `N_PANTALLAS`
- * en `index.astro` — nada más.
+ * faltan del mazo (ver `docs/landing-contenido.md`), agregar la entrada en `src/data/recorrido.ts`
+ * — nada más (`N_PANTALLAS`, en `src/lib/cinta.ts`, se deduce solo de ese array).
+ *
+ * === Pivot 2026-09-03/04: sin Hero de apertura ===
+ * P1 (`que-es`) pasa a ser el bloque 0 de la cinta (antes había un Hero en el bloque 0 y la
+ * primera parada navegable era el bloque 1). `llegada` ahora es literalmente `centro(k)` de
+ * `src/lib/cinta.ts` — no hay "+1" que compensar un Hero que ya no existe. Y como P1 se centra en
+ * 0 % (el sitio carga YA en su parada), la barra no tiene tramo de scroll "antes" donde deslizarse
+ * — entra de forma TEMPORAL, disparada por `:root.entrada` (mismo mecanismo que usaba
+ * `Hero.astro` y que ahora también dispara la entrada de P1, ver `P1QueEs.astro`), no por scroll.
  */
+import { recorrido } from '../data/recorrido.ts';
+import { centro } from '../lib/cinta.ts';
 
 interface Parada {
 	numero: number;
@@ -45,25 +55,14 @@ interface Parada {
 	llegada: number; // % de --hz-progreso donde su pantalla se centra (cuándo se pinta/pulsa el nodo)
 }
 
-// Orden = orden de las <Pantalla> del mazo en index.astro. El Hero (Pantalla 0) NO está: es una
-// portada sin contenido, no un destino navegable, y la barra recién aparece al entrar a la
-// Pantalla 1 (ver .hilo-ruta-barra en el <style>). El primer nodo/parada es la Portada.
-const recorrido: { nombre: string; id: string }[] = [
-	{ nombre: 'Portada', id: 'portada' },
-	{ nombre: 'La Oportunidad', id: 'oportunidad' },
-	{ nombre: '¿Qué es RENAMU?', id: 'sistema' },
-	{ nombre: 'Cómo funciona', id: 'como-funciona' },
-	{ nombre: 'Centro Regional', id: 'centro-regional' },
-];
-
 const paradas: Parada[] = recorrido.map((p, k, arr) => {
 	// `distancia` = posición VISUAL del nodo en la curva, repartida parejo de ~8% a 97% (usa casi
 	// toda la barra, sin que quede corrida hacia abajo).
 	const distancia = Math.round(8 + (k / (arr.length - 1)) * 89);
-	// `llegada` = % de --hz-progreso donde ESTA pantalla queda centrada (su mejor posición visual):
-	// es el bloque k+1 de la cinta de N bloques (N = arr.length + 1, con el Hero) → k+1 / (N-1).
-	// El pintado del "caminito" y el pulso del nodo se acomodan a esto (ver keyframes generados).
-	const llegada = Math.round(((k + 1) / arr.length) * 100);
+	// `llegada` = % de --hz-progreso donde ESTA pantalla queda centrada — es EXACTAMENTE `centro(k)`
+	// de cinta.ts (sin Hero que compensar, ver el comentario de arriba). El pintado del "caminito" y
+	// el pulso del nodo se acomodan a esto (ver keyframes generados).
+	const llegada = Math.round(centro(k));
 	return { numero: k + 1, nombre: p.nombre, id: p.id, distancia, llegada };
 });
 
@@ -135,28 +134,24 @@ const curvaOffsetPath = `"${curva}"`;
 // (`offset-path: path(var(--curva-offset-path))` en el `<style>` de abajo, no inline por nodo) —
 // así los descendientes la heredan de verdad, y actualizarla en el wrapper alcanza para todos.
 
-// El sitio carga ya "parado" en la parada 0 (Hero, la primera pantalla, visible sin scrollear),
-// así que ese tramo tiene que verse ya pintado de celeste desde el arranque — mismo cálculo que
-// la versión anterior (ver memoria del proyecto).
-// El sitio carga en el Hero (Pantalla 0), ANTES de la primera parada — nada pintado todavía. (Antes
-// arrancaba "parado" en la parada 0, con esa fracción ya pintada; ya no, el Hero no es parada.)
-const dashoffsetInicial = 1;
+// El sitio carga YA en la parada 0 (P1, `que-es` — sin Hero de apertura desde el pivot del
+// 2026-09-03/04, ver el comentario grande del frontmatter): ese tramo tiene que verse ya pintado
+// de celeste desde el arranque, o el hilo se ve "atrasado" respecto de dónde está el usuario.
+// `paradas[0].distancia` es la posición visual del primer nodo (8%) — el dashoffset arranca en
+// `1 - distancia/100` en vez de 1 (nada pintado), así el trazo ya cubre hasta el primer nodo.
+const dashoffsetInicial = 1 - paradas[0].distancia / 100;
 const duracionLetra = `${DURACION_LETRA_MS}ms`;
-
-// La barra entra deslizándose desde la izquierda antes de que la Pantalla 1 (Portada) se centre.
-// La P1 es el bloque 1 de la cinta de N bloques (N = recorrido.length + 1, el Hero); se centra en
-// ~100·1/(N-1) % de --hz-progreso. La ventana termina unos puntos antes de ese centro.
-const p1Centro = 100 / recorrido.length;
-const barraApareceRango = `${Math.max(2, Math.round(p1Centro - 15))}% ${Math.round(p1Centro - 7)}%`;
 ---
 
 <div class="hilo-ruta" style={`--curva-offset-path: ${curvaOffsetPath}`}>
-	{/* .hilo-ruta-barra es lo VISIBLE (fondo navy + botón + línea de ruta) y lo que se desliza desde
-	    la izquierda al entrar a la Pantalla 1 — está oculta durante el Hero (ver <style>). El menú
-	    de pantalla completa (.hilo-ruta-menu) queda FUERA de este wrapper a propósito: un `transform`
-	    en un ancestro le crearía un containing block y su `position: fixed; inset: 0` dejaría de
-	    tomar el viewport. */}
-	<div class="hilo-ruta-barra" style={`animation-range: ${barraApareceRango}`}>
+	{/* .hilo-ruta-barra es lo VISIBLE (fondo navy + botón + línea de ruta). Pivot 2026-09-03/04: sin
+	    Hero de apertura, P1 (que-es) se centra en 0% de --hz-progreso — no hay tramo de scroll
+	    "antes" donde deslizarse (ver el comentario grande del frontmatter). Entra TEMPORAL, disparada
+	    por :root.entrada (mismo mecanismo que Hero.astro usaba y que ahora dispara P1QueEs.astro),
+	    no por scroll. El menú de pantalla completa (.hilo-ruta-menu) queda FUERA de este wrapper a
+	    propósito: un `transform` en un ancestro le crearía un containing block y su
+	    `position: fixed; inset: 0` dejaría de tomar el viewport. */}
+	<div class="hilo-ruta-barra">
 	<button
 		type="button"
 		class="hilo-ruta-menu-boton"
@@ -291,9 +286,15 @@ const barraApareceRango = `${Math.max(2, Math.round(p1Centro - 15))}% ${Math.rou
 	/* La barra visible: fondo azul casi negro (2026-08-31, Ale — deja de ser transparente). La
 	 * línea de ruta, los nodos y el ícono de menú van en el claro cálido del fondo de las pantallas
 	 * (--color-fondo) para leerse sobre este navy; el "progreso ya recorrido" sigue en celeste.
-	 * ENTRA deslizándose desde la izquierda al acercarse la Pantalla 1 (pedido de Ale): oculta
-	 * durante el Hero, aparece `justo antes` de que la P1 se centre. Ventana inline en el markup
-	 * (depende de cuántas pantallas hay). */
+	 * === Pivot 2026-09-03/04: ENTRA de forma TEMPORAL, no por scroll ===
+	 * Antes se deslizaba desde la izquierda durante el tramo de scroll en que se aproximaba la
+	 * Pantalla 1 (que arrancaba en el bloque 1, con el Hero ocupando el bloque 0). Sin Hero de
+	 * apertura, P1 (que-es) ES el bloque 0 — se centra en 0% de --hz-progreso, así que no existe
+	 * ningún tramo "antes" para deslizarse durante el scroll. Mismo mecanismo que Hero.astro usaba
+	 * (y que ahora dispara la entrada de P1QueEs.astro): animación pausada bajo :root.js, puesta a
+	 * correr por :root.entrada (lo agrega Preloader.astro al abrir la cortina). Sin JS, o con
+	 * prefers-reduced-motion, la barra queda directamente en su estado final (visible, sin animar):
+	 * el estado por defecto de este bloque YA es translateX(0). */
 	.hilo-ruta-barra {
 		width: 100%;
 		height: 100%;
@@ -301,15 +302,16 @@ const barraApareceRango = `${Math.max(2, Math.round(p1Centro - 15))}% ${Math.rou
 		display: flex;
 		flex-direction: column;
 		align-items: center;
-		/* fallback sin scroll-driven: visible */
+		/* estado final / fallback sin JS: visible */
 		transform: translateX(0);
 	}
 
-	@supports (animation-timeline: scroll(root)) {
-		.hilo-ruta-barra {
-			animation: hilo-ruta-barra-aparece linear both;
-			animation-timeline: --hz-progreso;
-		}
+	:global(:root.js) .hilo-ruta-barra {
+		animation: hilo-ruta-barra-aparece 720ms cubic-bezier(0.2, 0.7, 0.2, 1) both paused;
+	}
+
+	:global(:root.entrada) .hilo-ruta-barra {
+		animation-play-state: running;
 	}
 
 	@keyframes hilo-ruta-barra-aparece {
