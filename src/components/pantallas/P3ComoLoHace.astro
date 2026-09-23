@@ -235,6 +235,15 @@ const RANGO_HERRAMIENTA = (i: number) => rangoEscalonadoContain(2, i, 4, 8);
 		}
 	}
 
+	@keyframes p3-beat-b-entra {
+		from {
+			opacity: 0;
+		}
+		to {
+			opacity: 1;
+		}
+	}
+
 	@keyframes p3-beat-a-sale {
 		from {
 			opacity: 1;
@@ -255,6 +264,20 @@ const RANGO_HERRAMIENTA = (i: number) => rangoEscalonadoContain(2, i, 4, 8);
 		}
 		.p3-beat-a {
 			animation: p3-beat-a-sale linear both;
+			animation-timeline: --como-lo-hace;
+			animation-range: contain 30% contain 38%;
+		}
+		/* HALLAZGO DEL EJECUTOR, corregido acá: Beat B (el carril + subtítulo) nunca tenía entrada
+		 * propia — solo la FILA del carril se animaba (traslado horizontal), no el beat en sí. Con
+		 * `animation-range` en `both`, antes de `contain 40%` el carril está en su estado "from"
+		 * (`translateX(0)`), que dentro de la ventana `56vw` recortada YA muestra los primeros 2
+		 * pasos — visibles simultáneo con Beat A (que recién sale en 30-38%), un solapamiento real
+		 * confirmado con capturas (no lo detecta C2: ese chequeo solo mide contra el celular/banda,
+		 * no entre bloques de contenido de la misma pantalla). Mismo rango que la salida de A, para
+		 * que el cruce se lea como una transición, no un salto. */
+		.p3-beat-b {
+			opacity: 0;
+			animation: p3-beat-b-entra linear both;
 			animation-timeline: --como-lo-hace;
 			animation-range: contain 30% contain 38%;
 		}
@@ -279,6 +302,10 @@ const RANGO_HERRAMIENTA = (i: number) => rangoEscalonadoContain(2, i, 4, 8);
 		}
 		.p3-beat-a {
 			display: none;
+		}
+		.p3-beat-b {
+			animation: none !important;
+			opacity: 1;
 		}
 		.p3-carril-fila {
 			animation: none !important;
