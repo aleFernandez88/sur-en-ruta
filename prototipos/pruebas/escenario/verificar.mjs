@@ -355,6 +355,15 @@ async function chequeoC2(page, seccionId) {
 				// candidato real de solapamiento (bug real encontrado corriendo el verificador
 				// contra P3, Bloque E: "FAIL" con texto clippeado del carril, confirmado con
 				// elementFromPoint devolviendo el contenedor de la sección, no el texto).
+				//
+				// LIMITACIÓN CONOCIDA (sin resolver, documentada tras E13): un elemento con
+				// `opacity: 0` sigue siendo "hit-testable" — `elementFromPoint()` lo devuelve igual
+				// aunque sea invisible, si pinta DESPUÉS en el orden del DOM (ej. `.p3-beat-b`,
+				// oculto con opacity antes de su entrada, tapando a `.p3-beat-a` para este chequeo
+				// aunque visualmente no lo tape). El síntoma es SKIP ("sin texto candidato"), no un
+				// FAIL falso — confirmado visualmente con capturas que ese checkpoint puntual no
+				// prueba solapamiento, no que haya uno oculto. Arreglo posible no implementado:
+				// exigir además que `elAhi` mismo tenga opacidad efectiva > 0.5.
 				const cx = Math.min(vw - 1, Math.max(0, (Math.max(0, r.left) + Math.min(vw, r.right)) / 2));
 				const cy = Math.min(vh - 1, Math.max(0, (Math.max(0, r.top) + Math.min(vh, r.bottom)) / 2));
 				const elAhi = document.elementFromPoint(cx, cy);
