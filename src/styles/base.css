@@ -98,6 +98,23 @@ body {
   }
 }
 
+@media (width >= 900px) {
+  .seccion__caja {
+    /* AJUSTE DEL EJECUTOR sobre el plan (E12), con evidencia: `.escenario__banda` (la onda +
+     * firma del pie, solo desktop, 50px de alto) es chrome NUEVO de este bloque que pinta encima
+     * del fondo pero DEBAJO del contenido de cada sección — nada en `.seccion__caja` reservaba su
+     * alto. El cierre de P2 (`.p2-cierre`), que se anima hacia esta franja a propósito, quedaba
+     * superpuesto con la banda en viewports de poca altura (confirmado con el verificador +
+     * `elementFromPoint`, overlap real — ~40px en 1024×768 con movimiento reducido, donde el
+     * cierre se muestra siempre en su posición final sin esperar el scroll). Con `.p2`/etc. en
+     * `align-content: center`, solo la MITAD de este padding se traduce en clearance real (la otra
+     * mitad la absorbe el padding-top simétrico) — 120px reserva ~50px de clearance efectivo sobre
+     * los 50px de la banda, verificado empíricamente contra el propio verificador, no calculado a
+     * ojo. */
+    padding-bottom: max(clamp(1.5rem, 5svh, 3rem), 120px);
+  }
+}
+
 h1,
 h2,
 h3,

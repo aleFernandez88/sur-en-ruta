@@ -54,6 +54,27 @@ const keyframes = [
 	keyframesFondo(tokens),
 	keyframesGlow(),
 ].join('\n\n');
+
+// === Banda inferior con la onda (D-F de §11.3, Bloque E, E12) ===
+// La MISMA fórmula de la onda de Lamina.astro:86-99 (BASE + AMP·sin), a escala menor: BASE=30,
+// AMP=10, AIRE=10 → 50px de alto (Lamina medía 156px = BASE+AMP+AIRE con sus valores propios;
+// repetida en las 5 secciones a ese tamaño se comería un 17% de un alto de 900px y competiría con
+// el celular — ver la nota E12 del plan). Un solo período de seno de lado a lado (no "indice + t"
+// como en Lamina: acá es UNA sola banda global, no varias láminas que tienen que empalmar).
+const BANDA_BASE = 30;
+const BANDA_AMP = 10;
+const BANDA_AIRE = 10;
+const BANDA_ALTO = BANDA_BASE + BANDA_AMP + BANDA_AIRE;
+
+const bandaAlto = (t: number): number => BANDA_BASE + BANDA_AMP * Math.sin(2 * Math.PI * t);
+const bandaY = (t: number): string => (BANDA_ALTO - bandaAlto(t)).toFixed(2);
+
+const BANDA_N = 44;
+let bandaD = `M 0 ${bandaY(0)}`;
+for (let k = 1; k <= BANDA_N; k++) {
+	bandaD += ` L ${((k / BANDA_N) * 100).toFixed(2)} ${bandaY(k / BANDA_N)}`;
+}
+bandaD += ` L 100 ${BANDA_ALTO} L 0 ${BANDA_ALTO} Z`;
 ---
 
 <div class="escenario" aria-hidden="true">
@@ -68,6 +89,17 @@ const keyframes = [
 			<Icono nombre="app" tamano={12} />
 			Vista conceptual de la app
 		</p>
+	</div>
+	<div class="escenario__banda">
+		<svg
+			class="escenario__banda-svg"
+			viewBox={`0 0 100 ${BANDA_ALTO}`}
+			preserveAspectRatio="none"
+			aria-hidden="true"
+		>
+			<path d={bandaD}></path>
+		</svg>
+		<p class="escenario__firma">URUGUAY — <em>conecta · ordena · potencia</em></p>
 	</div>
 </div>
 
@@ -251,6 +283,49 @@ const keyframes = [
 	/* La pone E5 (telefono.ts): un pulso corto cuando cambia la sección activa. */
 	.escenario__rotulo--pulso {
 		opacity: 1;
+	}
+
+	/* ============================================================================
+	 * Banda inferior con la onda + firma (D-F de §11.3, E12) — desktop solamente: en mobile el
+	 * alto de pantalla es para contenido, no para chrome decorativo. Sobre fondos casi negros
+	 * (P1/P3) la banda casi no se distingue del fondo — aceptable, aparece donde hay color.
+	 * ============================================================================ */
+	.escenario__banda {
+		display: none;
+	}
+
+	@media (width >= 900px) {
+		.escenario__banda {
+			display: block;
+			position: absolute;
+			left: 0;
+			right: 0;
+			bottom: 0;
+			height: 50px;
+		}
+	}
+
+	.escenario__banda-svg {
+		position: absolute;
+		inset: 0;
+		width: 100%;
+		height: 100%;
+		display: block;
+	}
+
+	.escenario__banda-svg path {
+		fill: color-mix(in srgb, var(--color-marino-noche) 92%, transparent);
+	}
+
+	.escenario__firma {
+		position: absolute;
+		right: clamp(1.25rem, 4vw, 4rem);
+		bottom: 0.85rem;
+		margin: 0;
+		font-family: var(--fuente-texto);
+		font-size: var(--texto-xs);
+		letter-spacing: 0.18em;
+		color: color-mix(in srgb, var(--color-texto-sobre-foto) 85%, transparent);
 	}
 
 	@keyframes escenario-rotulo-entra {

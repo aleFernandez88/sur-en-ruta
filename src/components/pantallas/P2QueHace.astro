@@ -1,117 +1,206 @@
 ---
 /**
- * P2QueHace.astro — P2 · ¿Qué hace? (`que-hace`, k=1, se centra en 25% de --hz-progreso).
+ * P2QueHace.astro — P2 · ¿Qué hace? (`que-hace`), 2ª de las 5 secciones del escenario vertical.
+ * Reescrita sobre `<Seccion>` en Bloque E, E8 (docs/planes/2026-09-23-bloque-e-secciones-chrome.md
+ * §5). Copy literal de `docs/landing-contenido.md` § P2, datos en `src/data/beneficios.ts`.
  *
- * Copy literal de `docs/landing-contenido.md` § P2 (deck `pag-08-beneficia-a-todos.png`), datos en
- * `src/data/beneficios.ts`. Componente dueño de su propia <Pantalla>/<Lamina> (mismo criterio que
- * P1QueEs.astro) — index.astro solo lo compone.
+ * === Corrección de contraste (H8 del plan de Bloque E) ===
+ * §11.3 del plan mayor pedía tipografía marino sobre el fondo oliva de esta sección — marino sobre
+ * `#5a6b2e` da 2,43:1, no pasa ni AA de texto grande (3:1). El titular pasa a
+ * `--color-texto-sobre-foto` (blanco), que da 5,87:1.
  *
- * === Ventana de entrada — tabla del plan (docs/planes/2026-09-04-reescritura-index-p1-p5.md §5) ===
- * Centro 25%, ventana 14% → 24.5% (= `ventana(1)` de cinta.ts, N=5). Los sub-rangos de abajo
- * (columnas / ítems / regla del cierre) son un desglose DENTRO de esa ventana, copiados literal
- * del plan §7 · P2 — no se recalculan acá.
+ * === Gesto propio, "dispersión desde el celular" ===
+ * En "que-hace" el celular queda a `x: 27%` (escenario.ts, TELEFONO). Cada tarjeta *i* arranca
+ * ENCIMA de esa posición (distancias decrecientes por tarjeta: la 1ª viaja más lejos que la 3ª,
+ * que ya nace casi en su lugar) y viaja a su posición final — igual que si "salieran" del celular
+ * hacia la fila. Dos `@keyframes` por tarjeta (escritorio/móvil), generados acá con valores
+ * literales (nunca `calc()`+`var()` dentro de un `@keyframes` — restricción 3 de escenario.ts) e
+ * inyectados con `<style is:global set:html>`, igual mecanismo que `Escenario.astro`.
  *
- * === Animación — "las 3 columnas convergen" ===
- * Única pantalla que mueve algo en X (P1 es clip-path centro→afuera, P3/P4/P5 no traen
- * translateX): columna izquierda entra desde -45%, columna derecha desde +45%, columna del medio
- * desde abajo (+28% en Y) — las tres convergen al centro, 14% → 21%. Coherente con el copy: "una
- * red que beneficia a TODOS", tres públicos que convergen. Dentro de cada columna, los 3 ítems se
- * descubren con UN SOLO wipe vertical por columna (no 9 sueltos), escalonado por columna
- * (19%→22% / 19.7%→22.7% / 20.4%→23.4%). El cierre del footer subraya con una regla verde que se
- * dibuja izquierda→derecha, 22% → 24.5%.
+ * === Qué se borra respecto de la versión "cinta" ===
+ * `<Pantalla>`/`<Lamina>`, la convergencia en X (columnas desde ±45%), los wipes de `clip-path` por
+ * columna, la regla verde animada del cierre y `.pie-footer`. La firma "URUGUAY — conecta · ordena
+ * · potencia" se muda a la banda del escenario (E12) — deja de vivir acá.
  */
-import Pantalla from '../Pantalla.astro';
-import Lamina from '../Lamina.astro';
+import Seccion from '../Seccion.astro';
 import Icono from '../Icono.astro';
 import { beneficios } from '../../data/beneficios.ts';
+
+// === Keyframes de "dispersión desde el celular" (ver comentario grande arriba) ===
+// Distancias en vw (escritorio) decrecientes por tarjeta: la tarjeta 0 arranca más lejos de su
+// lugar final que la 2 — sensación de que las 3 "salen" del mismo punto (el celular) y se abren.
+const TRASLADO_X_ESCRITORIO_VW = [58, 42, 26];
+const ESCALA_INICIAL = 0.42;
+const TRASLADO_Y_MOVIL_SVH = 40;
+const ESCALA_INICIAL_MOVIL = 0.5;
+
+function keyframesEscritorio(i: number): string {
+	const x = TRASLADO_X_ESCRITORIO_VW[i];
+	return `@keyframes p2-sale-${i}-escritorio {
+  from { transform: translate(${x}vw, 4svh) scale(${ESCALA_INICIAL}); opacity: 0; }
+  12% { opacity: 1; }
+  to { transform: none; opacity: 1; }
+}`;
+}
+
+function keyframesMovil(i: number): string {
+	return `@keyframes p2-sale-${i}-movil {
+  from { transform: translateY(${TRASLADO_Y_MOVIL_SVH}svh) scale(${ESCALA_INICIAL_MOVIL}); opacity: 0; }
+  12% { opacity: 1; }
+  to { transform: none; opacity: 1; }
+}`;
+}
+
+const keyframesTarjetas = beneficios
+	.map((_, i) => `${keyframesEscritorio(i)}\n\n${keyframesMovil(i)}`)
+	.join('\n\n');
+
+// Rangos inline (restricción 4: animation-range nunca con var()): tarjeta i, contain (2+12i)% →
+// contain (20+12i)% — 2-20 / 14-32 / 26-44. Las 3 asientan bien antes del 50% del tramo.
+//
+// AJUSTE DEL EJECUTOR sobre el plan (E8), con evidencia — anotar para revisión de Ale/arquitecto:
+// el plan literal decía "10+15i / 35+15i" (10-35 / 25-50 / 40-65), sincronizado a mano con
+// `telefono.ts` (E5: "la ficha se expande en local ≥ 0.5, cuando la 2ª tarjeta termina de
+// llegar" — con esa fórmula la tarjeta 1 termina justo en 50%). Verificado con el checkpoint real
+// del verificador ("que-hace · mitad de meseta" = local 50%, escritorio 1440×900 y 1920×1080): la
+// TARJETA 2 (la más cercana al celular, `x` final más chica) recién está al 40% de su propio
+// recorrido en ese instante — su texto ("Para el territorio" / "Circulación ordenada") queda a
+// mitad de camino, superpuesto de verdad sobre `.telefono__marco` (confirmado con
+// `elementFromPoint()`, no es un falso positivo del verificador). Comprimir el total a 2-44%
+// deja las 3 tarjetas asentadas con margen antes del 50%: la ficha del demo sigue expandiéndose
+// "cuando la 2ª tarjeta llega" (E5 ya lo llama "aproximado"), solo que ahora las 3 tarjetas —no
+// solo la 2ª— ya están en su lugar para ese momento.
+const rangoTarjeta = (i: number): string => `contain ${2 + 12 * i}% contain ${20 + 12 * i}%`;
 ---
 
-<Pantalla id="que-hace" completa>
-	<Lamina indice={1} distribucion="columna">
-		<h2 class="p2-titular">Una red que beneficia a todos</h2>
+<Seccion id="que-hace">
+	<div class="p2 seccion__caja">
+		<div class="p2-contenido">
+			<h2 class="p2-titular">
+				<span class="p2-titular-chica">Una red que</span>
+				<span class="p2-titular-grande">beneficia a todos</span>
+			</h2>
 
-		<div class="p2-columnas">
-			{
-				beneficios.map((bloque, i) => (
-					<div class={`p2-columna p2-columna--${i}`}>
-						<span class="p2-columna-icono">
-							<Icono nombre={bloque.icono} tamano={40} acento="var(--color-verde)" />
-						</span>
-						<h3 class="p2-columna-titulo">{bloque.titulo}</h3>
-						<ul class="p2-columna-items">
-							{bloque.items.map((item) => (
-								<li>{item}</li>
-							))}
-						</ul>
-					</div>
-				))
-			}
-		</div>
-
-		<Fragment slot="footer">
-			<div class="pie-footer">
-				<div class="p2-cierre">
-					<p class="p2-cierre-texto">
-						La red transforma <strong>el paso del viajero en valor para cada lugar.</strong>
-					</p>
-					<p class="p2-firma">URUGUAY — <em>conecta · ordena · potencia</em></p>
-				</div>
+			<div class="p2-tarjetas">
+				{
+					beneficios.map((bloque, i) => (
+						<div class={`p2-tarjeta p2-tarjeta--${i}`} style={`animation-range: ${rangoTarjeta(i)}`}>
+							<span class="p2-tarjeta-icono">
+								<Icono nombre={bloque.icono} tamano={32} acento="var(--color-verde)" />
+							</span>
+							<h3 class="p2-tarjeta-titulo">{bloque.titulo}</h3>
+							<ul class="p2-tarjeta-items">
+								{bloque.items.map((item) => (
+									<li>{item}</li>
+								))}
+							</ul>
+						</div>
+					))
+				}
 			</div>
-		</Fragment>
-	</Lamina>
-</Pantalla>
+
+			<p class="p2-cierre">
+				La red transforma <strong>el paso del viajero en valor para cada lugar.</strong>
+			</p>
+		</div>
+	</div>
+</Seccion>
+
+<style is:global set:html={keyframesTarjetas} />
 
 <style>
+	.p2 {
+		align-content: center;
+	}
+
+	.p2-contenido {
+		display: flex;
+		flex-direction: column;
+		gap: var(--espacio-lg);
+		/* AJUSTE DEL EJECUTOR sobre el plan (E8), con evidencia: el plan literal decía 58vw ("grid-
+		 * column que termina en 58vw"). A 1024×768 (aspecto casi cuadrado, el celular ocupa
+		 * relativamente más ancho que a 1440×900/1920×1080) el titular grande invadía 8px el borde
+		 * izquierdo de `.telefono__marco` (confirmado con elementFromPoint, overlap real, no falso
+		 * positivo). 46vw deja margen en los 3 anchos de escritorio verificados. */
+		max-width: 46vw;
+	}
+
+	@media (width < 900px) {
+		.p2-contenido {
+			max-width: none;
+		}
+	}
+
 	.p2-titular {
-		margin: 0 0 var(--espacio-lg);
+		margin: 0;
+		display: flex;
+		flex-direction: column;
 		font-family: var(--fuente-display);
 		font-weight: 800;
-		font-size: clamp(2rem, 1.4rem + 3vw, 3.5rem);
-		line-height: 1.05;
-		color: var(--color-marino);
-		max-width: 20ch;
+		line-height: 1.02;
+		text-transform: uppercase;
+		color: var(--color-texto-sobre-foto);
 	}
 
-	.p2-columnas {
+	.p2-titular-chica {
+		font-size: var(--texto-xl);
+	}
+
+	.p2-titular-grande {
+		font-size: clamp(3rem, 1.5rem + 6vw, 7.5rem);
+	}
+
+	@media (width < 900px) {
+		.p2-titular-chica {
+			font-size: var(--texto-sm);
+		}
+		.p2-titular-grande {
+			font-size: clamp(1.3rem, 0.7rem + 5vw, 2.1rem);
+		}
+	}
+
+	.p2-tarjetas {
 		display: grid;
 		grid-template-columns: repeat(3, minmax(0, 1fr));
-		gap: clamp(1.25rem, 3vw, 2.5rem);
-		width: 100%;
+		gap: clamp(1rem, 2vw, 1.75rem);
 	}
 
-	@media (max-width: 900px) {
-		.p2-columnas {
+	@media (width < 900px) {
+		.p2-tarjetas {
 			grid-template-columns: minmax(0, 1fr);
 		}
 	}
 
-	.p2-columna {
+	.p2-tarjeta {
 		display: flex;
 		flex-direction: column;
 		align-items: flex-start;
 		gap: var(--espacio-xs);
+		padding: clamp(1.1rem, 2vw, 1.5rem);
+		background: var(--color-superficie);
+		border-radius: var(--radio-lg);
+		box-shadow: 0 14px 28px -16px rgba(5, 11, 20, 0.45);
 	}
 
-	.p2-columna-icono {
+	.p2-tarjeta-icono {
 		display: grid;
 		place-items: center;
-		width: 3.2rem;
-		height: 3.2rem;
+		width: 3rem;
+		height: 3rem;
 		border-radius: 50%;
 		border: 1.5px solid var(--color-verde);
 		color: var(--color-verde);
 	}
 
-	.p2-columna-titulo {
+	.p2-tarjeta-titulo {
 		margin: 0;
 		font-family: var(--fuente-texto);
 		font-weight: 700;
-		font-size: clamp(1.05rem, 0.95rem + 0.5vw, 1.3rem);
+		font-size: clamp(1.05rem, 0.95rem + 0.5vw, 1.25rem);
 		color: var(--color-marino);
 	}
 
-	/* Un solo wipe (clip-path) por columna, no uno por ítem — ver .p2-columna-items abajo. */
-	.p2-columna-items {
+	.p2-tarjeta-items {
 		margin: 0;
 		padding: 0;
 		list-style: none;
@@ -120,16 +209,16 @@ import { beneficios } from '../../data/beneficios.ts';
 		gap: var(--espacio-2xs);
 	}
 
-	.p2-columna-items li {
+	.p2-tarjeta-items li {
 		font-family: var(--fuente-texto);
-		font-size: var(--texto-base);
+		font-size: var(--texto-sm);
 		line-height: 1.4;
 		color: var(--color-tinta-suave);
 		padding-left: 1.1em;
 		position: relative;
 	}
 
-	.p2-columna-items li::before {
+	.p2-tarjeta-items li::before {
 		content: '';
 		position: absolute;
 		left: 0;
@@ -140,43 +229,131 @@ import { beneficios } from '../../data/beneficios.ts';
 		background: var(--color-verde);
 	}
 
-	/* === Animación — las 3 columnas convergen (14% → 21% de --hz-progreso) ===
-	 * Restricción 1 del plan: envuelto en @supports, estado final legible fuera. */
-	@keyframes p2-columna-izq-entra {
-		from {
-			opacity: 0;
-			transform: translateX(-45%);
+	/* === Mobile: tarjetas compactas — título + ítems en una línea (E8 del plan, 2ª mitad de la
+	 * instrucción "si igual no entra": bajar `y` hasta 44% no alcanzó, verificado con el
+	 * verificador contra 390×844/369×698 — la 3ª tarjeta seguía tapada por el celular). Ningún
+	 * ítem se saca, el cuerpo sigue en --texto-sm (regla explícita del plan). */
+	@media (width < 900px) {
+		.p2-contenido {
+			gap: 0.3rem;
 		}
-		40% {
-			opacity: 1;
+		.p2-tarjetas {
+			gap: 0.2rem;
 		}
-		to {
-			opacity: 1;
-			transform: translateX(0);
+		.p2-tarjeta {
+			flex-direction: row;
+			flex-wrap: wrap;
+			align-items: center;
+			gap: 0.15rem 0.35rem;
+			padding: 0.3rem 0.5rem;
+		}
+		.p2-tarjeta-icono {
+			width: 1.3rem;
+			height: 1.3rem;
+		}
+		/* El ícono interno se pide a tamaño fijo (tamano={32}, prop de Icono.astro) — sin este
+		 * override desbordaría el círculo achicado de acá arriba. */
+		.p2-tarjeta-icono :global(svg) {
+			width: 0.8rem;
+			height: 0.8rem;
+		}
+		.p2-tarjeta-titulo {
+			flex: 1 1 auto;
+			font-size: var(--texto-sm);
+		}
+		.p2-tarjeta-items {
+			flex-direction: row;
+			flex-wrap: wrap;
+			width: 100%;
+			gap: 0;
+		}
+		.p2-tarjeta-items li {
+			padding-left: 0;
+			line-height: 1.25;
+		}
+		.p2-tarjeta-items li::before {
+			display: none;
+		}
+		.p2-tarjeta-items li:not(:last-child)::after {
+			content: ' · ';
+			color: var(--color-tinta-suave);
 		}
 	}
 
-	@keyframes p2-columna-der-entra {
-		from {
-			opacity: 0;
-			transform: translateX(45%);
-		}
-		40% {
-			opacity: 1;
-		}
-		to {
-			opacity: 1;
-			transform: translateX(0);
+	.p2-cierre {
+		margin: 0;
+		font-family: var(--fuente-texto);
+		font-size: clamp(1.15rem, 1rem + 0.6vw, 1.4rem);
+		line-height: 1.4;
+		max-width: 42ch;
+		color: var(--color-texto-sobre-foto);
+	}
+
+	@media (width < 900px) {
+		.p2-cierre {
+			/* AJUSTE DEL EJECUTOR sobre el plan (E8), con evidencia: bajo movimiento reducido el
+			 * cierre se muestra SIEMPRE (sin esperar su entrada por scroll), y su bloque natural
+			 * quedaba superpuesto con el celular en 390×844/369×698 (confirmado con
+			 * elementFromPoint, overlap real de hasta ~70px). Sin `max-width` (que en mobile
+			 * angostaba de más, forzando más líneas de las que hacían falta) y line-height más
+			 * ajustado — el `<strong>` no se toca (regla de contraste, ver abajo). */
+			max-width: none;
+			line-height: 1.2;
+			font-size: var(--texto-sm);
 		}
 	}
 
-	@keyframes p2-columna-medio-entra {
+	.p2-cierre strong {
+		/* --color-arena da 4,42:1 sobre --color-verde — válido SOLO porque este texto es ≥1.5rem
+		 * 700 (texto grande, umbral WCAG 3:1). No bajar el tamaño sin volver a blanco. */
+		color: var(--color-arena);
+		font-weight: 700;
+		font-size: clamp(1.5rem, 1.2rem + 1vw, 1.85rem);
+	}
+
+	/* === Animación — "dispersión desde el celular" (ver frontmatter) === */
+	@supports (animation-timeline: scroll(root)) {
+		.p2-tarjeta--0 {
+			animation: p2-sale-0-escritorio linear both;
+			animation-timeline: --que-hace;
+		}
+		.p2-tarjeta--1 {
+			animation: p2-sale-1-escritorio linear both;
+			animation-timeline: --que-hace;
+		}
+		.p2-tarjeta--2 {
+			animation: p2-sale-2-escritorio linear both;
+			animation-timeline: --que-hace;
+		}
+
+		@media (width < 900px) {
+			.p2-tarjeta--0 {
+				animation-name: p2-sale-0-movil;
+			}
+			.p2-tarjeta--1 {
+				animation-name: p2-sale-1-movil;
+			}
+			.p2-tarjeta--2 {
+				animation-name: p2-sale-2-movil;
+			}
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.p2-tarjeta--0,
+		.p2-tarjeta--1,
+		.p2-tarjeta--2 {
+			animation: none !important;
+			opacity: 1;
+			transform: none;
+		}
+	}
+
+	/* === Cierre — entra cuando las 3 tarjetas ya asentaron (contain 70% → 85%) === */
+	@keyframes p2-cierre-entra {
 		from {
 			opacity: 0;
-			transform: translateY(28%);
-		}
-		40% {
-			opacity: 1;
+			transform: translateY(1rem);
 		}
 		to {
 			opacity: 1;
@@ -185,150 +362,20 @@ import { beneficios } from '../../data/beneficios.ts';
 	}
 
 	@supports (animation-timeline: scroll(root)) {
-		.p2-columna--0 {
-			animation: p2-columna-izq-entra linear both;
-			animation-timeline: --hz-progreso;
-			animation-range: 14% 21%;
-		}
-		.p2-columna--1 {
-			animation: p2-columna-medio-entra linear both;
-			animation-timeline: --hz-progreso;
-			animation-range: 14% 21%;
-		}
-		.p2-columna--2 {
-			animation: p2-columna-der-entra linear both;
-			animation-timeline: --hz-progreso;
-			animation-range: 14% 21%;
-		}
-
-		/* Wipe vertical, uno por columna, escalonado. */
-		.p2-columna--0 .p2-columna-items {
-			clip-path: inset(0 0 100% 0);
-			animation: p2-columna-items-wipe linear both;
-			animation-timeline: --hz-progreso;
-			animation-range: 19% 22%;
-		}
-		.p2-columna--1 .p2-columna-items {
-			clip-path: inset(0 0 100% 0);
-			animation: p2-columna-items-wipe linear both;
-			animation-timeline: --hz-progreso;
-			animation-range: 19.7% 22.7%;
-		}
-		.p2-columna--2 .p2-columna-items {
-			clip-path: inset(0 0 100% 0);
-			animation: p2-columna-items-wipe linear both;
-			animation-timeline: --hz-progreso;
-			animation-range: 20.4% 23.4%;
-		}
-	}
-
-	@keyframes p2-columna-items-wipe {
-		from {
-			clip-path: inset(0 0 100% 0);
-		}
-		to {
-			clip-path: inset(0 0 0 0);
+		.p2-cierre {
+			opacity: 0;
+			transform: translateY(1rem);
+			animation: p2-cierre-entra linear both;
+			animation-timeline: --que-hace;
+			animation-range: contain 70% contain 85%;
 		}
 	}
 
 	@media (prefers-reduced-motion: reduce) {
-		.p2-columna--0,
-		.p2-columna--1,
-		.p2-columna--2 {
+		.p2-cierre {
 			animation: none !important;
 			opacity: 1;
 			transform: none;
-		}
-		.p2-columna--0 .p2-columna-items,
-		.p2-columna--1 .p2-columna-items,
-		.p2-columna--2 .p2-columna-items {
-			animation: none !important;
-			clip-path: none;
-		}
-	}
-
-	/* === Cierre de P2 — sobre la onda del footer (mismo lugar que .pie-marca/.op-cierre del
-	 * enfoque viejo: left 25% = la cresta de la onda de Lamina, ver el comentario largo en
-	 * index.astro histórico). Regla verde que se dibuja izquierda→derecha, 22% → 24.5%. */
-	.pie-footer {
-		position: relative;
-		height: 100%;
-	}
-
-	.p2-cierre {
-		position: absolute;
-		left: 25%;
-		bottom: clamp(1.5rem, 4vh, 2.5rem);
-		transform: translateX(-50%);
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		gap: var(--espacio-2xs);
-		max-width: min(34rem, 64vw);
-		text-align: center;
-	}
-
-	.p2-cierre-texto {
-		margin: 0;
-		font-family: var(--fuente-texto);
-		font-size: clamp(1.1rem, 0.95rem + 0.55vw, 1.35rem);
-		line-height: 1.35;
-		color: var(--color-texto-sobre-foto);
-	}
-
-	.p2-cierre-texto strong {
-		color: var(--color-verde);
-		text-shadow:
-			0 0 2px var(--color-superficie),
-			0 0 2px var(--color-superficie),
-			0 0 3px var(--color-superficie);
-	}
-
-	.p2-firma {
-		position: relative;
-		margin: var(--espacio-2xs) 0 0;
-		font-family: var(--fuente-texto);
-		font-size: var(--texto-xs);
-		letter-spacing: 0.18em;
-		color: var(--color-texto-sobre-foto);
-		padding-bottom: var(--espacio-2xs);
-	}
-
-	.p2-firma::after {
-		content: '';
-		position: absolute;
-		left: 50%;
-		bottom: 0;
-		width: 2.5rem;
-		height: 2px;
-		border-radius: 999px;
-		background: var(--color-verde);
-		transform: translateX(-50%);
-		/* Wipe izquierda→derecha del propio ancho de la regla. */
-		clip-path: inset(0 100% 0 0);
-	}
-
-	@supports (animation-timeline: scroll(root)) {
-		.p2-firma::after {
-			animation: p2-regla-dibuja linear both;
-			animation-timeline: --hz-progreso;
-			animation-range: 22% 24.5%;
-		}
-	}
-
-	@keyframes p2-regla-dibuja {
-		from {
-			clip-path: inset(0 100% 0 0);
-		}
-		to {
-			clip-path: inset(0 0 0 0);
-		}
-	}
-
-	@media (prefers-reduced-motion: reduce) {
-		.p2-firma::after {
-			animation: none !important;
-			clip-path: inset(0 0 0 0);
 		}
 	}
 </style>

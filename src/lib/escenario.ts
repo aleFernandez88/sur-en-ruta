@@ -186,7 +186,12 @@ export const TELEFONO: Record<string, { escritorio: EstadoTelefono; movil: Estad
 	},
 	'que-hace': {
 		escritorio: { x: 27, y: 2, escala: 0.86 },
-		movil: { x: 0, y: 40, escala: 0.72 },
+		// y: 40 → 44 (E8 del plan, mobile, ajuste explícitamente autorizado: "si C2 falla porque
+		// las 3 tarjetas no entran arriba del celular, primero se sube y ... hasta 44%"). Verificado
+		// con el verificador contra 390×844 y 369×698: seguía sin alcanzar, así que además se aplicó
+		// la 2ª mitad de esa misma instrucción — las tarjetas pasan a título + ítems en una línea
+		// (P2QueHace.astro, mobile).
+		movil: { x: 0, y: 44, escala: 0.72 },
 	},
 	'como-lo-hace': {
 		escritorio: { x: -25, y: 2, escala: 0.84 },

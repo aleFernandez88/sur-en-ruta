@@ -1,56 +1,34 @@
 ---
 /**
- * P1QueEs.astro — P1 · ¿Qué es Sur en Ruta? (`que-es`, k=0, se centra en 0% de --hz-progreso).
+ * P1QueEs.astro — P1 · ¿Qué es Sur en Ruta? (`que-es`), primera de las 5 secciones del escenario
+ * vertical. Reescrita sobre `<Seccion>` en Bloque E, E7
+ * (docs/planes/2026-09-23-bloque-e-secciones-chrome.md §5). Copy literal de
+ * `docs/landing-contenido.md` § P1.
  *
- * Texto centrado sobre una escena de fondo full-bleed (`.p1-escena`, ver más abajo por qué está
- * vacía ahora). Copy literal de `docs/landing-contenido.md` § P1.
+ * === Qué se borra respecto de la versión "cinta" ===
+ * `<Pantalla>` (reemplazada por `<Seccion id="que-es">`), `.p1-escena` (el celular ya vive en
+ * `Escenario.astro`, chrome fijo para las 5 secciones — E4), `.p1-rotulo` (el rótulo "Vista
+ * conceptual de la app" es chrome permanente desde E4, mismo string, no se pierde contenido), el
+ * fondo de `.p1` (lo pinta `.escenario`, con el mismo glow radial, mudado a `Escenario.astro` en
+ * E4) y las dos animaciones atadas a `--hz-progreso` (el timeline de `cinta.ts` ya no existe).
  *
- * === Por qué esta pantalla tiene DOS mecanismos de animación, no uno ===
- * (a) ENTRADA TEMPORAL, disparada por :root.entrada — sigue siendo obligatoria: sin Hero de
- *     apertura (CLAUDE.md §1), P1 es el bloque 0 de la cinta, se centra en 0% de --hz-progreso y
- *     está en pantalla apenas carga la página. No hay tramo de scroll de "aproximación" antes de
- *     ese instante, así que ningún `animation-range` puede animar su entrada. Mismo mecanismo que
- *     ya usaba Hero.astro (animación pausada bajo :root.js, puesta a correr cuando Preloader.astro
- *     agrega .entrada al abrir la cortina). **Los 4 textos + el rótulo entran TODOS acá** (ajuste
- *     2026-09-04, ver abajo) — nada del contenido de P1 depende de que el usuario scrollee.
- * (b) PERMANENCIA SCROLL-DRIVEN, tramo 0%→8% de --hz-progreso — un gesto sutil (el velo se afloja
- *     un poco, el bloque de texto se corre unos milímetros) avanza con el scroll mientras P1 ya
- *     está centrada. No oculta ni revela contenido — es un plus mientras se lee, no una condición
- *     para leer. El colchón 8%→14% no necesita código; en 14% ya empieza la ventana de entrada de
- *     P2 (cinta.ts).
+ * === Qué se conserva literal ===
+ * La entrada TEMPORAL de los 4 textos (titular, respuesta, bajada, marca), disparada por
+ * `:root.entrada` — sin Hero de apertura (CLAUDE.md §1: "mostrar rápido para retener"), P1 está en
+ * pantalla apenas carga la página, así que ningún `animation-range` puede animar su entrada. Mismos
+ * delays (120/300/460/610ms) que ya estaban aprobados.
  *
- * **Corrección 2026-09-04 (feedback de Ale, probado en vivo):** el diseño original tenía la bajada
- * y la marca reveladas recién con scroll (`0%→8%` de --hz-progreso, "como quien lee mientras mira
- * el recorrido"). En la práctica eso violaba la regla de más peso del proyecto para esta pantalla
- * — CLAUDE.md §1: *"Sin hero de apertura — mostrar rápido para retener"* — el mensaje completo de
- * P1 no se leía hasta scrollear un par de veces. Las 4 líneas de texto entran ahora TODAS con la
- * entrada temporal, igual que el titular; el velo/corrimiento sutil (B3) sigue de fondo, sin
- * bloquear nada.
- *
- * === Por qué NO usa <Lamina> (a diferencia de P2-P5) ===
- * Lamina es el shell de las pantallas de contenido del deck: fondo claro, padding reservado para
- * el footer. P1 es full-bleed oscura (--color-marino-noche) de punta a punta — se posee entera
- * (<Pantalla completa> + su propio shell), sin tocar Lamina.astro ni ninguna de las 4 pantallas que
- * ya lo usan. Consecuencia honesta: P1 pierde la onda continua del footer; la banda navy de Lamina
- * empieza recién en P2 (no rompe la continuidad, esa onda es una función global evaluada por
- * índice — P2 sigue enganchando con P3/P4/P5 igual).
- *
- * === Sobre .p1-escena (contenedor vacío, a propósito) ===
- * Hasta el 2026-09-22 esto tenía un <canvas> con 90 cuadros WebP pintados a mano según el scroll
- * (generados desde public/app-demo/ por una herramienta aparte) — se borró con el pivot a la
- * Opción 3 "Demo viva" (docs/planes/2026-09-22-recomposicion-ui-vertical.md §14, Bloque B). El
- * contenedor `.p1-escena` y su animación de entrada quedan vacíos a propósito: el
- * Bloque E del mismo plan (paso 17) los llena con el `<Telefono modo="vivo">` real (iframe), no
- * hace falta recrear el shell entonces.
+ * === Qué cambia ===
+ * La permanencia scroll-driven (antes tramo `0%→8%` de `--hz-progreso`, el velo se afloja + el
+ * texto se corre) pasa a `animation-timeline: --que-es` con `animation-range: contain 0% contain
+ * 100%` (literal, E7 del plan) — el tramo pineado completo de esta sección en vez de un % fijo del
+ * scroll del documento entero.
  */
-import Pantalla from '../Pantalla.astro';
-import Icono from '../Icono.astro';
+import Seccion from '../Seccion.astro';
 ---
 
-<Pantalla id="que-es" completa>
-	<div class="p1">
-		<div class="p1-escena"></div>
-
+<Seccion id="que-es">
+	<div class="p1 seccion__caja">
 		<div class="p1-velo"></div>
 
 		<div class="p1-texto">
@@ -63,46 +41,32 @@ import Icono from '../Icono.astro';
 					La app y la red que conecta a quien viaja con los puntos, servicios y rutas del país.
 				</p>
 				<p class="p1-marca">Explorá. Conectá. Viví.</p>
-				<p class="p1-rotulo">
-					<Icono nombre="app" tamano={14} />
-					Vista conceptual de la app
-				</p>
 			</div>
 		</div>
 	</div>
-</Pantalla>
+</Seccion>
 
 <style>
-	/* Fondo — el MISMO degradé que ya tiene la escena del video (showcase.html #scene), no un
-	 * plano liso. Pedido de Ale (2026-09-04): con fondo plano el celular se leía como un "parche"
-	 * pegado encima; con este glow radial detrás, el letterbox de object-fit:contain queda dentro
-	 * de la misma atmósfera y el celular se lee como si flotara sobre la pantalla. */
 	.p1 {
 		position: relative;
-		width: 100%;
-		height: 100%;
-		overflow: hidden;
-		background: radial-gradient(140% 100% at 50% 38%, #163a5c 0%, #0a2036 46%, #050b14 100%);
-		background-color: var(--color-marino-noche);
+		align-content: center;
 	}
 
-	/* === Capa 0 — la escena: vacía a propósito, ver "Sobre .p1-escena" en el frontmatter === */
-	.p1-escena {
-		position: absolute;
-		inset: 0;
-		z-index: 0;
+	/* Mobile: texto arriba y centrado (§4.3 — el celular asoma abajo, y aunque acá no se ve el
+	 * `.seccion__caja` compartido reserva el padding-top de HiloRuta, ver base.css). */
+	@media (width < 900px) {
+		.p1 {
+			align-content: start;
+		}
 	}
 
-	/* === Capa 1 — velo de contraste (scrim direccional, nunca parejo: taparía la escena) ===
-	 * Aflojado 2026-09-04 (pedido de Ale): con el fondo real de la escena (glow + viñeta, ver
-	 * .p1 arriba) el velo fuerte quedaba oscureciendo de más — la app se ve mejor casi natural.
-	 * Se deja un velo mínimo (no se saca del todo) como red de seguridad de contraste para el
-	 * texto sobre la parte más clara del degradé (#163a5c), que sigue dando 11,8:1 igual —
-	 * el velo es un plus, no una necesidad. */
+	/* === Velo de contraste (scrim direccional, nunca parejo: taparía el escenario de fondo) ===
+	 * Mínimo, red de seguridad de contraste sobre la parte más clara del glow (#163a5c, 11,8:1) —
+	 * no una necesidad, el fondo real ya da contraste de sobra (ver Escenario.astro). */
 	.p1-velo {
 		position: absolute;
 		inset: 0;
-		z-index: 1;
+		z-index: 0;
 		pointer-events: none;
 		background: linear-gradient(
 			100deg,
@@ -112,7 +76,7 @@ import Icono from '../Icono.astro';
 		);
 	}
 
-	@media (max-width: 1100px) {
+	@media (width < 900px) {
 		.p1-velo {
 			background: linear-gradient(
 				180deg,
@@ -123,38 +87,35 @@ import Icono from '../Icono.astro';
 		}
 	}
 
-	/* === Capa 2 — texto ===
-	 * Dos elementos: .p1-texto (posicionamiento/centrado, sin animación) y .p1-texto__cuerpo (la
-	 * columna real, que SÍ anima `transform` en el beat B3) — separados a propósito para que el
-	 * `translateY(-50%)` de centrado (desktop) y el `translateY(-0.9rem)` del corrimiento por
-	 * scroll (B3) no compitan por la misma propiedad del mismo elemento. */
+	/* === Texto ===
+	 * Dos elementos: .p1-texto (posicionamiento, sin animación) y .p1-texto__cuerpo (la columna
+	 * real, que SÍ anima `transform` en la permanencia scroll-driven) — separados para que el
+	 * centrado de .seccion__caja y el corrimiento por scroll no compitan por la misma propiedad. */
 	.p1-texto {
-		position: absolute;
-		z-index: 2;
-		left: calc(var(--ancho-hilo-ruta) + clamp(2rem, 6vw, 7rem));
-		top: 50%;
-		transform: translateY(-50%);
+		position: relative;
+		z-index: 1;
+		max-width: min(34rem, 42vw);
 	}
 
 	.p1-texto__cuerpo {
 		display: flex;
 		flex-direction: column;
 		gap: var(--espacio-sm);
-		max-width: 34rem;
 		text-shadow: 0 1px 16px color-mix(in srgb, var(--color-marino-noche) 70%, transparent);
 	}
 
-	@media (max-width: 1100px) {
+	@media (width < 900px) {
 		.p1-texto {
-			left: clamp(1.5rem, 6vw, 3rem);
-			right: clamp(1.5rem, 6vw, 3rem);
-			top: clamp(2rem, 6vh, 4rem);
-			transform: none;
+			max-width: none;
 			text-align: center;
+			justify-self: center;
 		}
 		.p1-texto__cuerpo {
 			align-items: center;
-			max-width: none;
+			/* AJUSTE DEL EJECUTOR sobre el plan (E7), con evidencia: en 369×698 la bajada quedaba
+			 * ~24px superpuesta con `.telefono__marco` (confirmado con elementFromPoint, overlap
+			 * real). Gap más chico en mobile para ganar el margen que hace falta. */
+			gap: 0.65rem;
 		}
 	}
 
@@ -162,9 +123,15 @@ import Icono from '../Icono.astro';
 		margin: 0;
 		font-family: var(--fuente-display);
 		font-weight: 800;
-		font-size: clamp(2.25rem, 1.5rem + 3vw, 4rem);
+		font-size: clamp(2.75rem, 1.4rem + 4.6vw, 6rem);
 		line-height: 1.02;
 		color: var(--color-texto-sobre-foto);
+	}
+
+	@media (width < 900px) {
+		.p1-titular {
+			font-size: clamp(2.1rem, 1.2rem + 4vw, 3.5rem);
+		}
 	}
 
 	.p1-respuesta {
@@ -174,6 +141,12 @@ import Icono from '../Icono.astro';
 		font-size: clamp(1.35rem, 1.1rem + 1vw, 1.85rem);
 		line-height: 1.3;
 		color: color-mix(in srgb, var(--color-texto-sobre-foto) 92%, transparent);
+	}
+
+	@media (width < 900px) {
+		.p1-respuesta {
+			font-size: clamp(1.05rem, 0.95rem + 0.6vw, 1.35rem);
+		}
 	}
 
 	.p1-respuesta strong {
@@ -194,9 +167,10 @@ import Icono from '../Icono.astro';
 		color: color-mix(in srgb, var(--color-texto-sobre-foto) 80%, transparent);
 	}
 
-	@media (max-width: 1100px) {
+	@media (width < 900px) {
 		.p1-bajada {
 			max-width: none;
+			font-size: var(--texto-base);
 		}
 	}
 
@@ -210,42 +184,11 @@ import Icono from '../Icono.astro';
 		color: var(--color-celeste);
 	}
 
-	.p1-rotulo {
-		margin: var(--espacio-sm) 0 0;
-		display: flex;
-		align-items: center;
-		gap: var(--espacio-2xs);
-		font-family: var(--fuente-texto);
-		font-size: var(--texto-xs);
-		letter-spacing: 0.02em;
-		color: color-mix(in srgb, var(--color-texto-sobre-foto) 70%, transparent);
-	}
-
 	/* ============================================================================
-	 * (a) Entrada TEMPORAL, disparada por :root.entrada — mismo mecanismo que Hero.astro usaba.
+	 * Entrada TEMPORAL, disparada por :root.entrada — igual mecanismo que ya usaba Hero.astro y la
+	 * versión "cinta" de esta pantalla. Delays y timings literales, sin cambios.
 	 * ============================================================================ */
 
-	@keyframes p1-escena-enciende {
-		from {
-			opacity: 0;
-			transform: scale(1.06);
-		}
-		to {
-			opacity: 1;
-			transform: scale(1);
-		}
-	}
-	:global(:root.js) .p1-escena {
-		opacity: 0;
-		transform: scale(1.06);
-		animation: p1-escena-enciende 1100ms cubic-bezier(0.2, 0.7, 0.2, 1) both paused;
-	}
-	:global(:root.entrada) .p1-escena {
-		animation-play-state: running;
-	}
-
-	/* Titular: wipe de clip-path DEL CENTRO HACIA AFUERA — exclusivo de P1 (P4 hace wipe
-	 * horizontal, P2 no anima clip-path en el texto). */
 	@keyframes p1-texto-centro {
 		from {
 			clip-path: inset(0 50% 0 50%);
@@ -281,8 +224,6 @@ import Icono from '../Icono.astro';
 		animation-play-state: running;
 	}
 
-	/* Bajada y marca — sumadas acá el 2026-09-04 (antes esperaban al scroll, ver el comentario
-	 * grande del frontmatter). Mismo keyframe que la respuesta, delays siguientes en la secuencia. */
 	:global(:root.js) .p1-bajada,
 	:global(:root.js) .p1-marca {
 		opacity: 0;
@@ -299,36 +240,14 @@ import Icono from '../Icono.astro';
 		animation-play-state: running;
 	}
 
-	@keyframes p1-rotulo-entra {
-		from {
-			opacity: 0;
-		}
-		to {
-			opacity: 1;
-		}
-	}
-	:global(:root.js) .p1-rotulo {
-		opacity: 0;
-		animation: p1-rotulo-entra 500ms cubic-bezier(0.2, 0.7, 0.2, 1) 760ms both paused;
-	}
-	:global(:root.entrada) .p1-rotulo {
-		animation-play-state: running;
-	}
-
 	@media (prefers-reduced-motion: reduce) {
-		:global(:root.js) .p1-escena {
-			animation: none !important;
-			opacity: 1;
-			transform: none;
-		}
 		:global(:root.js) .p1-titular {
 			animation: none !important;
 			clip-path: none;
 		}
 		:global(:root.js) .p1-respuesta,
 		:global(:root.js) .p1-bajada,
-		:global(:root.js) .p1-marca,
-		:global(:root.js) .p1-rotulo {
+		:global(:root.js) .p1-marca {
 			animation: none !important;
 			opacity: 1;
 			transform: none;
@@ -336,14 +255,9 @@ import Icono from '../Icono.astro';
 	}
 
 	/* ============================================================================
-	 * (b) Permanencia SCROLL-DRIVEN, tramo 0%→8% de --hz-progreso. Nada de esto es una entrada:
-	 * ocurre con P1 ya centrada, mientras el usuario la lee (excepción declarada en cinta.ts §5).
-	 * El canvas (B0) lo maneja el <script> de arriba, no CSS. Bajada y marca YA NO están acá — se
-	 * movieron a la entrada temporal (2026-09-04, ver el comentario grande del frontmatter): solo
-	 * queda el gesto sutil (velo + corrimiento), que nunca oculta contenido.
-	 *
-	 * Default FUERA de @supports = estado FINAL/visible (restricción 1 de cinta.ts): sin
-	 * animation-timeline (Firefox estable) o sin JS, el velo se ve en su estado de reposo.
+	 * Permanencia SCROLL-DRIVEN — nada de esto es una entrada: ocurre con P1 ya pineada, mientras
+	 * el usuario la lee. Rango: TODO el tramo pineado de esta sección (E7 del plan).
+	 * Default FUERA de @supports = estado FINAL/visible (restricción 1 de escenario.ts).
 	 * ============================================================================ */
 
 	.p1-velo {
@@ -351,8 +265,6 @@ import Icono from '../Icono.astro';
 	}
 
 	@supports (animation-timeline: scroll(root)) {
-		/* El velo se afloja (nunca desaparece del todo) — la app pasa a primer plano sin perder
-		 * el piso de contraste. */
 		@keyframes p1-velo-afloja {
 			from {
 				opacity: 1;
@@ -363,12 +275,10 @@ import Icono from '../Icono.astro';
 		}
 		.p1-velo {
 			animation: p1-velo-afloja linear both;
-			animation-timeline: --hz-progreso;
-			animation-range: 5.40% 8.00%;
+			animation-timeline: --que-es;
+			animation-range: contain 0% contain 100%;
 		}
 
-		/* El texto "se corre" un poco — nunca desvanece: si el usuario frena a mitad del tramo,
-		 * el mensaje central de P1 sigue legible completo (se descartó bajar su opacidad). */
 		@keyframes p1-texto-corre {
 			from {
 				transform: translateY(0);
@@ -379,8 +289,8 @@ import Icono from '../Icono.astro';
 		}
 		.p1-texto__cuerpo {
 			animation: p1-texto-corre linear both;
-			animation-timeline: --hz-progreso;
-			animation-range: 5.40% 8.00%;
+			animation-timeline: --que-es;
+			animation-range: contain 0% contain 100%;
 		}
 	}
 

@@ -317,28 +317,65 @@ async function chequeoC2(page, seccionId) {
 			if (!marco) return { estado: 'SKIP', detalle: '.telefono__marco no existe' };
 			const seccion = document.getElementById(seccionId);
 			if (!seccion) return { estado: 'SKIP', detalle: `#${seccionId} no existe` };
-			const mr = marco.getBoundingClientRect();
 			const vw = window.innerWidth;
 			const vh = window.innerHeight;
 			const TOL = 4;
+			// Rectángulos a evitar: el celular SIEMPRE, y la banda inferior (E12) solo si está
+			// visible (display:block en desktop — en mobile mide 0 y no molesta a nadie).
+			const rects = [marco.getBoundingClientRect()];
+			const banda = document.querySelector('.escenario__banda');
+			if (banda) {
+				const br = banda.getBoundingClientRect();
+				if (br.width > 0 && br.height > 0) rects.push(br);
+			}
 			const nodos = [...seccion.querySelectorAll('h1,h2,h3,p,li')];
 			const candidatos = nodos.filter((n) => {
 				if (n.closest('[aria-hidden="true"]')) return false;
-				const cs = getComputedStyle(n);
-				if (parseFloat(cs.opacity) <= 0.5) return false;
+				// Opacidad EFECTIVA (la propia × la de cada ancestro hasta la sección): un fade-out
+				// animado en un CONTENEDOR (ej. `.p3-beat-a`, los 2 "beats" superpuestos de P3, E9)
+				// no cambia la propiedad `opacity` COMPUTADA del hijo — hay que acumularla caminando
+				// hacia arriba, si no, un nodo dentro de un beat ya desvanecido sigue contando como
+				// "candidato visible" (bug real encontrado corriendo el verificador contra P3 en
+				// mobile, Bloque E).
+				let opacidadEfectiva = 1;
+				for (let anc = n; anc instanceof Element && seccion.contains(anc); anc = anc.parentElement) {
+					opacidadEfectiva *= parseFloat(getComputedStyle(anc).opacity);
+					if (opacidadEfectiva <= 0.5) break;
+				}
+				if (opacidadEfectiva <= 0.5) return false;
 				const r = n.getBoundingClientRect();
-				return r.width > 0 && r.height > 0 && r.right > 0 && r.bottom > 0 && r.left < vw && r.top < vh;
+				if (!(r.width > 0 && r.height > 0 && r.right > 0 && r.bottom > 0 && r.left < vw && r.top < vh)) {
+					return false;
+				}
+				// Visibilidad REAL, no solo geometría: `getBoundingClientRect()` no sabe si un
+				// ancestro con `overflow:clip/hidden` (p.ej. `.p3-carril`, E9) recorta este nodo —
+				// reporta la caja de layout completa aunque esté invisible. Se confirma con
+				// `elementFromPoint()` en el centro (recortado al viewport): si lo que está
+				// realmente pintado ahí no es este nodo ni un descendiente suyo, no es un
+				// candidato real de solapamiento (bug real encontrado corriendo el verificador
+				// contra P3, Bloque E: "FAIL" con texto clippeado del carril, confirmado con
+				// elementFromPoint devolviendo el contenedor de la sección, no el texto).
+				const cx = Math.min(vw - 1, Math.max(0, (Math.max(0, r.left) + Math.min(vw, r.right)) / 2));
+				const cy = Math.min(vh - 1, Math.max(0, (Math.max(0, r.top) + Math.min(vh, r.bottom)) / 2));
+				const elAhi = document.elementFromPoint(cx, cy);
+				// `n.contains(elAhi)` cubre el caso n===elAhi y el de un hijo inline (ej. <strong>
+				// dentro de un <p>). OJO: la comprobación es en UN solo sentido — `elAhi.contains(n)`
+				// sería casi siempre cierta (cualquier contenedor ancestro "contiene" a n) y anularía
+				// el chequeo por completo (bug real encontrado en esta misma sesión, corregido acá).
+				return !!elAhi && n.contains(elAhi);
 			});
 			if (candidatos.length === 0) return { estado: 'SKIP', detalle: 'sin texto candidato en viewport' };
 			for (const n of candidatos) {
 				const r = n.getBoundingClientRect();
-				const ix = Math.min(mr.right - TOL, r.right - TOL) - Math.max(mr.left + TOL, r.left + TOL);
-				const iy = Math.min(mr.bottom - TOL, r.bottom - TOL) - Math.max(mr.top + TOL, r.top + TOL);
-				if (ix > 0 && iy > 0) {
-					return {
-						estado: 'FAIL',
-						detalle: `solapa con "${(n.textContent || '').trim().slice(0, 40)}"`,
-					};
+				for (const rect of rects) {
+					const ix = Math.min(rect.right - TOL, r.right - TOL) - Math.max(rect.left + TOL, r.left + TOL);
+					const iy = Math.min(rect.bottom - TOL, r.bottom - TOL) - Math.max(rect.top + TOL, r.top + TOL);
+					if (ix > 0 && iy > 0) {
+						return {
+							estado: 'FAIL',
+							detalle: `solapa con "${(n.textContent || '').trim().slice(0, 40)}"`,
+						};
+					}
 				}
 			}
 			return { estado: 'PASS', detalle: `${candidatos.length} nodo(s) de texto sin solapar` };

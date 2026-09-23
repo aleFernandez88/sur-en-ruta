@@ -1,236 +1,325 @@
 ---
 /**
- * P4Donde.astro — P4 · ¿Dónde lo hace? (`donde`, k=3, se centra en 75% de --hz-progreso).
+ * P4Donde.astro — P4 · ¿Dónde lo hace? (`donde`), 4ª de las 5 secciones del escenario vertical.
+ * Reescrita sobre `<Seccion>` en Bloque E, E10 (docs/planes/2026-09-23-bloque-e-secciones-chrome.md
+ * §5). Copy literal de `docs/landing-contenido.md` § P4 (deck `pag-06-rutas.png`, "Rutas que
+ * cuentan Uruguay"). Datos: `src/data/rutas.ts`.
  *
- * Copy literal de `docs/landing-contenido.md` § P4 (deck `pag-06-rutas.png`, "Rutas que cuentan
- * Uruguay"). Datos: `src/data/rutas.ts`.
+ * === Fotos — BLOQUEADAS (D2, sigue abierto) ===
+ * `rutas.ts` tiene `foto: null` para las 6 rutas: 2 imágenes son de IA y 4 no tienen `FUENTE.md` ni
+ * licencia registrada — publicarlas en una pantalla que dice "rutas que CUENTAN Uruguay" es la
+ * decisión D2, sin resolver. En la Opción 3, P4 es color de ruta a pantalla completa (lo pinta
+ * `Escenario.astro`, E3/E4) — las fotos ya no hacían falta ni antes de D2 para esta pantalla; solo
+ * se verían chicas dentro del demo (fuera de alcance de este componente).
  *
- * === Fotos — BLOQUEADAS (plan, paso 13.2 / decisión D2) ===
- * Las 6 imágenes de `public/app-demo/rutas/` no se cablean acá: 2 son generadas con IA
- * (Pollinations) y las otras 4 son fotos reales sin `FUENTE.md` ni licencia registrada — publicar
- * eso en una pantalla que dice "rutas que CUENTAN Uruguay" es la decisión D2, todavía sin resolver
- * con Ale. Mientras tanto (`rutas.ts`, `foto: null`), cada tarjeta se renderiza SIN foto: fondo
- * tintado con `color-mix()` sobre `--color-ruta-*` + el ícono grande — presentable y no obliga a
- * rehacer el layout después (basta con reemplazar el bloque de fondo por un <img> cuando D2 se
- * resuelva).
+ * === Gesto propio, "estado activo que rota" (§6.5 del plan mayor) ===
+ * Los 6 bloques (nombre + bajada + ícono) están superpuestos (`grid-area: 1/1`, mismo patrón que
+ * los 2 beats de P3) — la ruta *k* es visible en `contain (100k/6)% → contain (100(k+1)/6)%`. La
+ * primera arranca ya visible y la última termina visible (dos keyframes especiales, generados en el
+ * frontmatter) para que no haya pantalla vacía en los bordes de la sección. El fondo lo cambia
+ * `Escenario.astro` en las mismas 6 sub-mesetas (E3) — quedan alineados por construcción.
  *
- * === Animación — "las 6 rutas se van trazando" ===
- * Wipe horizontal por tarjeta (izquierda→derecha, como un trazo de ruta avanzando) + scale(0.97)→1,
- * escalonadas cada 1,3 puntos, 3 puntos de duración: 64%→67%, 65.3%→68.3%, 66.6%→69.6%,
- * 67.9%→70.9%, 69.2%→72.2%, 70.5%→73.5% (= `escalonado(64, i, 1.3, 3)`). El titular hace
- * *tracking-in* (letter-spacing 0.16em→0.01em, 64%→68%) — única propiedad no-transform animada en
- * todo el plan, mitigado con `white-space: nowrap` + ancho fijo para que no empuje layout.
- * Ninguna otra pantalla anima algo tipográfico ni hace wipe horizontal por tarjeta (P1 es
- * centro→afuera, P2 es vertical por columna) — memoria `feedback_animacion_por_pantalla`.
+ * === Accesibilidad ===
+ * Los 6 bloques son un `<ul>` real: visualmente se ve uno por vez (opacity), pero los 6 quedan en
+ * el árbol de accesibilidad — la opacidad no los saca. El índice de 6 puntos es decorativo
+ * (`aria-hidden`).
  *
- * La cuña diagonal es la MISMA recta continua que P3ComoLoHace.astro (mismos 4 anclajes).
+ * === Qué se borra respecto de la versión "cinta" ===
+ * `<Pantalla>`/`<Lamina>`, la grilla de 6 tarjetas con fondo tintado + ícono, el *tracking-in* de
+ * `letter-spacing` (única propiedad no-transform que animaba la versión vieja — se saca, restricción
+ * 4 del set de reglas del proyecto) y el wipe horizontal por tarjeta.
  */
-import Pantalla from '../Pantalla.astro';
-import Lamina from '../Lamina.astro';
+import Seccion from '../Seccion.astro';
 import Icono from '../Icono.astro';
 import { rutas } from '../../data/rutas.ts';
-import { escalonado } from '../../lib/cinta.ts';
+
+const TOTAL = rutas.length;
+
+// Rango contain-relativo de la ruta k — 6 sub-mesetas parejas dentro del tramo pineado de esta
+// sección (restricción 4: animation-range nunca con var(), literal calculado acá).
+function rangoRuta(k: number): string {
+	const inicio = ((100 * k) / TOTAL).toFixed(3);
+	const fin = ((100 * (k + 1)) / TOTAL).toFixed(3);
+	return `contain ${inicio}% contain ${fin}%`;
+}
+
+// La ruta 0 arranca YA visible (no hay pantalla vacía al entrar a la sección) y la ruta 5 termina
+// visible (no hay pantalla vacía al salir) — dos keyframes especiales, el resto usa el genérico.
+function keyframesRuta(k: number): string {
+	const esPrimera = k === 0;
+	const esUltima = k === TOTAL - 1;
+	const stop0 = esPrimera ? '{ opacity: 1; translate: 0 0; }' : '{ opacity: 0; translate: 0 1.5rem; }';
+	const stop100 = esUltima ? '{ opacity: 1; translate: 0 0; }' : '{ opacity: 0; translate: 0 -1.5rem; }';
+	return `@keyframes p4-ruta-${k} {
+  0% ${stop0}
+  15% { opacity: 1; translate: 0 0; }
+  85% { opacity: 1; }
+  100% ${stop100}
+}`;
+}
+
+// Mismo criterio que la ruta, aplicado al punto k del índice (solo opacidad: lleno/apagado).
+function keyframesPunto(k: number): string {
+	const esPrimera = k === 0;
+	const esUltima = k === TOTAL - 1;
+	const inicio = esPrimera ? 1 : 0.35;
+	const fin = esUltima ? 1 : 0.35;
+	return `@keyframes p4-punto-${k} {
+  0% { opacity: ${inicio}; }
+  15% { opacity: 1; }
+  85% { opacity: 1; }
+  100% { opacity: ${fin}; }
+}`;
+}
+
+const keyframesGenerados = rutas
+	.map((_, i) => `${keyframesRuta(i)}\n\n${keyframesPunto(i)}`)
+	.join('\n\n');
 ---
 
-<Pantalla id="donde" completa>
-	<Lamina
-		indice={3}
-		distribucion="columna"
-		fondoDiagonal
-		diagDesdeIndice={2}
-		diagDesdeValor={95}
-		diagHastaIndice={4}
-		diagHastaValor={5}
-	>
-		<div class="p4-cabecera">
-			<h2 class="p4-titular">Rutas que cuentan Uruguay</h2>
-			<p class="p4-bajada">Experiencias temáticas para descubrir el país a otro ritmo.</p>
-		</div>
-
-		<div class="p4-rutas">
-			{
-				rutas.map((r, i) => (
-					<div class="p4-ruta" style={`animation-range: ${escalonado(64, i, 1.3, 3)}`}>
-						<div
-							class="p4-ruta-visual"
-							style={`background: color-mix(in srgb, ${r.colorTrazo} 22%, var(--color-fondo))`}
-						>
-							<Icono nombre={r.icono} tamano={48} acento={r.colorTrazo} />
-						</div>
-						<p class="p4-ruta-nombre">{r.nombre}</p>
-						<p class="p4-ruta-bajada">{r.bajada}</p>
-					</div>
-				))
-			}
-		</div>
-
-		<Fragment slot="footer">
-			<div class="pie-footer">
-				<div class="p4-cierre">
-					<p class="p4-cierre-texto">
-						Cada ruta conecta <strong>puntos, servicios, paisajes y experiencias.</strong>
-					</p>
-				</div>
+<Seccion id="donde">
+	<div class="p4 seccion__caja">
+		<div class="p4-caja">
+			<div class="p4-cabecera">
+				<h2 class="p4-titular">Rutas que cuentan Uruguay</h2>
+				<p class="p4-bajada">Experiencias temáticas para descubrir el país a otro ritmo.</p>
 			</div>
-		</Fragment>
-	</Lamina>
-</Pantalla>
+
+			<ul class="p4-escenario">
+				{
+					rutas.map((r, i) => (
+						<li class={`p4-ruta p4-ruta--${i}`} style={`animation-range: ${rangoRuta(i)}`}>
+							<span class="p4-ruta-icono">
+								<Icono nombre={r.icono} tamano={48} />
+							</span>
+							<p class="p4-ruta-nombre">{r.nombre}</p>
+							<p class="p4-ruta-bajada">{r.bajada}</p>
+						</li>
+					))
+				}
+			</ul>
+
+			<div class="p4-indice" aria-hidden="true">
+				{rutas.map((_, i) => <span class={`p4-punto p4-punto--${i}`} style={`animation-range: ${rangoRuta(i)}`} />)}
+			</div>
+
+			<p class="p4-cierre">
+				Cada ruta conecta <strong>puntos, servicios, paisajes y experiencias.</strong>
+			</p>
+		</div>
+	</div>
+</Seccion>
+
+<style is:global set:html={keyframesGenerados} />
 
 <style>
-	.p4-cabecera {
-		margin-bottom: var(--espacio-lg);
-		width: 100%;
-		/* Ancho fijo + nowrap: mitigación obligatoria del plan — el tracking-in no puede empujar
-		 * layout (única propiedad no-transform animada de todo el plan). */
+	.p4 {
+		align-content: center;
+	}
+
+	.p4-caja {
 		display: flex;
 		flex-direction: column;
-		align-items: center;
-		text-align: center;
+		gap: var(--espacio-md);
+		max-width: 50vw;
+	}
+
+	@media (width < 900px) {
+		.p4 {
+			align-content: start;
+		}
+		.p4-caja {
+			max-width: none;
+		}
+	}
+
+	.p4-cabecera {
+		display: flex;
+		flex-direction: column;
+		gap: var(--espacio-2xs);
 	}
 
 	.p4-titular {
-		margin: 0 0 var(--espacio-xs);
+		margin: 0;
 		font-family: var(--fuente-display);
-		font-weight: 800;
-		font-size: clamp(2rem, 1.4rem + 3vw, 3.25rem);
-		line-height: 1.05;
-		color: var(--color-marino);
-		white-space: nowrap;
-		letter-spacing: 0.01em;
+		font-weight: 700;
+		font-size: var(--texto-lg);
+		color: var(--color-texto-sobre-foto);
 	}
 
 	.p4-bajada {
 		margin: 0;
 		font-family: var(--fuente-texto);
 		font-size: var(--texto-base);
-		color: var(--color-tinta-suave);
+		color: color-mix(in srgb, var(--color-texto-sobre-foto) 80%, transparent);
 	}
 
-	@keyframes p4-titular-tracking {
-		from {
-			letter-spacing: 0.16em;
-		}
-		to {
-			letter-spacing: 0.01em;
-		}
-	}
-
-	@supports (animation-timeline: scroll(root)) {
-		.p4-titular {
-			letter-spacing: 0.16em;
-			animation: p4-titular-tracking linear both;
-			animation-timeline: --hz-progreso;
-			animation-range: 64% 68%;
-		}
-	}
-
-	@media (prefers-reduced-motion: reduce) {
-		.p4-titular {
-			animation: none !important;
-			letter-spacing: 0.01em;
-		}
-	}
-
-	.p4-rutas {
+	.p4-escenario {
 		display: grid;
-		grid-template-columns: repeat(3, minmax(0, 1fr));
-		gap: clamp(0.75rem, 1.8vw, 1.5rem);
-		width: 100%;
-	}
-
-	@media (max-width: 1100px) {
-		.p4-rutas {
-			grid-template-columns: repeat(2, minmax(0, 1fr));
-		}
+		margin: 0;
+		padding: 0;
+		list-style: none;
+		min-height: clamp(14rem, 30svh, 20rem);
 	}
 
 	.p4-ruta {
+		grid-area: 1 / 1;
 		display: flex;
 		flex-direction: column;
 		gap: var(--espacio-2xs);
-		overflow: hidden;
-		border-radius: var(--radio-md);
+		align-content: start;
 	}
 
-	.p4-ruta-visual {
-		display: grid;
-		place-items: center;
-		aspect-ratio: 16 / 10;
-		border-radius: var(--radio-md);
+	.p4-ruta-icono {
+		color: var(--color-texto-sobre-foto);
+		margin-bottom: var(--espacio-xs);
 	}
 
 	.p4-ruta-nombre {
-		margin: var(--espacio-2xs) 0 0;
-		font-family: var(--fuente-texto);
-		font-weight: 700;
-		font-size: clamp(0.95rem, 0.88rem + 0.35vw, 1.1rem);
-		color: var(--color-marino);
+		margin: 0;
+		font-family: var(--fuente-display);
+		font-weight: 800;
+		font-size: clamp(2.5rem, 1.2rem + 5vw, 6.5rem);
+		line-height: 1.02;
+		color: var(--color-texto-sobre-foto);
 	}
 
 	.p4-ruta-bajada {
 		margin: 0;
 		font-family: var(--fuente-texto);
-		font-size: clamp(0.78rem, 0.74rem + 0.2vw, 0.88rem);
-		line-height: 1.3;
-		color: var(--color-tinta-suave);
+		font-size: var(--texto-lg);
+		color: color-mix(in srgb, var(--color-texto-sobre-foto) 85%, transparent);
 	}
 
-	/* === Animación — wipe horizontal por tarjeta (izq→der, como un trazo de ruta) === */
-	@keyframes p4-ruta-traza {
-		from {
-			clip-path: inset(0 100% 0 0);
-			transform: scale(0.97);
+	.p4-indice {
+		display: flex;
+		gap: var(--espacio-xs);
+	}
+
+	/* === Mobile: bloque más compacto — AJUSTE DEL EJECUTOR sobre el plan (E10), con evidencia: en
+	 * 390×844/369×698 el cierre (y, en 369×698, hasta la bajada de la ruta) quedaba superpuesto con
+	 * `.telefono__marco` (confirmado con elementFromPoint, overlap real). Se achica el bloque de la
+	 * ruta activa y el espaciado; ningún texto se saca. */
+	@media (width < 900px) {
+		.p4-caja {
+			gap: 0.4rem;
 		}
-		to {
-			clip-path: inset(0 0 0 0);
-			transform: scale(1);
+		.p4-cabecera {
+			gap: 0.15rem;
+		}
+		.p4-escenario {
+			min-height: clamp(5rem, 13svh, 8rem);
+		}
+		.p4-ruta-nombre {
+			font-size: clamp(1.6rem, 0.9rem + 4vw, 2.6rem);
+		}
+		.p4-ruta-bajada {
+			font-size: var(--texto-sm);
+		}
+		.p4-cierre {
+			font-size: var(--texto-sm);
 		}
 	}
 
-	@supports (animation-timeline: scroll(root)) {
-		.p4-ruta {
-			clip-path: inset(0 100% 0 0);
-			transform: scale(0.97);
-			animation: p4-ruta-traza linear both;
-			animation-timeline: --hz-progreso;
-		}
-	}
-
-	@media (prefers-reduced-motion: reduce) {
-		.p4-ruta {
-			animation: none !important;
-			clip-path: inset(0 0 0 0);
-			transform: none;
-		}
-	}
-
-	.pie-footer {
-		position: relative;
-		height: 100%;
+	.p4-punto {
+		width: 0.55rem;
+		height: 0.55rem;
+		border-radius: 50%;
+		background: var(--color-texto-sobre-foto);
+		opacity: 0.35;
 	}
 
 	.p4-cierre {
-		position: absolute;
-		left: 25%;
-		bottom: clamp(1.5rem, 4vh, 2.5rem);
-		transform: translateX(-50%);
-		max-width: min(30rem, 60vw);
-		text-align: center;
-	}
-
-	.p4-cierre-texto {
 		margin: 0;
 		font-family: var(--fuente-texto);
 		font-size: clamp(1.05rem, 0.9rem + 0.5vw, 1.25rem);
 		line-height: 1.35;
+		max-width: 42ch;
 		color: var(--color-texto-sobre-foto);
 	}
 
-	.p4-cierre-texto strong {
-		color: var(--color-verde);
-		text-shadow:
-			0 0 2px var(--color-superficie),
-			0 0 2px var(--color-superficie),
-			0 0 3px var(--color-superficie);
+	.p4-cierre strong {
+		color: var(--color-verde-vivo);
+	}
+
+	@supports (animation-timeline: scroll(root)) {
+		.p4-ruta--0 {
+			animation: p4-ruta-0 linear both;
+			animation-timeline: --donde;
+		}
+		.p4-ruta--1 {
+			animation: p4-ruta-1 linear both;
+			animation-timeline: --donde;
+		}
+		.p4-ruta--2 {
+			animation: p4-ruta-2 linear both;
+			animation-timeline: --donde;
+		}
+		.p4-ruta--3 {
+			animation: p4-ruta-3 linear both;
+			animation-timeline: --donde;
+		}
+		.p4-ruta--4 {
+			animation: p4-ruta-4 linear both;
+			animation-timeline: --donde;
+		}
+		.p4-ruta--5 {
+			animation: p4-ruta-5 linear both;
+			animation-timeline: --donde;
+		}
+
+		.p4-punto--0 {
+			animation: p4-punto-0 linear both;
+			animation-timeline: --donde;
+		}
+		.p4-punto--1 {
+			animation: p4-punto-1 linear both;
+			animation-timeline: --donde;
+		}
+		.p4-punto--2 {
+			animation: p4-punto-2 linear both;
+			animation-timeline: --donde;
+		}
+		.p4-punto--3 {
+			animation: p4-punto-3 linear both;
+			animation-timeline: --donde;
+		}
+		.p4-punto--4 {
+			animation: p4-punto-4 linear both;
+			animation-timeline: --donde;
+		}
+		.p4-punto--5 {
+			animation: p4-punto-5 linear both;
+			animation-timeline: --donde;
+		}
+	}
+
+	/* === Movimiento reducido — DECISIÓN DEL EJECUTOR, marcada para revisión de Ale/arquitecto ===
+	 * La superposición `grid-area: 1/1` de las 6 rutas es NUEVA de este bloque. Primer intento
+	 * (apilar las 6 en columna, sin recortar): descartado con evidencia — `.seccion__pin` tiene
+	 * `overflow: clip` y alto fijo `100svh` (base.css), así que "sin recortar" en realidad SÍ
+	 * recortaba (6 bloques de texto grande no entran en una pantalla) y encima quedaban apiladas
+	 * unas sobre otras sin espacio, ilegibles. Verificado con el verificador: 14 FAIL nuevos en vez
+	 * de 0. Se vuelve al criterio literal de escenario.ts ("estado final" = la ÚLTIMA ruta, la que
+	 * el propio diseño ya marca como "termina visible") — las otras 5 se sacan del todo
+	 * (`display:none`, no solo opacidad: con opacidad sola seguirían siendo "hit-testables" y
+	 * contando como candidatas de solapamiento). El índice de puntos deja de tener sentido sin una
+	 * rotación real, así que se oculta. */
+	@media (prefers-reduced-motion: reduce) {
+		.p4-ruta--0,
+		.p4-ruta--1,
+		.p4-ruta--2,
+		.p4-ruta--3,
+		.p4-ruta--4 {
+			display: none;
+		}
+		.p4-ruta--5 {
+			animation: none !important;
+			opacity: 1;
+			translate: 0 0;
+		}
+		.p4-indice {
+			display: none;
+		}
 	}
 </style>
