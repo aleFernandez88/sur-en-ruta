@@ -6,17 +6,6 @@
  * repiten por sección, se heredan de esta capa.
  */
 
-/* Escenario vertical (docs/planes/2026-09-22-recomposicion-ui-vertical.md §14.7 paso 11 — Paso
- * 1.4 de §5). Un `view-timeline-name` con nombre solo es visible por defecto para los
- * DESCENDIENTES de quien lo declara (cada <Seccion>, ver Seccion.astro). Escenario.astro (el
- * cross-fade de `.escenario__fondo`) es HERMANO de <main>, no descendiente de ninguna sección —
- * sin este `timeline-scope` en :root, su animación no encontraría los 5 timelines y quedaría con
- * el progreso mal resuelto. Reemplaza a `timeline-scope: --hz-progreso` (que vivía en `body`,
- * apuntaba a un único timeline sobre `.hz-track`, ya borrado). */
-:root {
-  timeline-scope: --que-es, --que-hace, --como-lo-hace, --donde, --cierre;
-}
-
 *,
 *::before,
 *::after {
@@ -69,12 +58,43 @@ body {
   top: 0;
   height: 100svh;
   overflow: clip;
+  /* Transparente por default: el fondo real lo pinta `.escenario` (Escenario.astro), fijo detrás
+   * de todas las secciones — así fondo, celular y rótulo quedan alineados por construcción
+   * (Bloque E, E3/E4). Solo pinta su propio color sólido cuando NO hay scroll-driven animations
+   * (§4.5, Firefox estable): ahí `.escenario` no anima nada y cada sección necesita su propio
+   * fondo para no dejar la página entera en el color inicial de `--escenario-fondo`. */
+  background: transparent;
 }
 
 @supports (animation-timeline: view()) {
   .seccion {
     height: var(--largo);
     view-timeline-axis: block;
+  }
+}
+
+@supports not (animation-timeline: view()) {
+  .seccion__pin {
+    background: var(--seccion-fondo);
+  }
+}
+
+/* Utilidad de layout para el contenido de cada pantalla (P1-P5, E7-E11): ocupa toda la sección
+ * pineada y deja el hueco de HiloRuta a la izquierda (desktop) — el mismo `--ancho-hilo-ruta` que
+ * ya usaban `.p1-texto` y compañía, ahora en un solo lugar en vez de repetido por pantalla. */
+.seccion__caja {
+  position: absolute;
+  inset: 0;
+  padding: clamp(1.5rem, 5svh, 3rem) clamp(1.25rem, 4vw, 4rem) clamp(1.5rem, 5svh, 3rem)
+    calc(var(--ancho-hilo-ruta) + clamp(1.25rem, 4vw, 4rem));
+  display: grid;
+}
+
+@media (width < 900px) {
+  .seccion__caja {
+    /* Deja lugar al botón flotante de HiloRuta en mobile (E14) — ahí `--ancho-hilo-ruta` pasa a
+     * 0px (no hay barra lateral que reservar), así que ese padding no alcanza por sí solo. */
+    padding-top: 5.5rem;
   }
 }
 

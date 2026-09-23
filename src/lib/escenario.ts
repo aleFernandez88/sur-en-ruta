@@ -10,8 +10,17 @@
  * 1.2, `Seccion.astro`), así que lo que hace falta no es "dónde se centra" sino "entre qué dos
  * puntos del scroll del DOCUMENTO ENTERO está activa". Eso es lo que da `offsets()`.
  *
- * === La tabla (Opción 3, §11.3) === que-es:160 · que-hace:140 · como-lo-hace:220 · donde:180 ·
- * cierre:100 = 800 svh.
+ * === La tabla (Bloque E, docs/planes/2026-09-23-bloque-e-secciones-chrome.md §3.6/§4.2, E3) ===
+ * que-es:160 · que-hace:160 · como-lo-hace:260 · donde:260 · cierre:100 = 940 svh. Reemplaza al
+ * presupuesto original de §11.3 (800svh, 160/140/220/180/100): con ese reparto cada sección quedaba
+ * pineada MENOS de lo que parece (H5 del plan de Bloque E — el pin descuenta 100svh, así que
+ * `que-hace` quedaba con 40svh pineados y `donde` repartía 6 rutas en 80svh, ~13svh por ruta, un
+ * solo tick de rueda). Ale decidió la Opción B (940svh) el 2026-09-23: ~27svh por ruta de `donde` y
+ * ~19svh por paso de `como-lo-hace`, unos 2 ticks de rueda cada uno.
+ *
+ * `ESCENARIO` ya NO es una tabla suelta: se DERIVA de `recorrido` (fuente única del orden y los
+ * nombres, ver src/data/recorrido.ts) cruzada con `PRESUPUESTO_SVH` — antes las dos vivían
+ * separadas y podían desincronizarse (hallazgo H10 del plan de Bloque E).
  *
  * === Restricciones técnicas que no se pueden violar (trasladadas íntegras de cinta.ts:34-47,
  * todas ya costaron debugging real) ===
@@ -29,22 +38,38 @@
  * 6. Toda ruta a un asset de `public/` va con `import.meta.env.BASE_URL` (`astro.config.mjs` fija
  *    `base: '/sur-en-ruta/'`) — nunca `/algo/...` a secas, restricción ya documentada en el plan §12.
  */
+import { recorrido } from '../data/recorrido.ts';
+import { rutas } from '../data/rutas.ts';
 
 interface Seccion {
 	id: string;
 	largoSvh: number;
 }
 
-/** Tabla de presupuesto de scroll — Opción 3 (§11.3). Sumar/quitar una sección = tocar esto. */
-export const ESCENARIO: Seccion[] = [
-	{ id: 'que-es', largoSvh: 160 },
-	{ id: 'que-hace', largoSvh: 140 },
-	{ id: 'como-lo-hace', largoSvh: 220 },
-	{ id: 'donde', largoSvh: 180 },
-	{ id: 'cierre', largoSvh: 100 },
-];
+/** Presupuesto de scroll por sección, en svh — Bloque E, Opción B de §3.6 (940svh). Sumar/quitar
+ * una sección = agregar su id acá Y en `recorrido.ts`; si falta uno de los dos, `ESCENARIO` tira
+ * error en el arranque (ver abajo). */
+export const PRESUPUESTO_SVH: Record<string, number> = {
+	'que-es': 160,
+	'que-hace': 160,
+	'como-lo-hace': 260,
+	donde: 260,
+	cierre: 100,
+};
 
-/** Suma de `largoSvh` de todas las secciones (800 con la tabla de arriba). */
+/** `ESCENARIO` se deriva de `recorrido` (orden y nombres) cruzado con `PRESUPUESTO_SVH` (largo) —
+ * antes eran dos tablas independientes (H10 del plan de Bloque E). */
+export const ESCENARIO: Seccion[] = recorrido.map((r) => {
+	const largoSvh = PRESUPUESTO_SVH[r.id];
+	if (largoSvh === undefined) {
+		throw new Error(
+			`escenario.ts: la sección "${r.id}" está en recorrido.ts pero no tiene presupuesto en PRESUPUESTO_SVH.`,
+		);
+	}
+	return { id: r.id, largoSvh };
+});
+
+/** Suma de `largoSvh` de todas las secciones (940 con la tabla de arriba). */
 export const TOTAL_SVH = ESCENARIO.reduce((acc, s) => acc + s.largoSvh, 0);
 
 /** `largoSvh` de una sección por id — lo consume `Seccion.astro` vía cada `PnXxx.astro`. */
@@ -59,9 +84,18 @@ export interface Offset {
 	/** Acumulado en svh, medido desde el tope del documento. */
 	desdeSvh: number;
 	hastaSvh: number;
+	/** Fin de la MESETA pineada: `desdeSvh + largoSvh − 100` (§4.2 del plan de Bloque E). Puede
+	 * coincidir con `desdeSvh` cuando `largoSvh ≤ 100` (pasa con `cierre`: no hay meseta, la
+	 * sección entra y el documento termina). */
+	pinHastaSvh: number;
+	/** Punto medio del tramo de TRANSICIÓN hacia la sección siguiente: `pinHastaSvh + 50`. `null`
+	 * en la última sección (`cierre`), que no tiene "siguiente". */
+	fronteraSvh: number | null;
 	/** % del scroll del DOCUMENTO (0-100, ya clampeado) donde arranca/termina esta sección. */
 	desdePct: number;
 	hastaPct: number;
+	pinHastaPct: number;
+	fronteraPct: number | null;
 	centroPct: number;
 }
 
@@ -76,14 +110,34 @@ export interface Offset {
  */
 export function offsets(): Offset[] {
 	const totalScrolleable = TOTAL_SVH - 100;
+	const svhAPct = (svh: number) => Math.min(100, (svh / totalScrolleable) * 100);
 	let acumulado = 0;
-	return ESCENARIO.map((s) => {
+	const lista = ESCENARIO.map((s) => {
 		const desdeSvh = acumulado;
 		const hastaSvh = acumulado + s.largoSvh;
 		acumulado = hastaSvh;
-		const desdePct = Math.min(100, (desdeSvh / totalScrolleable) * 100);
-		const hastaPct = Math.min(100, (hastaSvh / totalScrolleable) * 100);
-		return { id: s.id, desdeSvh, hastaSvh, desdePct, hastaPct, centroPct: (desdePct + hastaPct) / 2 };
+		const pinHastaSvh = desdeSvh + Math.max(0, s.largoSvh - 100);
+		return { id: s.id, desdeSvh, hastaSvh, pinHastaSvh };
+	});
+	return lista.map((o, i) => {
+		const esUltima = i === lista.length - 1;
+		const fronteraSvh = esUltima ? null : o.pinHastaSvh + 50;
+		const desdePct = svhAPct(o.desdeSvh);
+		const hastaPct = svhAPct(o.hastaSvh);
+		const pinHastaPct = svhAPct(o.pinHastaSvh);
+		const fronteraPct = fronteraSvh === null ? null : svhAPct(fronteraSvh);
+		return {
+			id: o.id,
+			desdeSvh: o.desdeSvh,
+			hastaSvh: o.hastaSvh,
+			pinHastaSvh: o.pinHastaSvh,
+			fronteraSvh,
+			desdePct,
+			hastaPct,
+			pinHastaPct,
+			fronteraPct,
+			centroPct: (desdePct + hastaPct) / 2,
+		};
 	});
 }
 
@@ -107,3 +161,80 @@ export function escalonado(inicio: number, i: number, paso: number, duracion: nu
 	const desde = inicio + i * paso;
 	return `${desde.toFixed(2)}% ${(desde + duracion).toFixed(2)}%`;
 }
+
+// ================================================================================================
+// Tablas de DATOS (sin CSS) que consume escenario-keyframes.ts — Bloque E, §4.1/§4.3 del plan.
+// ================================================================================================
+
+export interface EstadoTelefono {
+	/** % del ancla (100vw × 100svh), eje X. */
+	x: number;
+	/** % del ancla, eje Y. */
+	y: number;
+	/** Sobre un celular base de 56svh de alto (Telefono.astro). */
+	escala: number;
+}
+
+/** Posición del celular por sección y breakpoint — §4.3 del plan de Bloque E. La rotación 3D de
+ * `que-es` (−16° → 0°, solo desktop) NO vive acá: es un caso especial que resuelve
+ * `keyframesTelefono` directamente, porque es la única sección donde `--tel-rot` vale algo
+ * distinto de 0. Valores INICIALES: se afinan en E13, solo tocando esta tabla, con capturas. */
+export const TELEFONO: Record<string, { escritorio: EstadoTelefono; movil: EstadoTelefono }> = {
+	'que-es': {
+		escritorio: { x: 20, y: 0, escala: 1 },
+		movil: { x: 0, y: 30, escala: 0.88 },
+	},
+	'que-hace': {
+		escritorio: { x: 27, y: 2, escala: 0.86 },
+		movil: { x: 0, y: 40, escala: 0.72 },
+	},
+	'como-lo-hace': {
+		escritorio: { x: -25, y: 2, escala: 0.84 },
+		movil: { x: 0, y: 40, escala: 0.72 },
+	},
+	donde: {
+		escritorio: { x: 25, y: 2, escala: 0.9 },
+		movil: { x: 0, y: 34, escala: 0.8 },
+	},
+	cierre: {
+		escritorio: { x: 0, y: 0, escala: 1.04 },
+		movil: { x: 0, y: 30, escala: 0.88 },
+	},
+};
+
+export interface FondoSeccion {
+	/** Uno o más nombres de custom property de color de `tokens.css` (con el `--` incluido). Para
+	 * `donde`, 6 tokens (uno por ruta, mismo orden que `rutas.ts`); para el resto, uno solo. */
+	tokens: string[];
+	/** Fracción (0-1) de `--color-marino-noche` mezclada por encima — solo `donde` (§4.1:
+	 * "color-mix(ruta 80%, marino-noche)" → 0.2 de noche, 0.8 de ruta). */
+	mezclaNoche?: number;
+	/** Si esta sección pinta el glow radial de P1 (lo agrega `Escenario.astro` aparte, ver
+	 * `keyframesGlow`). */
+	glow?: boolean;
+}
+
+/** Extrae el nombre del custom property de un valor tipo `var(--color-ruta-vino)`. */
+function tokenDeVar(valor: string): string {
+	const m = /--[\w-]+/.exec(valor);
+	if (!m) throw new Error(`escenario.ts: "${valor}" no tiene la forma var(--nombre-token)`);
+	return m[0];
+}
+
+/** Fondo, rótulo y glow por sección — tabla §4.1 del plan de Bloque E (sustituye a la de §11.3). */
+export const FONDO: Record<string, FondoSeccion> = {
+	'que-es': { tokens: ['--color-marino-noche'], glow: true },
+	'que-hace': { tokens: ['--color-verde'] },
+	'como-lo-hace': { tokens: ['--color-marino-noche'] },
+	donde: { tokens: rutas.map((r) => tokenDeVar(r.colorTrazo)), mezclaNoche: 0.2 },
+	cierre: { tokens: ['--color-arena'] },
+};
+
+/** Tratamiento del rótulo "Vista conceptual de la app" (claro/oscuro) por sección — §4.1. */
+export const ROTULO: Record<string, 'oscuro' | 'claro'> = {
+	'que-es': 'oscuro',
+	'que-hace': 'claro',
+	'como-lo-hace': 'oscuro',
+	donde: 'oscuro',
+	cierre: 'claro',
+};

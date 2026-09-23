@@ -2,29 +2,50 @@
 /**
  * Seccion.astro — una de las 5 secciones del escenario vertical (Opción 3, "Demo viva").
  * Reemplaza a Pantalla.astro (docs/planes/2026-09-22-recomposicion-ui-vertical.md §14.7 paso 8 —
- * Paso 1.2 de §5).
+ * Paso 1.2 de §5; reescrito en Bloque E, E6, docs/planes/2026-09-23-bloque-e-secciones-chrome.md
+ * §5).
  *
- * Estructura: un contenedor ALTO (`--largo`, en svh, el presupuesto de scroll propio de la sección
- * — sale de `escenario.ts`) con un hijo `position: sticky` que se pinea al tope del viewport
- * mientras el usuario scrollea ese presupuesto. El contenedor alto es quien declara
- * `view-timeline-name`, NUNCA el hijo sticky — un elemento pegado al viewport no cambia su
- * posición relativa al scrollport, así que su propio view-timeline se congelaría (el error típico
- * de este patrón, ya señalado en el plan).
+ * Estructura: un contenedor ALTO (`--largo`, en svh, el presupuesto de scroll propio de la sección)
+ * con un hijo `position: sticky` que se pinea al tope del viewport mientras el usuario scrollea ese
+ * presupuesto. El contenedor alto es quien declara `view-timeline-name`, NUNCA el hijo sticky — un
+ * elemento pegado al viewport no cambia su posición relativa al scrollport, así que su propio
+ * view-timeline se congelaría (el error típico de este patrón, ya señalado en el plan).
+ *
+ * `largoSvh` ya NO es una prop — sale de `escenario.ts` (`largoSvh(id)`) por `id`, así no puede
+ * desincronizarse de la tabla que usa `Escenario.astro`/`escenario-keyframes.ts` para todo lo
+ * demás (antes cada `PnXxx.astro` pasaba su propio número a mano).
+ *
+ * `--seccion-fondo` es el color de fondo SÓLIDO de esta sección — lo consume `.seccion__pin`
+ * (ver base.css) solo cuando no hay `animation-timeline` (Firefox estable, §4.5): ahí el escenario
+ * fijo no anima nada, así que cada sección tiene que pintar su propio fondo para no dejar la
+ * página en el color inicial de `--escenario-fondo` de punta a punta. Se lee de `FONDO[id]` (el
+ * primer token, si son varios — `donde` tiene 6, uno por ruta, y acá alcanza con el primero: en el
+ * fallback sin scroll-driven no hay cross-fade entre rutas, es un color fijo por sección).
  *
  * El `@supports` envolviendo la ALTURA (ver base.css, `.seccion`) es lo que hace que Firefox
  * estable (sin scroll-driven animations, ver escenario.ts restricción 1) lea la página como un
  * sitio vertical normal en vez de dejar ~2 pantallas de scroll muerto por sección: sin soporte,
  * `--largo` no se aplica y la sección mide `auto` (~una pantalla).
  */
+import { FONDO, largoSvh } from '../lib/escenario.ts';
+
 interface Props {
 	id: string;
-	largoSvh: number;
+	class?: string;
 }
 
-const { id, largoSvh } = Astro.props;
+const { id, class: claseExtra } = Astro.props;
+const largo = largoSvh(id);
+const fondo = FONDO[id];
+if (!fondo) throw new Error(`Seccion.astro: la sección "${id}" no tiene entrada en FONDO (escenario.ts).`);
+const seccionFondo = `var(${fondo.tokens[0]})`;
 ---
 
-<section class="seccion" id={id} style={`--largo: ${largoSvh}svh; view-timeline-name: --${id};`}>
+<section
+	class:list={['seccion', claseExtra]}
+	id={id}
+	style={`--largo: ${largo}svh; --seccion-fondo: ${seccionFondo}; view-timeline-name: --${id};`}
+>
 	<div class="seccion__pin">
 		<slot />
 	</div>
