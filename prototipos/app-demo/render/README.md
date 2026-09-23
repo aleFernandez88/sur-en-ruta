@@ -1,6 +1,7 @@
 # render — video y capturas del app-demo
 
-Herramienta interna (no se publica). A partir de `../showcase.html` genera:
+Herramienta interna (no se publica). A partir de `../../../public/app-demo/showcase.html` (única
+copia desde el 2026-09-22, ver `../README.md`) genera:
 
 - **`render.mjs`** → `sur-en-ruta-app-showcase.mp4` + `.webm` — el celular girando en 3D con el
   recorrido de la app (Mapa arriba → scroll → toca el teaser → push a Rutas → scroll). 10 s,
@@ -53,11 +54,9 @@ repo público hasta que se resuelva la decisión D2/D7 del addendum del plan (¿
 
 - El movimiento y el scroll los maneja `window.setSceneTime(t)` / `window.setStill(opts)` en
   `showcase.html` — todo determinista, por eso el render frame-a-frame es reproducible.
-- El contenido de pantalla es el mockup real (`../index.html`) dentro de un `<iframe>` — no hay
-  nada generado con IA, es 100% fiel.
-- **`../showcase.html` (la fuente) y `../../../public/app-demo/showcase.html` (la copia servida)
-  hay que sincronizarlas A MANO tras cualquier edición** — no hay build ni symlink. Se olvidó una
-  vez (2026-09-04): los scripts de acá (`render.mjs`, `stills.mjs`, `scrub.mjs`) siempre cargan la
-  URL servida (`http://localhost:4321/.../app-demo/showcase.html`), así que un cambio sin
-  sincronizar se genera con la versión VIEJA sin que ningún error lo avise. `cp` antes de
-  regenerar cualquier cosa.
+- El contenido de pantalla es el mockup real (`public/app-demo/index.html`) dentro de un
+  `<iframe>` — no hay nada generado con IA, es 100% fiel.
+- **Ya no hay dos copias que sincronizar** (2026-09-22, Opción 3 "Demo viva" — el demo pasa a ser
+  asset de producción, `public/app-demo/` es la única fuente, ver `../README.md` y
+  `CLAUDE.md` §8). Antes había que copiar `showcase.html` a mano entre acá y `public/`; el bug real
+  que costó eso (2026-09-04) queda solo como historia.

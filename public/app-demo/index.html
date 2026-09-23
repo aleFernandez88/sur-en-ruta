@@ -739,7 +739,7 @@
           <button class="seccion__link" type="button" data-ir="rutas">Ver todas ›</button>
         </div>
         <button class="ruta-teaser" type="button" data-ir="rutas">
-          <span class="ruta-teaser__foto" style="background-image:url('rutas/oceanica.jpg');background-size:cover;background-position:center 62%">
+          <span class="ruta-teaser__foto" style="background-image:url('rutas/oceanica.webp');background-size:cover;background-position:center 62%">
             <span class="ruta-teaser__km">340 km</span>
           </span>
           <span class="ruta-teaser__cuerpo">
@@ -763,7 +763,7 @@
       </div>
       <div class="rutas-lista">
         <article class="ruta-card">
-          <div class="ruta-card__foto" style="background-image:url('rutas/vino.jpg');background-size:cover;background-position:center 45%">
+          <div class="ruta-card__foto" style="background-image:url('rutas/vino.webp');background-size:cover;background-position:center 45%">
             <span class="ruta-card__km">180 km</span>
           </div>
           <div class="ruta-card__cuerpo">
@@ -775,7 +775,7 @@
           </div>
         </article>
         <article class="ruta-card">
-          <div class="ruta-card__foto" style="background-image:url('rutas/oceanica.jpg');background-size:cover;background-position:center 62%">
+          <div class="ruta-card__foto" style="background-image:url('rutas/oceanica.webp');background-size:cover;background-position:center 62%">
             <span class="ruta-card__km">340 km</span>
           </div>
           <div class="ruta-card__cuerpo">
@@ -787,7 +787,7 @@
           </div>
         </article>
         <article class="ruta-card">
-          <div class="ruta-card__foto" style="background-image:url('rutas/termal.jpg');background-size:cover;background-position:center 55%">
+          <div class="ruta-card__foto" style="background-image:url('rutas/termal.webp');background-size:cover;background-position:center 55%">
             <span class="ruta-card__km">90 km</span>
           </div>
           <div class="ruta-card__cuerpo">
@@ -799,7 +799,7 @@
           </div>
         </article>
         <article class="ruta-card">
-          <div class="ruta-card__foto" style="background-image:url('rutas/rural.jpg');background-size:cover;background-position:center 42%">
+          <div class="ruta-card__foto" style="background-image:url('rutas/rural.webp');background-size:cover;background-position:center 42%">
             <span class="ruta-card__km">220 km</span>
           </div>
           <div class="ruta-card__cuerpo">
@@ -811,7 +811,7 @@
           </div>
         </article>
         <article class="ruta-card">
-          <div class="ruta-card__foto" style="background-image:url('rutas/patrimonial.jpg');background-size:cover;background-position:center 55%">
+          <div class="ruta-card__foto" style="background-image:url('rutas/patrimonial.webp');background-size:cover;background-position:center 55%">
             <span class="ruta-card__km">260 km</span>
           </div>
           <div class="ruta-card__cuerpo">
@@ -823,7 +823,7 @@
           </div>
         </article>
         <article class="ruta-card">
-          <div class="ruta-card__foto" style="background-image:url('rutas/naturaleza.jpg');background-size:cover;background-position:center 55%">
+          <div class="ruta-card__foto" style="background-image:url('rutas/naturaleza.webp');background-size:cover;background-position:center 55%">
             <span class="ruta-card__km">150 km</span>
           </div>
           <div class="ruta-card__cuerpo">
@@ -1028,10 +1028,70 @@
     setTimeout(oculto, 1400);
   }
 
+  // ---------- modo embebido (?embed=1) — docs/planes/2026-09-22-recomposicion-ui-vertical.md
+  // §14.2.a/§14.3. Activa tres cosas: (1) sin preloader propio — el padre (Escenario.astro) ya
+  // tiene el suyo, que espera el aviso `listo` de acá abajo antes de abrir su cortina; (2) `inert`
+  // en #app — saca el subárbol del foco/tab-order/accesibilidad de una (aria-hidden del padre NO
+  // atraviesa un iframe, es otro documento); (3) SurEnRuta.aplicar(estado) queda expuesto y
+  // comandado por postMessage en vez de clicks reales del usuario. ---------
+  var embebido = new URLSearchParams(location.search).get('embed') === '1';
+
+  // ---------- SurEnRuta.aplicar(estado) — reusa las funciones que YA existen (ir(), el click de
+  // los pines, #ficha-toggle, el scrollTop de la .pantalla activa), no hay lógica nueva de UI acá,
+  // solo la traducción "estado declarativo -> las mismas acciones que un click real dispararía".
+  // showcase.html y el tooling de render también la usan (Paso 14 del plan) — una sola superficie
+  // de control, no dos. ---------
+  function aplicar(estado){
+    if (!estado) return;
+
+    // animar:false (reduced-motion, o render frame-a-frame reproducible) — mismo recurso que
+    // showcase.html ya usa (transition:'none' antes de tocar cualquier clase).
+    var instantaneo = estado.animar === false;
+    pantallas.forEach(function(s){ s.style.transition = instantaneo ? 'none' : ''; });
+
+    if (estado.pantalla) ir(estado.pantalla);
+
+    if (estado.pin != null && pines[estado.pin]) pines[estado.pin].btn.click();
+
+    if (estado.ficha){
+      var expandidaAhora = ficha.classList.contains('ficha--expandida');
+      var quiereExpandida = estado.ficha === 'expandida';
+      if (expandidaAhora !== quiereExpandida) fichaToggle.click();
+    }
+
+    if (typeof estado.scroll === 'number'){
+      var activa = document.querySelector('.pantalla.activa');
+      if (activa){
+        var maximo = activa.scrollHeight - activa.clientHeight;
+        activa.scrollTop = Math.max(0, Math.min(1, estado.scroll)) * maximo;
+      }
+    }
+  }
+  window.SurEnRuta = { aplicar: aplicar };
+
+  // Mensajes del padre — valida origin (mismo origen siempre, el iframe se sirve del mismo host
+  // que la landing) y la forma del mensaje antes de aplicar nada.
+  window.addEventListener('message', function(e){
+    if (e.origin !== location.origin) return;
+    var d = e.data;
+    if (!d || d.fuente !== 'sur-en-ruta' || d.tipo !== 'estado') return;
+    aplicar(d);
+  });
+
+  if (embebido && app) app.inert = true;
+
   Promise.all([
     new Promise(function(res){ if (document.readyState === 'complete') res(); else window.addEventListener('load', function(){res();}, {once:true}); }),
     (document.fonts ? document.fonts.ready : Promise.resolve())
   ]).then(function(){
+    if (embebido){
+      // sin preloader propio: se muestra directo (el padre ya tapó cualquier flash con el suyo,
+      // que recién abre su cortina cuando le llega este aviso) y avisa que ya se puede comandar.
+      if (panel) panel.classList.add('is-oculto');
+      if (app) app.classList.add('visible');
+      parent.postMessage({ fuente: 'sur-en-ruta', tipo: 'listo' }, location.origin);
+      return;
+    }
     var restante = Math.max(0, MIN_MS - (performance.now() - arranque));
     setTimeout(retirar, restante);
   });

@@ -113,6 +113,13 @@ hecho — y el destinatario de esta landing hace due diligence.
 `prototipos/` (incluida la herramienta de identidad visual) es material interno y descartable. El
 deploy sube **solo** `dist/`; `prototipos/` y `docs/` nunca llegan a producción.
 
+**Excepción: `public/app-demo/` sí se publica.** Desde la Opción 3 "Demo viva"
+(`docs/planes/2026-09-22-recomposicion-ui-vertical.md` §14.2.b), el mockup de la app dejó de ser
+un prototipo descartable — corre en vivo dentro del celular en las 5 pantallas, así que es un
+asset de producción. `public/app-demo/` es su **única fuente** (`index.html`, `showcase.html`,
+los SVG, `rutas/`); `prototipos/app-demo/` quedó reducido a `render/` (tooling interno) y
+`capturas/` (salida de ese tooling + respaldo del fallback N3 de §14.1), sin duplicar nada.
+
 ## 9. Convenciones heredadas del grupo
 
 - Comentarios y documentación en **español**.

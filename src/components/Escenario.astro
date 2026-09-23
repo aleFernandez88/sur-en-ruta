@@ -226,6 +226,8 @@ const secciones = off.map((o) => o.id);
 </style>
 
 <script>
+	import { iniciar } from '../lib/telefono.ts';
+
 	// Ajusta el iframe/imagen de adentro del celular a 390px lógicos escalados al tamaño real de
 	// la pantalla del marco — mismo mecanismo que ya prueba public/app-demo/showcase.html y
 	// prototipos/pruebas/iframe-3d/ (Paso 2 del plan). Un solo <Telefono> activo a la vez, así que
@@ -242,4 +244,9 @@ const secciones = off.map((o) => o.id);
 		new ResizeObserver(ajustar).observe(pantalla);
 		ajustar();
 	}
+
+	// Comanda el demo por scroll (§14.2.a, paso 15 del plan) — solo tiene sentido en modo 'vivo'
+	// (hay un iframe real del otro lado); en modo 'imagen' no hay nada que postear.
+	const iframeVivo = document.querySelector<HTMLIFrameElement>('.telefono__iframe');
+	if (iframeVivo) iniciar(iframeVivo);
 </script>
