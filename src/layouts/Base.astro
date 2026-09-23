@@ -1,28 +1,23 @@
 ---
 /**
- * Base.astro — layout de <head> y chrome de página de la landing de inversores.
+ * Base.astro — layout de <head> y chrome de página de la landing.
  *
  * Sin analytics de terceros en la v1 (ver docs/planes/2026-08-20-landing-inversores.md, paso 10).
  *
- * Incluye HiloRuta, la barra de navegación general fija al borde izquierdo (rediseñada el
- * 2026-08-28 como barra lateral vertical — vive acá y no en Hero.astro porque es un elemento
- * persistente de toda la página, no de una sección. Estuvo oculta entre el 2026-08-26 y el
- * 2026-08-28 mientras se definía la mecánica de "cinta" de abajo — ver la memoria del proyecto.
- *
- * 2026-08-25 — migración a slide horizontal: .hz-viewport/.hz-track (ver base.css) envuelven el
- * truco de rotación CSS que hace que el scroll vertical real se vea como un avance horizontal.
- *
- * 2026-08-26 — dos mecánicas distintas se probaron el mismo día (ver base.css y la memoria del
- * proyecto). La primera ("hoja que tapa y descubre") sacaba el contenido de .hz-track y lo
- * ponía fixed afuera. **Se descartó** a favor de la segunda ("cinta", más simple), que vuelve
- * al esquema original: las 5 <Pantalla> viven DENTRO de .hz-track, en fila — por eso <main>
- * necesita `display:contents` (ver base.css) para no romper esa fila con una caja propia.
+ * Incluye HiloRuta (barra de navegación general, fija al borde izquierdo) y Escenario (la capa
+ * fija de fondo + celular, docs/planes/2026-09-22-recomposicion-ui-vertical.md §14.7 paso 11 —
+ * Paso 1.5 de §5). `<main>` contiene las 5 <Seccion> directamente, scroll de documento nativo —
+ * reemplaza a la mecánica "cinta" (`.hz-viewport`/`.hz-track`, rotation hack + script de
+ * suavizado de rueda, historial completo en el git log y la memoria del proyecto): un `transform`
+ * en un ancestro le crea containing block a todo lo de adentro, así que `position: fixed` (la
+ * base del escenario fijo) no funcionaba ahí dentro — el bloqueo real que forzó este rediseño.
  */
 import '../styles/fuentes.css';
 import '../styles/tokens.css';
 import '../styles/base.css';
 import Preloader from '../components/Preloader.astro';
 import HiloRuta from '../components/HiloRuta.astro';
+import Escenario from '../components/Escenario.astro';
 
 interface Props {
   title?: string;
@@ -94,102 +89,9 @@ const urlImagenOG = new URL('/og-image.png', Astro.site ?? 'https://surenruta.uy
 		<Preloader />
 		<a href="#contenido-principal" class="skip-link">Saltar al contenido principal</a>
 		<HiloRuta />
-		<div class="hz-viewport">
-			{/* Capa de fondo FIJA al viewport — vive acá, fuera de .hz-track, a propósito: un
-			   `position: fixed` dentro de .hz-track quedaría relativo a ese ancestro rotado
-			   (transform crea containing block) y encima girado. Como hermana de .hz-track dentro
-			   de .hz-viewport (que NO está transformada), queda quieta mientras la cinta scrollea
-			   por encima. La llena index.astro con la foto de la pantalla que la use (hoy solo
-			   Pantalla 1); cada una trae su propio recorte + fade de opacidad atado a --hz-progreso
-			   para no aparecer detrás de las demás. Ver base.css (.fondo-fijo) y HiloRuta, que usa
-			   el mismo truco de "hermano de .hz-viewport que igual ve --hz-progreso". */}
-			<div class="fondo-fijo"><slot name="fondo-fijo" /></div>
-			<div class="hz-track">
-				<main id="contenido-principal">
-					<slot />
-				</main>
-			</div>
-		</div>
-
-		<script>
-			/**
-			 * Suavizado de rueda para .hz-track — 2026-08-26, pedido de Ale ("el scroll se siente
-			 * brusco"). Diagnóstico: con la rueda del mouse en modo "una pantalla por click" (una
-			 * configuración real de Windows, no rara), cada evento `wheel` trae un delta enorme de
-			 * una sola vez — el navegador lo aplica prácticamente de un salto, y ningún ajuste de
-			 * CSS (largo del tramo, scroll-snap-type) puede suavizar eso: reciben el delta crudo
-			 * del sistema operativo tal cual.
-			 *
-			 * La solución (primer JS "de verdad" del mecanismo de scroll, vanilla, sin librería —
-			 * ver CLAUDE.md sección 3): interceptar el wheel, acumular su delta en un objetivo, y
-			 * acercar el scroll real a ese objetivo de a poco en cada frame (`lerp` clásico) en vez
-			 * de dejar que el navegador lo aplique de un tirón. Sigue siendo útil con la mecánica
-			 * de "cinta" (sin scroll-snap, ver base.css): sin esto, un solo notch de rueda grande
-			 * puede saltar de golpe en vez de recorrerse suave.
-			 *
-			 * Respeta `prefers-reduced-motion`: si está activo, no se engancha nada y el scroll
-			 * queda 100% nativo (igual que el resto del sitio, ver base.css).
-			 */
-			const track = document.querySelector('.hz-track');
-			const prefiereMenosMovimiento = window.matchMedia(
-				'(prefers-reduced-motion: reduce)',
-			).matches;
-
-			if (track instanceof HTMLElement && !prefiereMenosMovimiento) {
-				const FACTOR_SUAVIZADO = 0.12;
-				// Los navegadores no exponen el alto real de una "línea" — 40px es una aproximación
-				// estándar para deltaMode 1 (poco común; el caso normal en Chrome/Edge/Safari es 0,
-				// ya en píxeles). deltaMode 2 ("una página") sí es el caso real que motivó esto.
-				const ALTO_LINEA_APROX = 40;
-
-				let objetivo = track.scrollTop;
-				let animando = false;
-
-				const limitar = (valor: number) => {
-					const maximo = track.scrollHeight - track.clientHeight;
-					return Math.min(Math.max(valor, 0), maximo);
-				};
-
-				const normalizarDelta = (evento: WheelEvent) => {
-					if (evento.deltaMode === 1) return evento.deltaY * ALTO_LINEA_APROX;
-					if (evento.deltaMode === 2) return evento.deltaY * track.clientHeight;
-					return evento.deltaY;
-				};
-
-				const animar = () => {
-					const actual = track.scrollTop;
-					const diferencia = objetivo - actual;
-
-					if (Math.abs(diferencia) < 0.5) {
-						track.scrollTop = objetivo;
-						animando = false;
-						return;
-					}
-
-					track.scrollTop = actual + diferencia * FACTOR_SUAVIZADO;
-					requestAnimationFrame(animar);
-				};
-
-				track.addEventListener(
-					'wheel',
-					(evento) => {
-						evento.preventDefault();
-						// Si no hay animación en curso, resincroniza el objetivo con la posición real
-						// primero — por si el scroll se movió por otro medio (touch, teclado) mientras
-						// tanto, y el objetivo viejo quedó desactualizado.
-						if (!animando) {
-							objetivo = track.scrollTop;
-						}
-						objetivo = limitar(objetivo + normalizarDelta(evento));
-
-						if (!animando) {
-							animando = true;
-							requestAnimationFrame(animar);
-						}
-					},
-					{ passive: false },
-				);
-			}
-		</script>
+		<Escenario />
+		<main id="contenido-principal">
+			<slot />
+		</main>
 	</body>
 </html>

@@ -1,0 +1,31 @@
+---
+/**
+ * Seccion.astro — una de las 5 secciones del escenario vertical (Opción 3, "Demo viva").
+ * Reemplaza a Pantalla.astro (docs/planes/2026-09-22-recomposicion-ui-vertical.md §14.7 paso 8 —
+ * Paso 1.2 de §5).
+ *
+ * Estructura: un contenedor ALTO (`--largo`, en svh, el presupuesto de scroll propio de la sección
+ * — sale de `escenario.ts`) con un hijo `position: sticky` que se pinea al tope del viewport
+ * mientras el usuario scrollea ese presupuesto. El contenedor alto es quien declara
+ * `view-timeline-name`, NUNCA el hijo sticky — un elemento pegado al viewport no cambia su
+ * posición relativa al scrollport, así que su propio view-timeline se congelaría (el error típico
+ * de este patrón, ya señalado en el plan).
+ *
+ * El `@supports` envolviendo la ALTURA (ver base.css, `.seccion`) es lo que hace que Firefox
+ * estable (sin scroll-driven animations, ver escenario.ts restricción 1) lea la página como un
+ * sitio vertical normal en vez de dejar ~2 pantallas de scroll muerto por sección: sin soporte,
+ * `--largo` no se aplica y la sección mide `auto` (~una pantalla).
+ */
+interface Props {
+	id: string;
+	largoSvh: number;
+}
+
+const { id, largoSvh } = Astro.props;
+---
+
+<section class="seccion" id={id} style={`--largo: ${largoSvh}svh; view-timeline-name: --${id};`}>
+	<div class="seccion__pin">
+		<slot />
+	</div>
+</section>

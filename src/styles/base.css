@@ -6,6 +6,17 @@
  * repiten por sección, se heredan de esta capa.
  */
 
+/* Escenario vertical (docs/planes/2026-09-22-recomposicion-ui-vertical.md §14.7 paso 11 — Paso
+ * 1.4 de §5). Un `view-timeline-name` con nombre solo es visible por defecto para los
+ * DESCENDIENTES de quien lo declara (cada <Seccion>, ver Seccion.astro). Escenario.astro (el
+ * cross-fade de `.escenario__fondo`) es HERMANO de <main>, no descendiente de ninguna sección —
+ * sin este `timeline-scope` en :root, su animación no encontraría los 5 timelines y quedaría con
+ * el progreso mal resuelto. Reemplaza a `timeline-scope: --hz-progreso` (que vivía en `body`,
+ * apuntaba a un único timeline sobre `.hz-track`, ya borrado). */
+:root {
+  timeline-scope: --que-es, --que-hace, --como-lo-hace, --donde, --cierre;
+}
+
 *,
 *::before,
 *::after {
@@ -23,16 +34,10 @@ body {
 
 body {
   margin: 0;
-  overflow: hidden;
-  /* Un scroll-timeline con nombre (--hz-progreso, declarado en .hz-track más abajo) solo es
-   * visible por defecto para los DESCENDIENTES de quien lo declara. HiloRuta es hermano de
-   * .hz-viewport, no descendiente de .hz-track — sin esto, su animación no encuentra el
-   * timeline y queda con el progreso mal resuelto. body es el ancestro común más cercano. */
-  timeline-scope: --hz-progreso;
   /* Fondo "blanco manchado": el off-white cálido de tono arena diluido de la marca, con una
    * viñeta radial muy sutil (apenas más claro hacia arriba-centro), igual que el ground de los
-   * boards de identidad. Se ve sobre todo en los márgenes que dejan las tarjetas al 82%
-   * (mecánica "cinta") y detrás de las tarjetas blancas puras. */
+   * boards de identidad. Queda detrás del escenario fijo (Escenario.astro) y de cualquier
+   * sección que no traiga su propio fondo opaco. */
   background-color: var(--color-fondo);
   background-image: radial-gradient(
     ellipse 130% 90% at 50% 25%,
@@ -48,141 +53,29 @@ body {
   text-rendering: optimizeLegibility;
 }
 
-/* === Mecánica de pantallas: "cinta" (Pantalla.astro) ===
- * 2026-08-26, segunda mecánica del día — reemplaza a la de "hoja que tapa y descubre"
- * (pantallas completas + sombra + scroll-timeline, ver historial de este archivo/git) después de
- * probar las dos con Ale. Probada primero en prototipos/efecto-cinta/index.html.
- *
- * Mucho más simple que la anterior: sin scroll-timeline, sin @property, sin animación de
- * ningún tipo. El "se va descubriendo de a poco" sale solo de que cada tarjeta mide MENOS que
- * la pantalla (82%) — el borde de la vecina ya se ve asomando por los costados antes de que la
- * actual termine de salir, en flujo normal, sin cortes duros. El Hero es la excepción: mide
- * pantalla completa (`--completa`), para pegar fuerte como primera impresión — de ahí en más
- * arranca el formato chico.
- *
- * Estructura (una sola capa, a diferencia de la mecánica anterior): .hz-track (rotado, el que
- * de verdad scrollea) contiene directamente los 5 .hz-bloque en fila — cada uno es tanto el
- * "espaciador" que da presupuesto de scroll como el contenedor de la tarjeta visual, no hace
- * falta separarlos en dos capas.
- *
- * `scroll-snap-type: none` a propósito — 2026-08-26, pedido de Ale: con `proximity` +
- * `scroll-snap-align`, un scroll corto que no llegaba a cruzar el umbral volvía siempre al
- * centro de la tarjeta actual (efecto resorte). La idea de "cinta" es que quede 100% libre, sin
- * ningún tirón magnético.
- */
-.hz-viewport {
+/* === Escenario vertical: Seccion.astro (Paso 1.2 de §5) ===
+ * Reemplaza a la mecánica "cinta" (Pantalla.astro + .hz-*, borrada arriba). Un contenedor ALTO
+ * (--largo, en svh — el presupuesto de scroll propio de la sección, sale de escenario.ts) con un
+ * hijo `position: sticky` que se pinea al tope del viewport mientras se scrollea ese presupuesto.
+ * El `@supports` envolviendo la ALTURA (no el pineado en sí) es lo que hace que Firefox estable
+ * (sin scroll-driven animations) lea la página como un sitio vertical normal: sin soporte,
+ * --largo no se aplica, la sección mide `auto` (~una pantalla), y no queda scroll muerto. */
+.seccion {
   position: relative;
-  width: 100vw;
-  height: 100vh;
-  overflow: hidden;
 }
 
-/* Capa de fondo fija (ver Base.astro). Ocupa todo el viewport, detrás de la cinta. Las tarjetas
- * de .hz-track son opacas y la tapan salvo donde una lámina se deja transparente a propósito
- * (Pantalla 1: fondo beige recortado a la izquierda, foto fija asomando a la derecha). */
-.fondo-fijo {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
+.seccion__pin {
+  position: sticky;
+  top: 0;
+  height: 100svh;
+  overflow: clip;
 }
 
-.hz-track {
-  position: absolute;
-  top: 100vh;
-  left: 0;
-  width: 100vh;
-  height: 100vw;
-  /* Encima de .fondo-fijo (capa de fondo fija al viewport, ver arriba y Base.astro). */
-  z-index: 1;
-  transform-origin: top left;
-  transform: rotate(-90deg);
-  overflow-y: scroll;
-  overflow-x: hidden;
-  scroll-snap-type: none;
-  /* El suavizado del wheel lo hace el script de Base.astro (acumula el delta y lo acerca de a
-   * poco con `lerp` por frame) — si acá quedara `smooth`, el navegador le sumaría SU PROPIA
-   * animación a cada `scrollTop` que el script asigna, y las dos curvas de easing se pisan
-   * entre sí en vez de sumar. */
-  scroll-behavior: auto;
-  scroll-timeline-name: --hz-progreso;
-  scroll-timeline-axis: y;
-  /* Barra de scroll nativa oculta a propósito (confirmado con Ale en el prototipo): el scroll
-   * real sigue funcionando, pero sin cromo de navegador encima del efecto. */
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-  /* Layout en fila — cada .hz-bloque es un hijo más, en flujo normal. */
-  display: flex;
-  flex-direction: column;
-}
-
-.hz-track::-webkit-scrollbar {
-  display: none;
-}
-
-/* <main id="contenido-principal"> (el ancla del skip-link) queda entre .hz-track y los 5
- * .hz-bloque — sin esto, su propia caja rompería el layout en fila: la mecánica necesita que
- * cada .hz-bloque sea hijo flex DIRECTO de .hz-track. display:contents lo saca del layout sin
- * sacarlo del DOM ni del árbol de accesibilidad como landmark. */
-main {
-  display: contents;
-}
-
-.hz-bloque {
-  /* Medidas en el espacio LOCAL de .hz-track (antes de su propia rotación) — acá "ancho"
-   * equivale al alto real de pantalla y "alto" a un avance de una pantalla completa. */
-  width: 100vh;
-  height: 100vw;
-  /* Sin esto, flexbox comprimía los 5 bloques para que entraran (casi) todos dentro del alto
-   * explícito de .hz-track en vez de dejarlos desbordar a su alto natural (5x) — bug real,
-   * encontrado midiendo scrollHeight en vivo en el prototipo (daba ~1.3 pantallas de recorrido
-   * en vez de 5), no solo cosmético. */
-  flex-shrink: 0;
-  position: relative;
-  /* Fondo OPACO (el mismo off-white del body) — cada bloque llena el viewport cuando le toca,
-   * así tapa por completo la capa .fondo-fijo (foto fija al viewport, ver Base.astro). Sin esto,
-   * la foto de Pantalla 1 sangraría por los márgenes que dejan las tarjetas al 82% de las
-   * pantallas siguientes (se veía un marco de foto de camping alrededor de "Mapa y servicios").
-   * La única excepción es .hz-bloque--transparente. Esto vuelve innecesario el fade-out de
-   * opacidad de la foto: cada bloque vecino la oculta por geometría, no por timing. */
-  background-color: var(--color-fondo);
-}
-
-/* Pantalla 1 (Oportunidad): su bloque queda TRANSPARENTE a propósito para que la foto fija de
- * .fondo-fijo se vea por detrás, a través de la mitad derecha transparente de la lámina. Ver
- * Pantalla.astro (prop `transparente`) e index.astro. */
-.hz-bloque--transparente {
-  background-color: transparent;
-}
-
-.hz-tarjeta {
-  /* Mismo truco de medidas intercambiadas que ya usaba HzSlide/Pantalla: un transform no
-   * cambia cuánto espacio reserva el elemento en el layout, así que hace falta position:
-   * absolute + medidas ya en unidades REALES de viewport (lo que se ve, no lo que mide antes
-   * de rotar) + centrado con translate(-50%,-50%) antes de rotar 90° para leerse derecho. */
-  position: absolute;
-  width: 82vw;
-  height: 82vh;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%) rotate(90deg);
-  border-radius: var(--radio-lg);
-  overflow: hidden;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
-}
-
-/* El Hero (y cualquier otra pantalla que lo pida) pega fuerte a pantalla completa, sin bordes
- * ni sombra. */
-.hz-tarjeta--completa {
-  width: 100vw;
-  height: 100vh;
-  border-radius: 0;
-  box-shadow: none;
-}
-
-.hz-tarjeta__contenido {
-  position: absolute;
-  inset: 0;
+@supports (animation-timeline: view()) {
+  .seccion {
+    height: var(--largo);
+    view-timeline-axis: block;
+  }
 }
 
 h1,
