@@ -309,13 +309,17 @@ const RANGO_HERRAMIENTA = (i: number) => rangoEscalonadoContain(2, i, 4, 8);
 		}
 		.p3-carril-fila {
 			animation: none !important;
-			transform: translateX(-70vw);
+			/* AJUSTE DEL EJECUTOR (E13): mismo valor que el "to" de @keyframes p3-carril-escritorio
+			 * (ver ese comentario) — -70vw → -80vw. */
+			transform: translateX(-80vw);
 		}
 	}
 
 	@media (prefers-reduced-motion: reduce) and (width < 900px) {
 		.p3-carril-fila {
-			transform: translateX(-308vw);
+			/* AJUSTE DEL EJECUTOR (E13): mismo valor que el "to" de @keyframes p3-carril-movil (ver
+			 * ese comentario) — -308vw → -328vw. */
+			transform: translateX(-328vw);
 		}
 	}
 
@@ -330,12 +334,31 @@ const RANGO_HERRAMIENTA = (i: number) => rangoEscalonadoContain(2, i, 4, 8);
 
 	.p3-carril {
 		overflow: clip;
-		width: 56vw;
+		/* AJUSTE DEL EJECUTOR sobre el plan (E13), con evidencia: 56vw → 46vw. El gate visual
+		 * encontró que `.p3-caja` (`margin-left: 40vw` + el ancho de ESTE carril, que fija el ancho
+		 * de la columna compartida con Beat A vía `grid-area: 1/1`) desbordaba el viewport en
+		 * 1440×900: medido con Puppeteer, el borde derecho de `.p3-caja` caía en 1504px contra un
+		 * viewport de 1440px — las tarjetas "Pasaporte de Ruta" y "Señalética e identidad" quedaban
+		 * cortadas contra el borde real de la pantalla (no lo detecta C2: ese chequeo mide
+		 * solapamiento entre nodos de texto o contra el celular/banda, no desborde contra el
+		 * viewport — ver el comentario de arriba sobre el mismo punto ciego). 40vw + 46vw = 86vw,
+		 * dentro del `calc()` real de `.seccion__caja` (padding + `--ancho-hilo-ruta`, ≈87,6vw
+		 * disponibles medidos en 1440px). Cambia también cuántos pasos se ven a la vez en el
+		 * carril — ver el ajuste espejado en los `translateX` de abajo.
+		 */
+		width: 46vw;
 	}
 
 	@media (width < 900px) {
 		.p3-carril {
-			width: 88vw;
+			/* AJUSTE DEL EJECUTOR sobre el plan (E13), con evidencia: 88vw → 68vw. Mismo hallazgo que
+			 * arriba pero en mobile (390×844/369×698): sin `margin-left` acá, pero la columna
+			 * disponible real hoy es ≈73vw (no 100vw) porque `--ancho-hilo-ruta` TODAVÍA reserva su
+			 * ancho de escritorio en mobile — la barra lateral pasa a "solo el botón" recién en E14.
+			 * 68vw deja margen bajo esa reserva actual; si E14 la baja a 0 en mobile, este valor
+			 * queda con más aire de sobra, no roto — puede ensancharse de nuevo ahí si Ale lo pide.
+			 */
+			width: 68vw;
 		}
 	}
 
@@ -418,7 +441,11 @@ const RANGO_HERRAMIENTA = (i: number) => rangoEscalonadoContain(2, i, 4, 8);
 			transform: translateX(0);
 		}
 		to {
-			transform: translateX(-70vw);
+			/* AJUSTE DEL EJECUTOR (E13): -70vw → -80vw, espejo del cambio de `.p3-carril` de 56vw a
+			 * 46vw. Fila de 5 tarjetas de 24vw + 4 huecos de 2vw = 128vw; ventana de 46vw; recorrido
+			 * hasta el borde = 128-46 = 82vw, menos 2vw (mismo margen que dejaba el valor viejo:
+			 * 128-56=72 contra el -70 real) = 80vw. */
+			transform: translateX(-80vw);
 		}
 	}
 
@@ -427,7 +454,11 @@ const RANGO_HERRAMIENTA = (i: number) => rangoEscalonadoContain(2, i, 4, 8);
 			transform: translateX(0);
 		}
 		to {
-			transform: translateX(-308vw);
+			/* AJUSTE DEL EJECUTOR (E13): -308vw → -328vw, espejo del cambio de `.p3-carril` mobile de
+			 * 88vw a 68vw. Fila de 5 tarjetas de 76vw + 4 huecos de 4vw = 396vw; ventana de 68vw;
+			 * recorrido exacto hasta el borde = 396-68 = 328vw (mismo criterio "exacto, sin margen"
+			 * que ya usaba el valor viejo: 396-88=308). */
+			transform: translateX(-328vw);
 		}
 	}
 

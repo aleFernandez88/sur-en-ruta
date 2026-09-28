@@ -1,18 +1,21 @@
 ---
 /**
  * index.astro — landing de Sur en Ruta. Spot publicitario de la app (pivot 2026-09-03), sin
- * RENAMU, sin hero de apertura. 5 pantallas ("P1-P5", ver docs/landing-contenido.md), cada una
+ * RENAMU, sin hero de apertura. 5 secciones ("P1-P5", ver docs/landing-contenido.md), cada una
  * responde una pregunta guía: ¿qué es? / ¿qué hace? / ¿cómo lo hace? / ¿dónde? / cierre.
  *
- * Reescrito de cero el 2026-09-04 (ver docs/planes/2026-09-04-reescritura-index-p1-p5.md) —
- * reemplaza las 6 <Pantalla> del enfoque viejo (hero/portada/oportunidad/sistema-RENAMU/
- * como-funciona/placeholder). Este archivo queda reducido a composición + orden: la matemática de
- * la cinta vive en `src/lib/cinta.ts`, el copy de cada pantalla en `src/data/`, y el markup/CSS de
- * cada pantalla en su propio componente (`src/components/pantallas/`) — cada una con su propia
- * animación de entrada, ninguna se repite (memoria `feedback_animacion_por_pantalla`).
+ * Reescrito sobre el escenario vertical (Opción 3 "Demo viva") en Bloque E
+ * (docs/planes/2026-09-23-bloque-e-secciones-chrome.md) — reemplaza el mecanismo de "cinta"
+ * horizontal (scroll-como-slide, `<Pantalla>`/`cinta.ts`) por un escenario `position:fixed`
+ * (`Escenario.astro`) detrás de 5 `<Seccion>` con pin/scroll-driven propio. Este archivo queda
+ * reducido a composición + orden: la matemática del escenario vive en `src/lib/escenario.ts`, el
+ * copy de cada sección en `src/data/`, y el markup/CSS de cada sección en su propio componente
+ * (`src/components/pantallas/`) — cada una con su propia animación de entrada, ninguna se repite
+ * (memoria `feedback_animacion_por_pantalla`).
  *
- * Sumar o quitar una pantalla = tocar el array de `src/data/recorrido.ts` (`N_PANTALLAS`, en
- * `src/lib/cinta.ts`, se deduce solo de ahí) + agregar/crear el componente correspondiente acá.
+ * Sumar o quitar una sección = tocar `src/data/recorrido.ts` (el orden y los nombres) Y
+ * `PRESUPUESTO_SVH` en `src/lib/escenario.ts` (el largo en svh) + agregar/crear el componente
+ * correspondiente acá. Si falta uno de los dos, `escenario.ts` tira error en el arranque.
  */
 import Base from '../layouts/Base.astro';
 import P1QueEs from '../components/pantallas/P1QueEs.astro';
@@ -23,17 +26,17 @@ import P5Cierre from '../components/pantallas/P5Cierre.astro';
 ---
 
 <Base>
-	<!-- P1 · ¿Qué es Sur en Ruta? — k=0, se centra en 0% de --hz-progreso (sin Hero de apertura,
-	     ver el comentario grande de P1QueEs.astro sobre por qué su entrada es temporal, no scroll).
-	     Cada pantalla es dueña de su propia <Pantalla>/<Lamina> (ver el componente respectivo). -->
+	<!-- P1 · ¿Qué es Sur en Ruta? (`que-es`) — sin Hero de apertura (ver el comentario grande de
+	     P1QueEs.astro sobre por qué su entrada es temporal, no scroll). Cada sección es dueña de
+	     su propio <Seccion> (ver el componente respectivo). -->
 	<P1QueEs />
-	<!-- P2 · ¿Qué hace? — k=1, se centra en 25%. -->
+	<!-- P2 · ¿Qué hace? (`que-hace`). -->
 	<P2QueHace />
-	<!-- P3 · ¿Cómo lo hace? — k=2, se centra en 50% (2 bloques: herramientas + 5 pasos). -->
+	<!-- P3 · ¿Cómo lo hace? (`como-lo-hace`) — 2 beats: herramientas + 5 pasos. -->
 	<P3ComoLoHace />
-	<!-- P4 · ¿Dónde lo hace? — k=3, se centra en 75%. Tarjetas SIN foto (bloqueo D2, paso 13). -->
+	<!-- P4 · ¿Dónde lo hace? (`donde`) — color de ruta a pantalla completa. Sin foto (bloqueo D2). -->
 	<P4Donde />
-	<!-- P5 · Cierre — k=4, se centra en 100% (fin del scroll). Titular provisorio, sin CTA
-	     (bloqueo D1, paso 15) — ver el comentario grande de P5Cierre.astro. -->
+	<!-- P5 · Cierre (`cierre`) — fin del scroll. Titular provisorio, sin CTA (bloqueo D1) — ver el
+	     comentario grande de P5Cierre.astro. -->
 	<P5Cierre />
 </Base>

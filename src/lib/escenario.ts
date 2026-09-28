@@ -191,7 +191,20 @@ export const TELEFONO: Record<string, { escritorio: EstadoTelefono; movil: Estad
 		// con el verificador contra 390×844 y 369×698: seguía sin alcanzar, así que además se aplicó
 		// la 2ª mitad de esa misma instrucción — las tarjetas pasan a título + ítems en una línea
 		// (P2QueHace.astro, mobile).
-		movil: { x: 0, y: 44, escala: 0.72 },
+		//
+		// AJUSTE DEL EJECUTOR sobre el plan (E13), con evidencia: y: 44 → 58. El verificador con
+		// `--reducido` (movimiento reducido) encontró C2 en FAIL en 390×844/369×698 — el cierre
+		// ("La red transforma... valor para cada lugar") se muestra siempre bajo movimiento
+		// reducido (P2QueHace.astro:374-380, ya no espera su animación de entrada por scroll) y su
+		// última línea quedaba detrás de `.telefono__marco` (medido con getBoundingClientRect: el
+		// texto terminaba 31px más abajo que el borde superior del celular en 390×844, 12,5px en
+		// 369×698). Bajo movimiento normal no se nota porque el cierre recién se hace visible al
+		// 70% del tramo, cuando el scroll ya pasó este punto. El `y` es un % de la ALTURA del
+		// viewport (translate relativo a `.escenario__ancla`, `height:100svh`), así que el mismo %
+		// mueve menos px en el viewport más bajo (369×698) — 52 alcanzaba en 390×844 pero no en
+		// 369×698. y:58 deja margen medido en los dos (≈29px en 390×844, ≈24px en 369×698) sin
+		// arriesgar el mínimo de C1 (25% visible): con y:44 el celular estaba al 65% visible.
+		movil: { x: 0, y: 58, escala: 0.72 },
 	},
 	'como-lo-hace': {
 		escritorio: { x: -25, y: 2, escala: 0.84 },

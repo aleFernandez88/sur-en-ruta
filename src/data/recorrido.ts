@@ -1,8 +1,8 @@
 /**
- * recorrido.ts — las 5 paradas de la cinta (spot de la app, pivot 2026-09-03).
+ * recorrido.ts — las 5 secciones del escenario vertical (spot de la app, pivot 2026-09-03).
  *
- * Fuente única del orden y de los nombres del recorrido: la importan tanto `src/pages/index.astro`
- * (para armar las <Pantalla> en orden y derivar N_PANTALLAS, ver src/lib/cinta.ts) como
+ * Fuente única del orden y de los nombres del recorrido: la importan tanto `src/lib/escenario.ts`
+ * (`ESCENARIO` se deriva de acá cruzado con `PRESUPUESTO_SVH`, ver ese archivo) como
  * `src/components/HiloRuta.astro` (para el nav lateral y su menú de pantalla completa). Antes cada
  * archivo tenía su propia copia del recorrido — desincronizadas ya una vez (ver
  * docs/planes/2026-09-04-reescritura-index-p1-p5.md, hallazgo 2). No duplicar de nuevo.
