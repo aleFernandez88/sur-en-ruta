@@ -18,10 +18,10 @@
  * DOS copias superpuestas de la misma curva+nodos — una marino, SIEMPRE dibujada entera (capa de
  * base, "todavía no recorrido"); otra celeste, adentro de un `<g mask="...">` cuyo trazo de
  * máscara se revela con el scroll (misma técnica pathLength=1 + stroke-dasharray/dashoffset +
- * `animation-timeline: --hz-progreso`, con `timeline-scope` ya declarado en `body`, ver
- * base.css). La celeste tapa a la marino a medida que el scroll "la alcanza" — no hace falta
- * lógica aparte por nodo, el mismo trazo de máscara cubre línea Y nodos porque ambos viven dentro
- * del mismo `<g>` enmascarado.
+ * `animation-timeline: scroll(root block)`, atado al scroll del documento entero, Bloque E/E14).
+ * La celeste tapa a la marino a medida que el scroll "la alcanza" — no hace falta lógica aparte
+ * por nodo, el mismo trazo de máscara cubre línea Y nodos porque ambos viven dentro del mismo
+ * `<g>` enmascarado.
  *
  * Nodos posicionados con `offset-path` + `offset-distance` sobre la curva (misma técnica que la
  * versión anterior) — a propósito SIN `offset-anchor` explícito: cada `<circle>`/`<a>` tiene su
@@ -31,38 +31,44 @@
  *
  * Posiciones de paradas APROXIMADAS, no exactas — mismo criterio que la versión anterior: calcar
  * la posición real de cada sección en el scroll necesitaría JS midiendo layout, fuera de alcance
- * a propósito. La `distancia` (y el instante en que el nodo "llega") se reparte pareja según el
- * instante de centrado de cada bloque de la cinta: k/(N-1). Cuando se sumen las pantallas que
- * faltan del mazo (ver `docs/landing-contenido.md`), agregar la entrada en `src/data/recorrido.ts`
- * — nada más (`N_PANTALLAS`, en `src/lib/cinta.ts`, se deduce solo de ese array).
+ * a propósito. La `distancia` (posición VISUAL del nodo en la curva) se reparte pareja, k/(N-1);
+ * el instante en que el nodo "llega" (`llegada`) sí es exacto — es `offsets()[k].desdePct` de
+ * `src/lib/escenario.ts` (Bloque E, E14), el mismo punto donde arranca a pinearse la sección. Cuando
+ * se sumen pantallas nuevas, agregar la entrada en `src/data/recorrido.ts` y su presupuesto en
+ * `PRESUPUESTO_SVH` de `escenario.ts` — nada más, `ESCENARIO` se deriva solo de esos dos.
  *
  * === Pivot 2026-09-03/04: sin Hero de apertura ===
- * P1 (`que-es`) pasa a ser el bloque 0 de la cinta (antes había un Hero en el bloque 0 y la
- * primera parada navegable era el bloque 1). `llegada` ahora es literalmente `centro(k)` de
- * `src/lib/cinta.ts` — no hay "+1" que compensar un Hero que ya no existe. Y como P1 se centra en
- * 0 % (el sitio carga YA en su parada), la barra no tiene tramo de scroll "antes" donde deslizarse
- * — entra de forma TEMPORAL, disparada por `:root.entrada` (mismo mecanismo que usaba
- * `Hero.astro` y que ahora también dispara la entrada de P1, ver `P1QueEs.astro`), no por scroll.
+ * P1 (`que-es`) es la primera sección del escenario (antes había un Hero delante y la primera
+ * parada navegable era la segunda). `llegada` de P1 es `offsets()[0].desdePct = 0` — no hay "+1"
+ * que compensar un Hero que ya no existe. Y como P1 arranca ya pineada al 0% del scroll (el sitio
+ * carga YA en su parada), la barra no tiene tramo de scroll "antes" donde deslizarse — entra de
+ * forma TEMPORAL, disparada por `:root.entrada` (mismo mecanismo que usaba `Hero.astro` y que
+ * ahora también dispara la entrada de P1, ver `P1QueEs.astro`), no por scroll.
  */
 import { recorrido } from '../data/recorrido.ts';
-import { centro } from '../lib/cinta.ts';
+import { offsets } from '../lib/escenario.ts';
+
+const off = offsets();
 
 interface Parada {
 	numero: number;
 	nombre: string;
 	id: string;
 	distancia: number; // % a lo largo de la curva (posición VISUAL del nodo, repartida parejo)
-	llegada: number; // % de --hz-progreso donde su pantalla se centra (cuándo se pinta/pulsa el nodo)
+	llegada: number; // % del scroll donde arranca a pinearse su sección (cuándo se pinta/pulsa el nodo)
 }
 
 const paradas: Parada[] = recorrido.map((p, k, arr) => {
 	// `distancia` = posición VISUAL del nodo en la curva, repartida parejo de ~8% a 97% (usa casi
 	// toda la barra, sin que quede corrida hacia abajo).
 	const distancia = Math.round(8 + (k / (arr.length - 1)) * 89);
-	// `llegada` = % de --hz-progreso donde ESTA pantalla queda centrada — es EXACTAMENTE `centro(k)`
-	// de cinta.ts (sin Hero que compensar, ver el comentario de arriba). El pintado del "caminito" y
-	// el pulso del nodo se acomodan a esto (ver keyframes generados).
-	const llegada = Math.round(centro(k));
+	// `llegada` = % del scroll del documento donde ESTA sección arranca a pinearse — es
+	// EXACTAMENTE `offsets()[k].desdePct` de escenario.ts (Bloque E, E14): es el mismo punto exacto
+	// donde lleva el click de navegación (el ancla nativa `#id` cae en el borde superior de la
+	// `<Seccion>`), así que el nodo se enciende justo cuando el usuario llega adonde el link
+	// prometía. El pintado del "caminito" y el pulso del nodo se acomodan a esto (ver keyframes
+	// generados).
+	const llegada = Math.round(off[k].desdePct);
 	return { numero: k + 1, nombre: p.nombre, id: p.id, distancia, llegada };
 });
 
@@ -78,8 +84,8 @@ const paintKeyframes = `@keyframes hilo-ruta-pintar {
 }`;
 
 // Ventana de "llegada" de cada nodo (el latido + anillo, ver estilos más abajo): rango angosto
-// del scroll-timeline compartido (--hz-progreso) centrado en la distancia exacta del nodo. No
-// hace falta clampear a [0,100] — el nodo más cercano a cada borde (3% / 97%) ya deja margen.
+// del scroll del documento (`scroll(root block)`, Bloque E/E14) centrado en `llegada`. No hace
+// falta clampear a [0,100] — el nodo más cercano a cada borde (3% / 97%) ya deja margen.
 const VENTANA = 1.5;
 
 // Entrada del menú (2026-08-28, pedido de Ale): cada LÍNEA arranca con un pequeño desfase
@@ -145,7 +151,7 @@ const duracionLetra = `${DURACION_LETRA_MS}ms`;
 
 <div class="hilo-ruta" style={`--curva-offset-path: ${curvaOffsetPath}`}>
 	{/* .hilo-ruta-barra es lo VISIBLE (fondo navy + botón + línea de ruta). Pivot 2026-09-03/04: sin
-	    Hero de apertura, P1 (que-es) se centra en 0% de --hz-progreso — no hay tramo de scroll
+	    Hero de apertura, P1 (que-es) arranca ya pineada al 0% del scroll — no hay tramo de scroll
 	    "antes" donde deslizarse (ver el comentario grande del frontmatter). Entra TEMPORAL, disparada
 	    por :root.entrada (mismo mecanismo que Hero.astro usaba y que ahora dispara P1QueEs.astro),
 	    no por scroll. El menú de pantalla completa (.hilo-ruta-menu) queda FUERA de este wrapper a
@@ -198,7 +204,9 @@ const duracionLetra = `${DURACION_LETRA_MS}ms`;
 		<!-- Capa de progreso: celeste, revelada por scroll a través de la máscara. Cada nodo trae
 		     además su propio anillo (aparece + el nodo "late" una vez al llegar, ver @keyframes
 		     hilo-ruta-latido/hilo-ruta-anillo) acotado a una ventana angosta alrededor de `llegada`
-		     (cuándo su pantalla se centra), vía --nodo-desde/--nodo-hasta. -->
+		     (cuándo la sección arranca a pinearse), vía `animation-range` LITERAL inline (Bloque E,
+		     E14, H11 — restricción 4: nunca `animation-range: var(...)`, cada nodo tiene su propia
+		     ventana así que no puede ser una regla de clase compartida). -->
 		<g mask="url(#hilo-ruta-mascara)" aria-hidden="true">
 			<use href="#hilo-ruta-curva" class="hilo-ruta-linea-progreso"></use>
 			{paradas.map((parada) => (
@@ -206,12 +214,12 @@ const duracionLetra = `${DURACION_LETRA_MS}ms`;
 					<circle
 						class="hilo-ruta-nodo-anillo"
 						r="11"
-						style={`offset-distance: ${parada.distancia}%; --nodo-desde: ${parada.llegada - VENTANA}%; --nodo-hasta: ${parada.llegada + VENTANA}%`}
+						style={`offset-distance: ${parada.distancia}%; animation-range: ${parada.llegada - VENTANA}% ${parada.llegada + VENTANA}%`}
 					></circle>
 					<circle
 						class="hilo-ruta-nodo-progreso"
 						r="7"
-						style={`offset-distance: ${parada.distancia}%; --nodo-desde: ${parada.llegada - VENTANA}%; --nodo-hasta: ${parada.llegada + VENTANA}%`}
+						style={`offset-distance: ${parada.distancia}%; animation-range: ${parada.llegada - VENTANA}% ${parada.llegada + VENTANA}%`}
 					></circle>
 				</>
 			))}
@@ -288,9 +296,9 @@ const duracionLetra = `${DURACION_LETRA_MS}ms`;
 	 * (--color-fondo) para leerse sobre este navy; el "progreso ya recorrido" sigue en celeste.
 	 * === Pivot 2026-09-03/04: ENTRA de forma TEMPORAL, no por scroll ===
 	 * Antes se deslizaba desde la izquierda durante el tramo de scroll en que se aproximaba la
-	 * Pantalla 1 (que arrancaba en el bloque 1, con el Hero ocupando el bloque 0). Sin Hero de
-	 * apertura, P1 (que-es) ES el bloque 0 — se centra en 0% de --hz-progreso, así que no existe
-	 * ningún tramo "antes" para deslizarse durante el scroll. Mismo mecanismo que Hero.astro usaba
+	 * Pantalla 1 (que arrancaba después del Hero). Sin Hero de apertura, P1 (que-es) ES la primera
+	 * sección — arranca ya pineada al 0% del scroll, así que no existe ningún tramo "antes" para
+	 * deslizarse durante el scroll. Mismo mecanismo que Hero.astro usaba
 	 * (y que ahora dispara la entrada de P1QueEs.astro): animación pausada bajo :root.js, puesta a
 	 * correr por :root.entrada (lo agrega Preloader.astro al abrir la cortina). Sin JS, o con
 	 * prefers-reduced-motion, la barra queda directamente en su estado final (visible, sin animar):
@@ -404,6 +412,35 @@ const duracionLetra = `${DURACION_LETRA_MS}ms`;
 		pointer-events: none;
 	}
 
+	/* === Mobile: "en mobile, solo el botón" (D-G de §11.3, Bloque E, E14) ===
+	 * La barra lateral completa (línea+nodos, fondo navy de punta a punta) es demasiado chrome para
+	 * el ancho de un teléfono — queda solo el botón de menú, flotando arriba a la izquierda. Con
+	 * `--ancho-hilo-ruta: 0px` acá (ver tokens.css), `.hilo-ruta` ya no reserva ninguna columna de
+	 * ancho fijo para el resto del layout (padding de `.seccion__caja` y del propio menú a pantalla
+	 * completa, que la usan directo) — `width: auto` es indispensable ACÁ, no solo cosmético: si se
+	 * dejara heredando `--ancho-hilo-ruta` (0px en mobile), el wrapper quedaría con ancho cero y el
+	 * botón de adentro no tendría dónde pintarse. */
+	@media (width < 900px) {
+		.hilo-ruta {
+			width: auto;
+			bottom: auto;
+		}
+
+		.hilo-ruta-barra {
+			background: none;
+		}
+
+		.hilo-ruta-svg {
+			display: none;
+		}
+
+		.hilo-ruta-menu-boton {
+			background: color-mix(in srgb, var(--color-marino-noche) 80%, transparent);
+			border-radius: var(--radio-full);
+			margin: var(--espacio-sm);
+		}
+	}
+
 	/* El path maestro (#hilo-ruta-curva) es solo geometría: sin stroke/fill propio, no se ve. OJO:
 	 * no ponerle `visibility:hidden` — un <use> clona el id completo, esa regla apagaría también
 	 * los <use> que lo pintan (gotcha ya documentado en la versión anterior). */
@@ -488,7 +525,7 @@ const duracionLetra = `${DURACION_LETRA_MS}ms`;
 		.hilo-ruta-mascara-trazo {
 			stroke-dashoffset: var(--dashoffsetInicial);
 			animation: hilo-ruta-pintar linear both;
-			animation-timeline: --hz-progreso;
+			animation-timeline: scroll(root block);
 		}
 
 		/* Antes de su ventana, el nodo/anillo tienen que arrancar en su estado "todavía no
@@ -497,19 +534,22 @@ const duracionLetra = `${DURACION_LETRA_MS}ms`;
 		 * del scroll. `animation-fill-mode: both` (parte de "both" en el shorthand) ya cubre el
 		 * extremo final; el inicial lo fija el propio 0% del keyframe una vez que la animación
 		 * está activa — pero mientras el scroll no entró en el rango, el navegador todavía no
-		 * aplicó ningún frame, así que hace falta el estado "before" explícito acá. */
+		 * aplicó ningún frame, así que hace falta el estado "before" explícito acá.
+		 *
+		 * `animation-range` NO va acá (restricción 4, H11 del plan de Bloque E: nunca
+		 * `animation-range: var(...)`) — cada nodo tiene su propia ventana (`llegada` distinto por
+		 * parada), así que el rango se pone LITERAL inline en el propio `<circle>` (ver más abajo,
+		 * donde antes iban `--nodo-desde`/`--nodo-hasta`). */
 		.hilo-ruta-nodo-progreso {
 			transform: scale(1);
 			animation: hilo-ruta-latido linear both;
-			animation-timeline: --hz-progreso;
-			animation-range: var(--nodo-desde) var(--nodo-hasta);
+			animation-timeline: scroll(root block);
 		}
 
 		.hilo-ruta-nodo-anillo {
 			opacity: 0;
 			animation: hilo-ruta-anillo linear both;
-			animation-timeline: --hz-progreso;
-			animation-range: var(--nodo-desde) var(--nodo-hasta);
+			animation-timeline: scroll(root block);
 		}
 	}
 
@@ -818,14 +858,6 @@ const duracionLetra = `${DURACION_LETRA_MS}ms`;
 		temporizadorResize = setTimeout(ajustarCurva, 150);
 	});
 
-	// Navegación real (click, no solo indicador de progreso) — mismo motivo que la versión
-	// anterior: el destino vive dentro de .hz-track, rotado -90° por el truco de slide horizontal
-	// (ver base.css), así que el scroll-hasta-el-ancla nativo del navegador no calcula bien el
-	// scroll necesario. Se resuelve leyendo `offsetTop` del slide destino DENTRO de .hz-track (esa
-	// posición SÍ es correcta, es el espacio local sin rotar) y llevando el scroll ahí a mano.
-	// `behavior:'instant'` a propósito — 'smooth' se queda clavado en 0 sobre este elemento
-	// transformado (gotcha ya documentado, ver memoria del proyecto).
-	const track = document.querySelector<HTMLElement>('.hz-track');
 	const boton = document.querySelector<HTMLButtonElement>('.hilo-ruta-menu-boton');
 	const menu = document.querySelector<HTMLElement>('#hilo-ruta-menu');
 
@@ -900,17 +932,18 @@ const duracionLetra = `${DURACION_LETRA_MS}ms`;
 		if (evento.key === 'Escape') cerrarMenu();
 	});
 
+	// Navegación real (click, no solo indicador de progreso) — Bloque E, E14: el escenario vertical
+	// ya no vive dentro de un contenedor rotado (ver la versión anterior de este comentario, en el
+	// historial de este archivo), así que el ancla nativa `#id` del navegador SÍ calcula bien el
+	// scroll — lleva `.seccion` (que tiene el `id`, ver Seccion.astro) a alinear su borde superior
+	// con el tope del viewport, exactamente el mismo punto que usa `llegada` arriba
+	// (`offsets()[k].desdePct`). `scroll-behavior: smooth` de `html` (base.css) hace la transición;
+	// con movimiento reducido el navegador la hace instantánea solo. No hace falta `preventDefault`
+	// ni scrollear a mano — solo cerrar el menú ANTES de que el navegador empiece a moverse, así las
+	// letras se van mientras la página viaja (pedido de Ale, ver el comentario del CSS del menú).
 	document
 		.querySelectorAll<HTMLAnchorElement>('.hilo-ruta-parada-link, .hilo-ruta-menu a')
 		.forEach((enlace) => {
-			enlace.addEventListener('click', (evento) => {
-				const id = enlace.getAttribute('href')?.slice(1);
-				const destino = id && document.getElementById(id);
-				if (!track || !destino) return;
-
-				evento.preventDefault();
-				track.scrollTo({ top: destino.offsetTop, behavior: 'instant' });
-				cerrarMenu();
-			});
+			enlace.addEventListener('click', () => cerrarMenu());
 		});
 </script>

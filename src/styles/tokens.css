@@ -182,3 +182,13 @@
    */
   --color-velo-foto: #000000;
 }
+
+/* En mobile, HiloRuta pasa a ser "solo el botón" flotante (D-G de §11.3, Bloque E, E14) — no hay
+ * barra lateral que reservar. Sin este 0px, el padding de `.seccion__caja` (base.css) y el del
+ * menú a pantalla completa (HiloRuta.astro) seguirían dejando el hueco de una barra que ya no
+ * está. */
+@media (width < 900px) {
+  :root {
+    --ancho-hilo-ruta: 0px;
+  }
+}
