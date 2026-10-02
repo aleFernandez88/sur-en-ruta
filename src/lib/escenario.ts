@@ -1,12 +1,9 @@
 /**
  * escenario.ts — matemática del escenario vertical (Opción 3 "Demo viva",
- * docs/planes/2026-09-22-recomposicion-ui-vertical.md §14.7 paso 7 — Paso 1.1 de §5). Reemplaza a
- * `cinta.ts` como única fuente de verdad de la línea de tiempo del documento; `cinta.ts` sigue
- * vivo hasta que las 5 pantallas y HiloRuta se migren (Bloque E, paso 17-18 del plan) — hasta
- * entonces conviven los dos módulos, cada uno con sus propios consumidores.
+ * docs/planes/2026-09-22-recomposicion-ui-vertical.md §14.7 paso 7 — Paso 1.1 de §5). Es la única
+ * fuente de verdad de la línea de tiempo del documento (la "cinta" horizontal anterior ya no existe).
  *
- * Diferencia de fondo con `cinta.ts`: ahí cada pantalla era un PUNTO (`centro(k)`, un instante de
- * scroll donde se centra). Acá cada sección es un RANGO — mide `largoSvh` de scroll propio (Paso
+ * Cada sección es un RANGO — mide `largoSvh` de scroll propio (Paso
  * 1.2, `Seccion.astro`), así que lo que hace falta no es "dónde se centra" sino "entre qué dos
  * puntos del scroll del DOCUMENTO ENTERO está activa". Eso es lo que da `offsets()`.
  *
@@ -22,7 +19,7 @@
  * nombres, ver src/data/recorrido.ts) cruzada con `PRESUPUESTO_SVH` — antes las dos vivían
  * separadas y podían desincronizarse (hallazgo H10 del plan de Bloque E).
  *
- * === Restricciones técnicas que no se pueden violar (trasladadas íntegras de cinta.ts:34-47,
+ * === Restricciones técnicas que no se pueden violar (heredadas de la versión "cinta",
  * todas ya costaron debugging real) ===
  * 1. Toda animación scroll-driven va envuelta en `@supports (animation-timeline: scroll(root))`,
  *    con el estado final legible como default FUERA del bloque — Firefox estable todavía tiene
@@ -102,11 +99,9 @@ export interface Offset {
 /**
  * Acumulado de cada sección en svh, y su conversión a % del scroll del documento:
  * `pct = acumuladoSvh / (TOTAL_SVH − 100) · 100` (se resta una pantalla porque la última sección ya
- * está a la vista cuando el scroll termina — mismo motivo por el que `cinta.ts` dividía por `N−1`
- * en vez de `N`, el razonamiento no cambia, la fórmula sí). Clampeado a [0,100]: más allá de
+ * está a la vista cuando el scroll termina). Clampeado a [0,100]: más allá de
  * `TOTAL_SVH − 100` svh no existe scroll posible, así que la última sección (que sigue "activa"
- * mientras el usuario está parado en el fondo del documento) queda pegada en 100% — no es un bug,
- * es lo mismo que pasaba con `centro(N-1) = 100` antes.
+ * mientras el usuario está parado en el fondo del documento) queda pegada en 100% — no es un bug.
  */
 export function offsets(): Offset[] {
 	const totalScrolleable = TOTAL_SVH - 100;
@@ -141,21 +136,13 @@ export function offsets(): Offset[] {
 	});
 }
 
-/** % del scroll del documento donde el "centro" de la sección `id` queda a la vista. */
-export function centro(id: string): number {
-	const o = offsets().find((o) => o.id === id);
-	if (!o) throw new Error(`escenario.ts: sección desconocida "${id}"`);
-	return o.centroPct;
-}
-
-/** Tramo explícito `desde% hasta%` — copiado tal cual de `cinta.ts:70-72`, funciona igual. */
+/** Tramo explícito `desde% hasta%` como string para `animation-range`. */
 export function tramo(desde: number, hasta: number): string {
 	return `${desde.toFixed(2)}% ${hasta.toFixed(2)}%`;
 }
 
 /**
- * Rango de un elemento `i`-ésimo de una secuencia escalonada — copiado tal cual de
- * `cinta.ts:78-81`. Usado para nodos/tarjetas que entran uno detrás de otro (P3 beat B, etc.).
+ * Rango de un elemento `i`-ésimo de una secuencia escalonada. Usado para nodos/tarjetas que entran uno detrás de otro (P3 beat B, etc.).
  */
 export function escalonado(inicio: number, i: number, paso: number, duracion: number): string {
 	const desde = inicio + i * paso;

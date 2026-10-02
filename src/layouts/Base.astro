@@ -7,7 +7,7 @@
  * Incluye HiloRuta (barra de navegación general, fija al borde izquierdo) y Escenario (la capa
  * fija de fondo + celular, docs/planes/2026-09-22-recomposicion-ui-vertical.md §14.7 paso 11 —
  * Paso 1.5 de §5). `<main>` contiene las 5 <Seccion> directamente, scroll de documento nativo —
- * reemplaza a la mecánica "cinta" (`.hz-viewport`/`.hz-track`, rotation hack + script de
+ * reemplaza a la mecánica "cinta" (contenedor horizontal rotado, rotation hack + script de
  * suavizado de rueda, historial completo en el git log y la memoria del proyecto): un `transform`
  * en un ancestro le crea containing block a todo lo de adentro, así que `position: fixed` (la
  * base del escenario fijo) no funcionaba ahí dentro — el bloqueo real que forzó este rediseño.

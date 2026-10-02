@@ -7,7 +7,7 @@
  * conceptual de la app" pulsa al cambiar de sección pase lo que pase con el demo.
  *
  * Es un solo `requestAnimationFrame` (no un listener de `scroll` propio, restricción de §14.2.a)
- * con guarda de igualdad: si el estado calculado es idéntico al último mandado, no postea nada —
+ * con guarda de igualdad: si el estado calculado es idéntico al último mandado, no envía nada —
  * sino, cada frame de scroll dispararía un mensaje, y la restricción del plan es explícita
  * ("un solo postMessage por frame COMO MUCHO", no uno siempre).
  *
@@ -172,7 +172,7 @@ function enviarTokens(iframe: HTMLIFrameElement | null): void {
 /**
  * Arranca el loop sobre un `<iframe>` ya montado, o sobre `null` en modo 'imagen' (fallback N3,
  * §14.1): el loop sigue corriendo igual (el rótulo pulsa al cambiar de sección pase lo que pase
- * con el demo), pero sin postear nada — no hay nada del otro lado que escuche.
+ * con el demo), pero sin enviar nada — no hay nada del otro lado que escuche.
  *
  * Un solo `requestAnimationFrame`, con guarda de igualdad — ver el comentario grande del
  * frontmatter. `prefers-reduced-motion` fuerza `animar:false` siempre (§14.3): el celular sigue
@@ -188,7 +188,7 @@ export function iniciar(iframe: HTMLIFrameElement | null): void {
 	let detenido = false;
 
 	// Cuando el demo avisa que está listo (receptor temprano de Base.astro), se descarta la
-	// guarda de igualdad para que el próximo tick reenvíe el estado: el que se posteó antes de
+	// guarda de igualdad para que el próximo tick reenvíe el estado: el que se envió antes de
 	// que el iframe escuchara se perdió.
 	window.addEventListener('sur-en-ruta:demo-listo', () => {
 		ultimoJSON = null;

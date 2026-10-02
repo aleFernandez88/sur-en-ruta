@@ -2,8 +2,8 @@
 /**
  * HiloRuta.astro — barra de navegación general del sitio, fija al borde IZQUIERDO de toda la
  * pantalla (rediseño 2026-08-28, reemplaza a la versión anterior: barra horizontal arriba, con
- * asfalto/línea central/cartelitos numerados — ver la memoria del proyecto para ese historial,
- * `--color-asfalto`/`--color-linea-central`/`--color-cartel-*` quedan sin uso en tokens.css).
+ * pavimento/línea central/cartelitos numerados — ver la memoria del proyecto para ese historial;
+ * los tokens de color de esa versión se borraron de tokens.css en E17).
  *
  * Pedido de Ale (2026-08-28), inspirado en el sidebar de bertani.net + el motivo real del footer
  * de la página 4 del mazo de Ana (línea punteada ondulada con nodos, ver
@@ -205,7 +205,7 @@ const duracionLetra = `${DURACION_LETRA_MS}ms`;
 		     además su propio anillo (aparece + el nodo "late" una vez al llegar, ver @keyframes
 		     hilo-ruta-latido/hilo-ruta-anillo) acotado a una ventana angosta alrededor de `llegada`
 		     (cuándo la sección arranca a pinearse), vía `animation-range` LITERAL inline (Bloque E,
-		     E14, H11 — restricción 4: nunca `animation-range: var(...)`, cada nodo tiene su propia
+		     E14, H11 — restricción 4: nunca `animation-range` con variable, cada nodo tiene su propia
 		     ventana así que no puede ser una regla de clase compartida). -->
 		<g mask="url(#hilo-ruta-mascara)" aria-hidden="true">
 			<use href="#hilo-ruta-curva" class="hilo-ruta-linea-progreso"></use>
@@ -537,7 +537,7 @@ const duracionLetra = `${DURACION_LETRA_MS}ms`;
 		 * aplicó ningún frame, así que hace falta el estado "before" explícito acá.
 		 *
 		 * `animation-range` NO va acá (restricción 4, H11 del plan de Bloque E: nunca
-		 * `animation-range: var(...)`) — cada nodo tiene su propia ventana (`llegada` distinto por
+		 * `animation-range` con variable) — cada nodo tiene su propia ventana (`llegada` distinto por
 		 * parada), así que el rango se pone LITERAL inline en el propio `<circle>` (ver más abajo,
 		 * donde antes iban `--nodo-desde`/`--nodo-hasta`). */
 		.hilo-ruta-nodo-progreso {

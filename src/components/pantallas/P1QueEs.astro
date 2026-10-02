@@ -6,11 +6,11 @@
  * `docs/landing-contenido.md` § P1.
  *
  * === Qué se borra respecto de la versión "cinta" ===
- * `<Pantalla>` (reemplazada por `<Seccion id="que-es">`), `.p1-escena` (el celular ya vive en
+ * el shell `Pantalla` (reemplazado por `<Seccion id="que-es">`), `.p1-escena` (el celular ya vive en
  * `Escenario.astro`, chrome fijo para las 5 secciones — E4), `.p1-rotulo` (el rótulo "Vista
  * conceptual de la app" es chrome permanente desde E4, mismo string, no se pierde contenido), el
  * fondo de `.p1` (lo pinta `.escenario`, con el mismo glow radial, mudado a `Escenario.astro` en
- * E4) y las dos animaciones atadas a `--hz-progreso` (el timeline de `cinta.ts` ya no existe).
+ * E4) y las dos animaciones atadas al progreso horizontal de la cinta (esa línea de tiempo ya no existe).
  *
  * === Qué se conserva literal ===
  * La entrada TEMPORAL de los 4 textos (titular, respuesta, bajada, marca), disparada por
@@ -19,7 +19,7 @@
  * delays (120/300/460/610ms) que ya estaban aprobados.
  *
  * === Qué cambia ===
- * La permanencia scroll-driven (antes tramo `0%→8%` de `--hz-progreso`, el velo se afloja + el
+ * La permanencia scroll-driven (antes tramo `0%→8%` del progreso horizontal de la cinta, el velo se afloja + el
  * texto se corre) pasa a `animation-timeline: --que-es` con `animation-range: contain 0% contain
  * 100%` (literal, E7 del plan) — el tramo pineado completo de esta sección en vez de un % fijo del
  * scroll del documento entero.

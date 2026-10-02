@@ -43,7 +43,7 @@ body {
 }
 
 /* === Escenario vertical: Seccion.astro (Paso 1.2 de §5) ===
- * Reemplaza a la mecánica "cinta" (Pantalla.astro + .hz-*, borrada arriba). Un contenedor ALTO
+ * Reemplaza a la mecánica "cinta" (horizontal, ya borrada). Un contenedor ALTO
  * (--largo, en svh — el presupuesto de scroll propio de la sección, sale de escenario.ts) con un
  * hijo `position: sticky` que se pinea al tope del viewport mientras se scrollea ese presupuesto.
  * El `@supports` envolviendo la ALTURA (no el pineado en sí) es lo que hace que Firefox estable

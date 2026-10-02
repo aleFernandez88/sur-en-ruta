@@ -53,7 +53,7 @@
   --color-marino: #0f2b4d;
   /* Variante oscura: círculos de ícono macizos, franjas inferiores. */
   --color-marino-profundo: #0a2036;
-  /* Azul casi negro — 2026-08-28, para el degradé animado del footer de Lamina (junto con
+  /* Azul casi negro — 2026-08-28, para el degradé animado del footer de la lámina del mazo viejo (junto con
    * --color-marino y --color-celeste). Más oscuro que --color-marino-profundo a propósito. */
   --color-marino-noche: #050b14;
   /* D-A resuelto 2026-09-23 (Opción 3 · Demo viva): vuelve el oliva de
@@ -146,22 +146,6 @@
    * Uso: color de "progreso ya recorrido" de la línea/nodos de HiloRuta, sobre el marino de base.
    */
   --color-celeste: #6cace4;
-
-  /* === Color de pavimento y cartel de ruta (HiloRuta, versión horizontal vieja) ===
-   * Representan asfalto/demarcación real. Sin uso desde el 2026-08-28 (HiloRuta se rediseñó como
-   * barra lateral vertical, ver --ancho-hilo-ruta abajo) — se dejan por si algún día se retoma la
-   * estética de "ruta vista desde arriba" en otra parte del sitio.
-   */
-  --color-asfalto: #4a4a4a;
-  --color-linea-central: #ffc82c;
-  --color-cartel-fondo: var(--color-marino);
-  --color-cartel-texto: #ffffff;
-  /* Poste de CartelSeccion.astro: gris clarito, un solo color, sin textura — a propósito
-   * distinto del asfalto (más oscuro, es pavimento, no un poste). */
-  --color-poste: #c7c7c7;
-  /* Franja más oscura sobre un lado del poste, simulando sombra/bisel — no es un color de marca,
-   * es nada más que --color-poste oscurecido. */
-  --color-poste-sombra: #a3a3a3;
 
   /* Ancho de HiloRuta (src/components/HiloRuta.astro), rediseñada el 2026-08-28 como barra
    * lateral izquierda fija (antes: barra horizontal arriba, token se llamaba --alto-hilo-ruta).
