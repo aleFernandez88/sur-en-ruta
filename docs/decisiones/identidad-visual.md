@@ -4,6 +4,11 @@
 **Estado:** vigente — sistema de color final salvo pedido de cambio de Ana.
 **Aplica en:** `src/styles/tokens.css` (capa de color), `src/styles/base.css` (viñeta del fondo).
 
+> **Nota 2026-09-23 (Bloque E) — D-A resuelto.** El oliva `#5a6b2e` queda **confirmado** como verde
+> de marca. `--color-verde-vivo` (`#8c9c50`) es solo para acento sobre fondo oscuro. El isotipo
+> **volvió al oliva**. El marino sobre oliva **no se usa** como combinación de texto (2,43:1, no
+> pasa ni AA de texto grande); sobre oliva va texto blanco (`--color-texto-sobre-foto`, 5,87:1).
+
 ---
 
 ## Origen

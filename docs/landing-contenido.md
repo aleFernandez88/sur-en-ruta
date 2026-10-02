@@ -10,9 +10,10 @@ git. `docs/comparativa-mazo-vs-landing.md` quedó **obsoleto** (movido a
 ## 1. Enfoque
 
 La landing es un **spot publicitario de la app Sur en Ruta**. La app todavía no existe — por eso
-se usan **maquetas falsas** (el prototipo `prototipos/app-demo/` + el video
-`sur-en-ruta-app-showcase.mp4` + las capturas en `prototipos/app-demo/capturas/` + la secuencia de
-90 frames en `public/p1-scrub/` que usa P1 para su scroll-scrub, ver §15 del plan de addendum).
+se usan **maquetas falsas**: el demo de la app corriendo **en vivo** dentro del celular del
+escenario (`public/app-demo/`, única fuente — se publica), más el video
+`sur-en-ruta-app-showcase.mp4` y las capturas en `prototipos/app-demo/capturas/` (respaldo del
+fallback N3). Ya **no existe** la secuencia de frames de scroll-scrub de P1.
 
 - **Solo se habla de Sur en Ruta.** Cero menciones a RENAMU (ni el nombre, ni la diferenciación
   institucional, ni el aparato). La "red" que se nombra es la red propia de Sur en Ruta: sus
@@ -22,9 +23,10 @@ se usan **maquetas falsas** (el prototipo `prototipos/app-demo/` + el video
 - **Tono de spot:** frases cortas, orientadas al beneficio, sin bajada institucional larga.
 
 ### Se mantiene del diseño base
-Cinta horizontal (scroll-como-slide), Preloader, HiloRuta lateral, **una animación de entrada
-propia por pantalla** (no se repite la misma), e identidad visual ya cerrada — paleta (verde
-`#356a2c` + celeste `#6cace4` + marino `#0f2b4d`), tipografías (Archivo display, Space Grotesk,
+**Escenario vertical** (`Escenario` + `Seccion`, secciones pineadas con scroll vertical; la línea
+de tiempo sale de `src/lib/escenario.ts`, sin porcentajes calibrados a mano), Preloader, HiloRuta
+lateral, **un gesto propio por pantalla** (no se repite el mismo), e identidad visual ya cerrada —
+paleta (verde oliva `#5a6b2e` + celeste `#6cace4` + marino `#0f2b4d`), tipografías (Archivo display, Space Grotesk,
 Lora + Source Sans 3), íconos SVG propios. Ver `docs/decisiones/identidad-visual.md`.
 
 ### Reglas de contenido vigentes
@@ -47,7 +49,7 @@ Se toman como **guía de info, no como plantilla**: se extrae lo necesario, no s
 
 ---
 
-## 2. Estructura de la cinta
+## 2. Estructura del escenario vertical
 
 | # | id | Pregunta guía | Base |
 |---|----|---------------|------|
@@ -57,41 +59,42 @@ Se toman como **guía de info, no como plantilla**: se extrae lo necesario, no s
 | P4 | `donde` | ¿Dónde lo hace? | pág. 06 |
 | P5 | `cierre` | (CTA) | genérico, se ajusta al final |
 
-Cada pantalla es un `<Pantalla completa>`. Al sumar/quitar pantallas se toca `N_PANTALLAS` en
-`src/pages/index.astro` y la parada correspondiente en `HiloRuta.astro` (`recorrido`).
+Cada pantalla es una `<Seccion id="...">` (`src/components/pantallas/`). El orden y los nombres
+salen de `src/data/recorrido.ts`; el largo de scroll de cada una, de `PRESUPUESTO_SVH` en
+`src/lib/escenario.ts`. Sumar/quitar una pantalla = tocar `recorrido.ts` **y** `PRESUPUESTO_SVH`
+(si falta uno, `ESCENARIO` tira error al arrancar).
+
+**Presupuesto de scroll (Bloque E, 2026-09-23):** 940 svh en total.
+
+| Sección | Largo (svh) | Pineada (largo − 100) |
+|---------|-------------|-----------------------|
+| P1 `que-es` | 160 | 60 |
+| P2 `que-hace` | 160 | 60 |
+| P3 `como-lo-hace` | 260 | 160 |
+| P4 `donde` | 260 | 160 (≈27 svh por ruta) |
+| P5 `cierre` | 100 | 0 (sin meseta: entra y el documento termina) |
 
 ---
 
 ## P1 · ¿Qué es Sur en Ruta?
 
-**Arranque de la cinta.** Responde la pregunta en el acto y muestra el producto.
+**Arranque del escenario.** Responde la pregunta en el acto y muestra el producto.
 
 - **Titular:** ¿Qué es Sur en Ruta?
 - **Respuesta (copy propuesto):**
   > Una forma nueva de recorrer Uruguay: **por etapas, conectada, a tu ritmo.**
 - **Bajada:** La app y la red que conecta a quien viaja con los puntos, servicios y rutas del país.
 - **Marca:** "Explorá. Conectá. Viví."
-- **Elemento visual — rediseñado 2026-09-04 (addendum de scroll-scrub):** full-bleed, no panel
-  lateral. Una secuencia de **90 frames WebP** (`public/p1-scrub/`, generados por
-  `prototipos/app-demo/render/scrub.mjs` a partir de la misma escena `showcase.html`) dibujada en
-  `<canvas>` y atada al scroll — el celular gira y el recorrido de la app avanza cuadro a cuadro
-  mientras el usuario scrollea, **no** en loop automático. Detalle técnico completo en
-  `docs/planes/2026-09-04-reescritura-index-p1-p5.md` §15.
-- **Animación — implementada 2026-09-04, ajustada el mismo día tras probarla en vivo, dos
-  mecanismos:**
-  1. **Entrada TEMPORAL** (disparada por `:root.entrada`, sin scroll — P1 se centra en 0%, sin
-     tramo de aproximación): "cortina desde el centro" — la escena se enciende (opacity+scale), el
-     titular hace wipe de `clip-path` centro→afuera, la respuesta sube con fade, y **las 4 líneas
-     de texto (titular, respuesta, bajada, marca) más el rótulo "Vista conceptual de la app" entran
-     todas acá, escalonadas** — nada del contenido de P1 depende de scrollear. *(Ajuste: el diseño
-     original tenía la bajada y la marca reveladas recién con scroll, "como quien lee mientras mira
-     el recorrido" — probado en vivo no funcionaba: violaba la regla de más peso de esta pantalla,
-     CLAUDE.md §1 "mostrar rápido para retener". Se sacó.)*
-  2. **Permanencia SCROLL-DRIVEN, tramo `0%→8%` de `--hz-progreso`** (con P1 ya centrada — no es
-     una entrada): el scrub del canvas avanza con el scroll; el velo de contraste se afloja y el
-     bloque de texto se corre levemente hacia el final del tramo — un plus mientras se lee, nunca
-     algo de lo que dependa ver el contenido. De 8% a 14% queda un colchón: el scrub se congela en
-     el último frame. Ver `src/components/pantallas/P1QueEs.astro`.
+- **Elemento visual:** el celular del escenario (chrome fijo, `Escenario.astro`) con el demo de la
+  app **corriendo en vivo** (`public/app-demo/` dentro de un iframe). El rótulo "Vista conceptual
+  de la app" es chrome permanente. Ya no hay canvas ni secuencia de frames.
+- **Animación:**
+  1. **Entrada TEMPORAL** (disparada por `:root.entrada`, sin scroll — P1 está en pantalla apenas
+     carga): los 4 textos (titular, respuesta, bajada, marca) entran escalonados (120/300/460/610
+     ms). Nada del contenido depende de scrollear (CLAUDE.md §1: "mostrar rápido para retener").
+  2. **Permanencia SCROLL-DRIVEN** sobre el tramo pineado completo (`animation-timeline: --que-es`,
+     `contain 0% contain 100%`): el velo de contraste se afloja y el bloque de texto se corre
+     levemente — un plus mientras se lee. Ver `src/components/pantallas/P1QueEs.astro`.
 
 ---
 
@@ -110,12 +113,13 @@ Cada pantalla es un `<Pantalla completa>`. Al sumar/quitar pantallas se toca `N_
   | **Para los comercios y privados** | Más visibilidad · Nuevos clientes · Integración simple a una red turística |
   | **Para el territorio** | Circulación ordenada · Activación de economías locales · Mejor conexión entre destinos |
 
-- **Firma de pie:** URUGUAY — *conecta · ordena · potencia*.
-- **Animación de entrada — implementada 2026-09-04:** "las 3 columnas convergen" — columna
-  izquierda y derecha entran desde ±45% en X, la del medio desde abajo; único movimiento en X de
-  toda la cinta. Los 3 ítems de cada columna se descubren con un wipe vertical, uno por columna. El
-  cierre subraya con una regla verde que se dibuja izquierda→derecha. Ver
-  `src/components/pantallas/P2QueHace.astro`.
+- **Firma de pie:** URUGUAY — *conecta · ordena · potencia* (vive en la banda del escenario, ya no
+  dentro de P2).
+- **Animación (Bloque E, E8):** "dispersión desde el celular" — las 3 tarjetas salen de la posición
+  del celular (a `x: 27%` en esta sección) con distancias decrecientes, y viajan a su fila final
+  (escala + opacidad + traslado). En mobile suben desde abajo. Rangos `contain` 2-20 / 14-32 /
+  26-44 %. Titular en blanco (`--color-texto-sobre-foto`, 5,87:1): marino sobre oliva da 2,43:1 y
+  no se usa. Ver `src/components/pantallas/P2QueHace.astro`.
 
 ---
 
@@ -135,7 +139,8 @@ pantalla.**
   | **Sello Viajero Responsable** | Buenas prácticas y confianza dentro de la red |
   | **Señalética e identidad** | Puntos reconocibles, información clara y presencia en el territorio |
 
-- **Cierre del bloque:** Tecnología, comunidad y comunicación al servicio del viaje.
+- **Cierre del bloque:** Tecnología, comunidad y comunicación al servicio del viaje. **Ahora se
+  muestra** (hasta 2026-09-04 no se mostraba): aparece al final del beat A, antes del cruce.
 
 ### Bloque B — Cómo funciona, paso a paso
 - **Subtítulo:** Una experiencia simple, organizada y conectada.
@@ -149,11 +154,12 @@ pantalla.**
   | 05 | Viajá de forma responsable | Las buenas prácticas fortalecen el cuidado y la convivencia. |
 
 - **Cierre del bloque:** Una red que organiza el viaje y potencia los destinos.
-- **Animación de entrada — implementada 2026-09-04:** dos gestos distintos, uno por bloque. Bloque
-  A ("4 paneles que se despliegan"): cada tarjeta gira en X desde -78° (perspectiva + rotación), en
-  tira horizontal compacta. Bloque B: patrón trasladado de la vieja Pantalla 4 (ruta ondulada que
-  se dibuja + nodos numerados que hacen pop + tarjetas que suben). Ver
-  `src/components/pantallas/P3ComoLoHace.astro`.
+- **Animación (Bloque E, E9):** dos beats superpuestos en la misma caja (`grid-area: 1/1`). Beat A
+  (`contain 0%→35%`): las 4 herramientas se despliegan escalonadas. Cruce en `contain 30%→38%`: A
+  sale con fade+translate y B entra. Beat B (`contain 32%→100%`): los 5 pasos viajan en un carril
+  (`contain 40%→95%`) con su numeral 01-05 como hijo de cada tarjeta, y el cierre del bloque
+  entra al final (`92%→100%`). El contenido va a la derecha en escritorio (celular a la
+  izquierda, `x: −25%`) y arriba en mobile. Ver `src/components/pantallas/P3ComoLoHace.astro`.
 
 ---
 
@@ -175,10 +181,13 @@ pantalla.**
   | **Ruta de Naturaleza y Aventura** | Sierras, lagunas y aire libre |
 
 - **Cierre:** Cada ruta conecta puntos, servicios, paisajes y experiencias.
-- **Animación de entrada — implementada 2026-09-04:** "las 6 rutas se van trazando" — cada tarjeta
-  se descubre con un wipe horizontal izquierda→derecha (como un trazo de ruta avanzando), y el
-  titular hace *tracking-in* (letter-spacing que se cierra). Único wipe horizontal por tarjeta y
-  única animación tipográfica de toda la cinta. Ver `src/components/pantallas/P4Donde.astro`.
+- **Animación (Bloque E, E10):** "estado activo que rota". **Sin tarjetas**: el fondo es **color de
+  ruta a pantalla completa** (lo pinta `Escenario.astro`) y los 6 bloques (nombre + bajada + ícono)
+  están superpuestos; cada ruta ocupa una sub-meseta de 1/6 del tramo pineado (≈27 svh) y cambia
+  por fade+translate. La primera arranca visible y la última termina visible. Índice de 6 puntos
+  decorativo; los 6 bloques son un `<ul>` real accesible. Ver `src/components/pantallas/P4Donde.astro`.
+- **Fotos:** `src/data/rutas.ts → foto` queda en `null` y **no tiene consumidor en la landing** (el
+  color de ruta reemplazó a las fotos). D2 (licencia) queda solo dentro del demo.
 
 ---
 
@@ -188,13 +197,15 @@ pantalla.**
 
 La app todavía no existe, así que el CTA **no puede decir "descargala"**. Placeholder de trabajo:
 
-- **Titular:** Sur en Ruta está en camino.
+- **Titular:** Sur en Ruta está en camino. (en `src/data/cierre.ts`, junto con `cta`)
 - **Sub / acción:** [CTA genérico — "Muy pronto" / "Seguí el proyecto" / form de contacto — a definir]
-- **Animación de entrada — implementada 2026-09-04 (titular sin CTA todavía, ver arriba):** "el
-  hilo llega y el cierre se enciende" — único gesto de zoom-out de toda la cinta (el bloque de
-  contenido arranca en `scale(1.1)` y se asienta), el titular se "enciende" con un barrido de color
-  (gradient-text animado), y el isotipo hace el mismo "choque" que ya usaba la vieja Pantalla 1. Ver
-  `src/components/pantallas/P5Cierre.astro`.
+- **CTA (D1):** `cierre.ts` tiene `cta: null`. En el build **no se renderiza ningún bloque de
+  acción**; solo bajo `astro dev` se ve un hueco punteado "[CTA — a definir (D1)]", para no mover
+  el layout el día que se resuelva.
+- **Animación (Bloque E, E11):** sin meseta (100 svh), todo va sobre `animation-range: entry` de
+  `--cierre`: el contenido se asienta (`entry 0%→80%`), el titular se "enciende" con un barrido de
+  color vía `@property --p5-barrido` (`entry 20%→90%`) y el isotipo hace el "choque"
+  (`entry 70%→100%`). Ver `src/components/pantallas/P5Cierre.astro`.
 
 ---
 
@@ -228,13 +239,18 @@ tintado + ícono).
 
 ## 4. Pendientes / notas de implementación
 
+- **Pendientes del Bloque E (2026-09-23), ver plan §8:** iPhone real (T1-T6 en iOS, bloquea el
+  deploy); D2 (licencia de fotos de ruta, antes del deploy); el demo carga Google Fonts de un
+  tercero; el demo presenta como reales km por ruta y nombres de comercios inventados (lo revisa
+  Ale); `public/img/oportunidad/` (4 fotos) sin uso pero publicado; prueba manual en Android real
+  y Chrome con rueda real pendiente de Ale.
 - **`app-demo`:** las 4 rutas ya están renombradas a la lista canónica de §3 y alineadas con
   `src/data/rutas.ts`. Sigue pendiente: conseguir fotos deployables (ver la corrección de §3 —
   decisión D2) y definir si la pantalla "Rutas" del demo muestra las 6 o un subconjunto.
 - ~~**`src/pages/index.astro`:** hoy tiene 6 `<Pantalla>` con el contenido viejo (hero / portada /
   oportunidad / sistema-RENAMU / como-funciona / placeholder). Todo eso se reemplaza por P1–P5.~~ ✅
   reescrito completo el 2026-09-04 (`docs/planes/2026-09-04-reescritura-index-p1-p5.md`, pasos 1-12
-  y 14) — P1-P5 en `src/components/pantallas/`, matemática de la cinta en `src/lib/cinta.ts`. El
+  y 14) — P1-P5 en `src/components/pantallas/`, (2026-09-04) matemática de la cinta en `src/lib/cinta.ts`, borrada el 2026-09-23. El
   CTA de P5 (D1) y las fotos de P4 (D2) siguen bloqueados por Ale.
 - ~~**`CLAUDE.md`:** §1, §2 y §6 están escritos alrededor de RENAMU + el mazo. Hay que reescribirlos
   con este enfoque.~~ ✅ ya reescritos (ver el propio `CLAUDE.md`, sin RENAMU, enfoque de spot).
@@ -247,6 +263,12 @@ tintado + ícono).
 
 ## 5. Historial
 
+- **2026-09-23** — Bloque E (`docs/planes/2026-09-23-bloque-e-secciones-chrome.md`): P1-P5 pasan a
+  `<Seccion>` sobre el escenario vertical (presupuesto 940 svh, `src/lib/escenario.ts`), un gesto
+  nuevo por pantalla (E7-E11), P3 muestra el cierre del bloque A, P4 pasa a color de ruta a
+  pantalla completa sin tarjetas, P5 lee `src/data/cierre.ts`. Se borran la cinta (`cinta.ts`,
+  `Pantalla`, `Lamina`, `SlidePlaceholder`) y la secuencia `p1-scrub`. Verde oliva `#5a6b2e`
+  confirmado.
 - **2026-09-04** — `src/pages/index.astro` reescrito con P1-P5 reales
   (`docs/planes/2026-09-04-reescritura-index-p1-p5.md`, pasos 1-12 y 14). Componente por pantalla
   en `src/components/pantallas/`, matemática de la cinta centralizada en `src/lib/cinta.ts`, cada

@@ -9,23 +9,23 @@
 
 La **landing de Sur en Ruta**: un **spot publicitario de la app**, dirigido a público general.
 Mucho show visual, comprensión inmediata. La app **todavía no existe** — se muestra con **maquetas
-falsas** (`prototipos/app-demo/` + su video `sur-en-ruta-app-showcase.mp4` + las capturas en
-`prototipos/app-demo/capturas/`). **No es una propuesta de inversión** — nada de negocio,
+falsas**: el demo vivo en `public/app-demo/` (corre dentro del celular del escenario) + su video
+`sur-en-ruta-app-showcase.mp4` + las capturas en `prototipos/app-demo/capturas/`. **No es una propuesta de inversión** — nada de negocio,
 presupuesto ni modelo económico se publica acá.
 
 **Solo se habla de Sur en Ruta.** No se menciona **RENAMU** (ni el nombre, ni el marco
 institucional, ni la diferenciación RENAMU / Sur en Ruta). La "red" que se nombra es la red propia
 de Sur en Ruta: sus puntos, rutas y servicios.
 
-**Estructura (2026-09-03):** la "cinta" horizontal. **Sin hero de apertura** — mostrar rápido para
+**Estructura (2026-09-23):** escenario vertical con secciones pineadas (scroll vertical, el celular
+fijo como chrome). **Sin hero de apertura** — mostrar rápido para
 retener. Las primeras 4 pantallas responden 4 preguntas guía: **¿qué es? / ¿qué hace? / ¿cómo lo
 hace? / ¿dónde lo hace?** (las rutas turísticas entran en la 4ª). P5 = CTA. El detalle de
 contenido, pantalla por pantalla, vive en **`docs/landing-contenido.md`** (fuente única del
 contenido).
 
-**Se mantiene** el andamiaje visual construido antes del pivot: cinta horizontal (scroll-como-
-slide), Preloader, HiloRuta lateral, **una animación de entrada propia por pantalla** (no se
-repite), e identidad visual cerrada (ver `docs/decisiones/identidad-visual.md`).
+**Se mantiene** el andamiaje visual construido antes del pivot: escenario vertical (`Escenario` +
+`Seccion`), Preloader, HiloRuta lateral, **un gesto propio por pantalla** (no se repite), e identidad visual cerrada (ver `docs/decisiones/identidad-visual.md`).
 
 > **Nota histórica:** hasta el 2026-08-25 esto era una landing para inversores con sección de
 > presupuesto. El 2026-08-26 Ana pidió el pivot a público general
@@ -51,6 +51,10 @@ repite), e identidad visual cerrada (ver `docs/decisiones/identidad-visual.md`).
 **Astro** estático (SSG), **sin backend, sin login, sin base de datos**. CSS propio con custom
 properties, mapa en SVG inline propio (sin Leaflet ni Mapbox). Deploy = subir el contenido de
 `dist/` (nunca `src/`, `node_modules/`, `docs/` ni `prototipos/`).
+
+**Línea de tiempo:** el presupuesto de scroll de cada sección y todo el cálculo de offsets salen de
+`src/lib/escenario.ts` (fuente única, hoy 940 svh). **No** se calibran porcentajes a mano en los
+componentes: se derivan de ahí.
 
 **Animación — regla actualizada 2026-08-26:** CSS nativo sigue siendo la primera opción
 (`animation-timeline`, `@property`+`counter()`, etc. — así está hecho `HiloRuta` hoy). **JS
