@@ -52,6 +52,16 @@ const urlImagenOG = new URL('/og-image.png', Astro.site ?? 'https://surenruta.uy
 			setTimeout(function () {
 				document.documentElement.classList.add('entrada');
 			}, 4500);
+			/* Receptor temprano de la señal `listo` del demo (iframe de app-demo). Corre antes de
+			   que exista el iframe, así que el aviso nunca se pierde por una carrera con los
+			   módulos del padre. Lo escuchan Preloader.astro y telefono.ts. */
+			window.addEventListener('message', function (e) {
+				if (e.origin !== location.origin || !e.data || e.data.fuente !== 'sur-en-ruta') return;
+				if (e.data.tipo === 'listo') {
+					document.documentElement.dataset.demo = 'listo';
+					window.dispatchEvent(new Event('sur-en-ruta:demo-listo'));
+				}
+			});
 		</script>
 
 		<title>{title}</title>
@@ -80,8 +90,8 @@ const urlImagenOG = new URL('/og-image.png', Astro.site ?? 'https://surenruta.uy
 			cambie la identidad — tocarlo junto con tokens.css.
 		-->
 		<meta name="theme-color" content="#f1f0ee" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
+		<link rel="icon" type="image/svg+xml" href={`${import.meta.env.BASE_URL}favicon.svg`} />
+		<link rel="icon" href={`${import.meta.env.BASE_URL}favicon.ico`} />
 
 		<meta name="generator" content={Astro.generator} />
 	</head>

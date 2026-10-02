@@ -155,6 +155,13 @@ export function iniciar(iframe: HTMLIFrameElement | null): void {
 	let temporizadorPulso: ReturnType<typeof setTimeout> | null = null;
 	let detenido = false;
 
+	// Cuando el demo avisa que está listo (receptor temprano de Base.astro), se descarta la
+	// guarda de igualdad para que el próximo tick reenvíe el estado: el que se posteó antes de
+	// que el iframe escuchara se perdió.
+	window.addEventListener('sur-en-ruta:demo-listo', () => {
+		ultimoJSON = null;
+	});
+
 	function tick() {
 		if (detenido) return;
 		const doc = document.documentElement;

@@ -6,7 +6,7 @@
  * adaptado con dos ajustes que pidió Ale (2026-08-27):
  *  1. La salida NO es un slide único: el fondo se parte en DOS BANDAS horizontales — la de arriba
  *     sube y sale por el borde superior, la de abajo baja y sale por el inferior (cortina que se
- *     abre en vertical), descubriendo el Hero (Sección 0).
+ *     abre en vertical), descubriendo la primera sección.
  *  2. El texto va partido por la costura: el TÍTULO ("SUR EN RUTA") vive en la banda de arriba y
  *     se va con ella hacia arriba; el ESLOGAN vive en la banda de abajo y se va con ella hacia
  *     abajo. Sin "RENAMU".
@@ -19,8 +19,9 @@
  *
  * Robustez:
  *  - Visible por HTML/CSS desde el primer frame (no hay FOUC del panel).
- *  - El retiro lo dispara el JS con `window.load` + `document.fonts.ready` + un mínimo de 1,5 s
- *    (MIN_MS) para que se lea el nombre antes de abrir la cortina.
+ *  - El retiro lo dispara el JS con `window.load` + `document.fonts.ready` + la señal `listo`
+ *    del demo del celular (si hay iframe) + un mínimo de 0,95 s (MIN_MS, = animación del título)
+ *    para que se lea el nombre antes de abrir la cortina. Failsafe de JS a los 4 s.
  *  - Red de seguridad: un @keyframes apaga todo a los 5 s aunque el JS falle.
  *  - prefers-reduced-motion: sin escala ni cortina, solo un fade corto.
  */
@@ -157,7 +158,11 @@ const ESLOGAN = 'Conecta. Ordena. Potencia.';
 	 */
 	const panel = document.getElementById('preloader');
 	if (panel) {
-		const MIN_MS = 1500; // el preloader se ve al menos 1,5 s (fondo + letras) antes de abrirse
+		// = duración de `preloader-titulo` (0,95 s): la cortina no abre antes de que el nombre
+		// termine de entrar.
+		const MIN_MS = 950;
+		// Failsafe de JS: por debajo del failsafe de CSS (5 s), que no se toca.
+		const FAILSAFE_MS = 4000;
 		const arranque = performance.now();
 
 		const cargaLista = new Promise<void>((resolve) => {
@@ -168,7 +173,18 @@ const ESLOGAN = 'Conecta. Ordena. Potencia.';
 			? (document as Document & { fonts: FontFaceSet }).fonts.ready.then(() => undefined)
 			: Promise.resolve();
 
-		Promise.all([cargaLista, fuentesListas]).then(() => {
+		// El demo del celular (iframe) avisa `listo` por postMessage; el receptor temprano de
+		// Base.astro lo convierte en `dataset.demo` + evento. Sin iframe (modo imagen), no se espera.
+		const demoListo = new Promise<void>((resolve) => {
+			if (!document.querySelector('.telefono__iframe') || document.documentElement.dataset.demo === 'listo') {
+				resolve();
+			} else {
+				window.addEventListener('sur-en-ruta:demo-listo', () => resolve(), { once: true });
+			}
+		});
+		const failsafe = new Promise<void>((resolve) => window.setTimeout(resolve, FAILSAFE_MS));
+
+		Promise.race([Promise.all([cargaLista, fuentesListas, demoListo]), failsafe]).then(() => {
 			const restante = Math.max(0, MIN_MS - (performance.now() - arranque));
 			window.setTimeout(retirar, restante);
 		});
