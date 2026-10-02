@@ -137,6 +137,38 @@ export function estadoParaProgreso(progreso01: number): EstadoDemo {
 	return estado;
 }
 
+/** Variable del `:root` del demo ← variable de `tokens.css` de la landing (13 pares). Así
+ * `tokens.css` manda sobre la paleta del demo; los valores del demo quedan de fallback para
+ * cuando se abre suelto. */
+const MAPA_TOKENS: Record<string, string> = {
+	'--marino': '--color-marino',
+	'--marino-profundo': '--color-marino-profundo',
+	'--marino-noche': '--color-marino-noche',
+	'--verde': '--color-verde',
+	'--verde-vivo': '--color-verde-vivo',
+	'--terracota': '--color-terracota',
+	'--arena': '--color-arena',
+	'--fondo': '--color-fondo',
+	'--superficie': '--color-superficie',
+	'--tinta': '--color-tinta',
+	'--tinta-suave': '--color-tinta-suave',
+	'--celeste': '--color-celeste',
+	'--borde': '--color-superficie-borde',
+};
+
+/** Lee los tokens computados de la landing y se los manda al demo (el receptor valida con lista
+ * blanca y formato hex). */
+function enviarTokens(iframe: HTMLIFrameElement | null): void {
+	if (!iframe) return;
+	const estilo = getComputedStyle(document.documentElement);
+	const valores: Record<string, string> = {};
+	for (const [destino, origen] of Object.entries(MAPA_TOKENS)) {
+		const v = estilo.getPropertyValue(origen).trim();
+		if (v) valores[destino] = v;
+	}
+	iframe.contentWindow?.postMessage({ fuente: 'sur-en-ruta', tipo: 'tokens', valores }, location.origin);
+}
+
 /**
  * Arranca el loop sobre un `<iframe>` ya montado, o sobre `null` en modo 'imagen' (fallback N3,
  * §14.1): el loop sigue corriendo igual (el rótulo pulsa al cambiar de sección pase lo que pase
@@ -160,6 +192,7 @@ export function iniciar(iframe: HTMLIFrameElement | null): void {
 	// que el iframe escuchara se perdió.
 	window.addEventListener('sur-en-ruta:demo-listo', () => {
 		ultimoJSON = null;
+		enviarTokens(iframe);
 	});
 
 	function tick() {

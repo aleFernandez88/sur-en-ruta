@@ -1074,7 +1074,23 @@
   window.addEventListener('message', function(e){
     if (e.origin !== location.origin) return;
     var d = e.data;
-    if (!d || d.fuente !== 'sur-en-ruta' || d.tipo !== 'estado') return;
+    if (!d || d.fuente !== 'sur-en-ruta') return;
+    if (d.tipo === 'tokens'){
+      // Paleta inyectada por la landing (tokens.css manda). Solo las 13 variables del :root y
+      // solo valores hex. Los valores de :root quedan de fallback para el demo abierto suelto.
+      // OJO: los colores de categoría de los pines son hex literales en el JS/SVG del demo y
+      // esta inyección NO los alcanza.
+      var permitidas = ['--marino','--marino-profundo','--marino-noche','--verde','--verde-vivo',
+        '--terracota','--arena','--fondo','--superficie','--tinta','--tinta-suave','--celeste','--borde'];
+      var vals = d.valores;
+      if (!vals || typeof vals !== 'object') return;
+      permitidas.forEach(function(k){
+        var v = vals[k];
+        if (typeof v === 'string' && /^#[0-9a-f]{3,8}$/i.test(v)) document.documentElement.style.setProperty(k, v);
+      });
+      return;
+    }
+    if (d.tipo !== 'estado') return;
     aplicar(d);
   });
 
