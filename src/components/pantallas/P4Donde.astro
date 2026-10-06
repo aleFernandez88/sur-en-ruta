@@ -294,6 +294,22 @@ const keyframesGenerados = rutas
 		}
 	}
 
+	/* Sin animation-timeline (Firefox estable): nada rota las rutas, así que las 6 se apilan en
+	 * flujo (la página crece, ver base.css) y el índice de puntos, que solo marca la rotación,
+	 * se oculta. */
+	@supports not (animation-timeline: scroll(root)) {
+		.p4-escenario {
+			gap: var(--espacio-md);
+			min-height: 0;
+		}
+		.p4-ruta {
+			grid-area: auto;
+		}
+		.p4-indice {
+			display: none;
+		}
+	}
+
 	/* === Movimiento reducido — DECISIÓN DEL EJECUTOR, marcada para revisión de Ale/arquitecto ===
 	 * La superposición `grid-area: 1/1` de las 6 rutas es NUEVA de este bloque. Primer intento
 	 * (apilar las 6 en columna, sin recortar): descartado con evidencia — `.seccion__pin` tiene

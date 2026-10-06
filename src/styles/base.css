@@ -74,8 +74,21 @@ body {
 }
 
 @supports not (animation-timeline: view()) {
+  /* Sitio vertical normal: la sección crece con su contenido (mínimo una pantalla) en vez de
+   * recortarlo a 100svh. Las secciones con varios estados superpuestos (P3 beats, P4 rutas) los
+   * apilan en flujo en su propio CSS — acá solo se libera el alto y el recorte. */
   .seccion__pin {
     background: var(--seccion-fondo);
+    height: auto;
+    min-height: 100svh;
+    overflow: visible;
+  }
+  /* `.seccion` delante: este bloque va ANTES de la regla base de `.seccion__caja` (abajo) y sin
+   * más especificidad perdería por orden. */
+  .seccion .seccion__caja {
+    position: relative;
+    inset: auto;
+    min-height: 100svh;
   }
 }
 

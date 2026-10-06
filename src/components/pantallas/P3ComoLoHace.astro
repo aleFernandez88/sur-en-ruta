@@ -507,4 +507,32 @@ const RANGO_HERRAMIENTA = (i: number) => rangoEscalonadoContain(2, i, 4, 8);
 			transform: none;
 		}
 	}
+
+	/* Va al FINAL de la hoja a propósito: pisa reglas base del mismo peso que están más arriba. */
+	/* Sin animation-timeline (Firefox estable): los dos beats se apilan en flujo en vez de
+	 * superponerse en la misma celda — nada los alterna, así que se leen uno tras otro. */
+	@supports not (animation-timeline: scroll(root)) {
+		.p3-beat-a,
+		.p3-beat-b {
+			grid-area: auto;
+		}
+		.p3-caja {
+			grid-template-columns: minmax(0, 1fr);
+			gap: var(--espacio-lg);
+			margin-left: 0; /* el celular no se dibuja en este modo: no hay nada que esquivar */
+		}
+		/* Los 5 pasos eran un carril horizontal que se desplazaba con el scroll; sin eso, se
+		 * acomodan en filas y se ven todos. */
+		.p3-carril {
+			width: auto;
+			overflow: visible;
+		}
+		.p3-carril-fila {
+			flex-wrap: wrap;
+			gap: var(--espacio-sm);
+		}
+		.p3-paso {
+			flex: 1 1 12rem;
+		}
+	}
 </style>
