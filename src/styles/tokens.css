@@ -99,7 +99,7 @@
   --fuente-marca: 'Italiana', 'Lora', ui-serif, Georgia, serif;
 
   /* Grotesca FINA (peso 300) que complementa a Archivo (--fuente-display) sin ser la misma
-   * familia — elegida el 2026-08-28 para los nombres de sección del menú de HiloRuta (panel de
+   * familia — elegida el 2026-08-28 para los nombres de sección del menú de HiloRuta, ya retirado (panel de
    * pantalla completa). Uso puntual, no reemplaza ningún rol de los 4 cerrados el 27/8. */
   --fuente-fina: 'Space Grotesk', var(--fuente-texto);
 
@@ -140,18 +140,12 @@
   --color-ruta-patrimonial: #75607f;
   --color-ruta-naturaleza: #3d7a5c;
 
-  /* === Celeste de bandera (HiloRuta, barra lateral) ===
+  /* === Celeste de bandera ===
    * Referencia Pantone 279 C, el celeste más citado para la franja de la bandera uruguaya
    * (misma familia que la argentina, herencia de Belgrano) — punto de partida, ajustable en vivo.
-   * Uso: color de "progreso ya recorrido" de la línea/nodos de HiloRuta, sobre el marino de base.
+   * Uso: acento celeste sobre fondo oscuro (P1) y token `--celeste` que se inyecta al demo.
    */
   --color-celeste: #6cace4;
-
-  /* Ancho de HiloRuta (src/components/HiloRuta.astro), rediseñada el 2026-08-28 como barra
-   * lateral izquierda fija (antes: barra horizontal arriba, token se llamaba --alto-hilo-ruta).
-   * Un solo valor para el componente y para cualquier padding-left que otros componentes necesiten
-   * dejarle (ej. Hero.astro), así no se desincronizan. */
-  --ancho-hilo-ruta: 64px;
 
   /* === Color de texto sobre foto (Hero) ===
    * El resto de la landing usa texto oscuro (--color-tinta) sobre fondo claro. Encima de la foto
@@ -165,14 +159,4 @@
    * encima, no seguir la marca.
    */
   --color-velo-foto: #000000;
-}
-
-/* En mobile, HiloRuta pasa a ser "solo el botón" flotante (D-G de §11.3, Bloque E, E14) — no hay
- * barra lateral que reservar. Sin este 0px, el padding de `.seccion__caja` (base.css) y el del
- * menú a pantalla completa (HiloRuta.astro) seguirían dejando el hueco de una barra que ya no
- * está. */
-@media (width < 900px) {
-  :root {
-    --ancho-hilo-ruta: 0px;
-  }
 }

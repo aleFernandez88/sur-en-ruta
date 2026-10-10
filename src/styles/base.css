@@ -106,22 +106,13 @@ body {
 }
 
 /* Utilidad de layout para el contenido de cada pantalla (P1-P5, E7-E11): ocupa toda la sección
- * pineada y deja el hueco de HiloRuta a la izquierda (desktop) — el mismo `--ancho-hilo-ruta` que
- * ya usaban `.p1-texto` y compañía, ahora en un solo lugar en vez de repetido por pantalla. */
+ * pineada y usa el mismo padding lateral en las 5 pantallas, en un solo lugar en vez de repetido por
+ * pantalla. */
 .seccion__caja {
   position: absolute;
   inset: 0;
-  padding: clamp(1.5rem, 5svh, 3rem) clamp(1.25rem, 4vw, 4rem) clamp(1.5rem, 5svh, 3rem)
-    calc(var(--ancho-hilo-ruta) + clamp(1.25rem, 4vw, 4rem));
+  padding: clamp(1.5rem, 5svh, 3rem) clamp(1.25rem, 4vw, 4rem);
   display: grid;
-}
-
-@media (width < 900px) {
-  .seccion__caja {
-    /* Deja lugar al botón flotante de HiloRuta en mobile (E14) — ahí `--ancho-hilo-ruta` pasa a
-     * 0px (no hay barra lateral que reservar), así que ese padding no alcanza por sí solo. */
-    padding-top: 5.5rem;
-  }
 }
 
 @media (width >= 900px) {

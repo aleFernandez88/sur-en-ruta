@@ -74,10 +74,10 @@ import { titular, cta } from '../../data/cierre.ts';
 	}
 
 	/* Deja libre el ancho del celular (x 0, centrado) — cada columna se achica en función del
-	 * ancho disponible menos la barra de HiloRuta y una reserva aproximada del celular (18svh). */
+	 * ancho disponible menos una reserva aproximada del celular (18svh). */
 	.p5-marca,
 	.p5-mensaje {
-		max-width: calc((100vw - var(--ancho-hilo-ruta)) / 2 - 18svh);
+		max-width: calc(100vw / 2 - 18svh);
 	}
 
 	@media (width < 900px) {

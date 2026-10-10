@@ -25,7 +25,7 @@ contenido, pantalla por pantalla, vive en **`docs/landing-contenido.md`** (fuent
 contenido).
 
 **Se mantiene** el andamiaje visual construido antes del pivot: escenario vertical (`Escenario` +
-`Seccion`), Preloader, HiloRuta lateral, **un gesto propio por pantalla** (no se repite), e identidad visual cerrada (ver `docs/decisiones/identidad-visual.md`).
+`Seccion`), Preloader, **un gesto propio por pantalla** (no se repite), e identidad visual cerrada (ver `docs/decisiones/identidad-visual.md`).
 
 > **Nota histórica:** hasta el 2026-08-25 esto era una landing para inversores con sección de
 > presupuesto. El 2026-08-26 Ana pidió el pivot a público general
@@ -57,7 +57,7 @@ properties, mapa en SVG inline propio (sin Leaflet ni Mapbox). Deploy = subir el
 componentes: se derivan de ahí.
 
 **Animación — regla actualizada 2026-08-26:** CSS nativo sigue siendo la primera opción
-(`animation-timeline`, `@property`+`counter()`, etc. — así está hecho `HiloRuta` hoy). **JS
+(`animation-timeline`, `@property`+`counter()`, etc. — así están hechas las secciones hoy). **JS
 vanilla está habilitado cuando sea necesario y se use de forma óptima** — sin librerías de
 animación (nada de GSAP, Framer Motion, Locomotive Scroll ni equivalentes; `IntersectionObserver`,
 `requestAnimationFrame` y la Web Animations API nativa alcanzan). Esta restricción existía porque,

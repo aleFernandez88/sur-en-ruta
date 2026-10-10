@@ -596,15 +596,11 @@ async function chequeoG4(page) {
 		if (info.tag === 'IFRAME') vioIframe = true;
 	}
 	const incluyeSkip = secuencia.some((s) => typeof s.clase === 'string' && s.clase.includes('skip-link'));
-	const incluyeHilo = secuencia.some(
-		(s) => (typeof s.clase === 'string' && s.clase.includes('hilo-ruta')) || s.id.includes('hilo-ruta'),
-	);
 	const fallas = [];
 	if (vioIframe) fallas.push('el foco entró al IFRAME');
 	if (!incluyeSkip) fallas.push('la secuencia no pasó por el skip-link');
-	if (!incluyeHilo) fallas.push('la secuencia no pasó por HiloRuta');
 	return fallas.length === 0
-		? { estado: 'PASS', detalle: '15 Tab sin entrar al iframe, incluye skip-link y HiloRuta' }
+		? { estado: 'PASS', detalle: '15 Tab sin entrar al iframe, incluye skip-link' }
 		: { estado: 'FAIL', detalle: fallas.join('; ') };
 }
 

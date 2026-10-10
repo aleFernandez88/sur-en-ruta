@@ -342,8 +342,8 @@ const RANGO_HERRAMIENTA = (i: number) => rangoEscalonadoContain(2, i, 4, 8);
 		 * cortadas contra el borde real de la pantalla (no lo detecta C2: ese chequeo mide
 		 * solapamiento entre nodos de texto o contra el celular/banda, no desborde contra el
 		 * viewport — ver el comentario de arriba sobre el mismo punto ciego). 40vw + 46vw = 86vw,
-		 * dentro del `calc()` real de `.seccion__caja` (padding + `--ancho-hilo-ruta`, ≈87,6vw
-		 * disponibles medidos en 1440px). Cambia también cuántos pasos se ven a la vez en el
+		 * dentro del `calc()` real de `.seccion__caja` (ya sin barra lateral: el ancho
+		 * disponible es mayor que los ≈87,6vw medidos en 1440px cuando existía HiloRuta). Cambia también cuántos pasos se ven a la vez en el
 		 * carril — ver el ajuste espejado en los `translateX` de abajo.
 		 */
 		width: 46vw;
@@ -353,10 +353,9 @@ const RANGO_HERRAMIENTA = (i: number) => rangoEscalonadoContain(2, i, 4, 8);
 		.p3-carril {
 			/* AJUSTE DEL EJECUTOR sobre el plan (E13), con evidencia: 88vw → 68vw. Mismo hallazgo que
 			 * arriba pero en mobile (390×844/369×698): sin `margin-left` acá, pero la columna
-			 * disponible real hoy es ≈73vw (no 100vw) porque `--ancho-hilo-ruta` TODAVÍA reserva su
-			 * ancho de escritorio en mobile — la barra lateral pasa a "solo el botón" recién en E14.
-			 * 68vw deja margen bajo esa reserva actual; si E14 la baja a 0 en mobile, este valor
-			 * queda con más aire de sobra, no roto — puede ensancharse de nuevo ahí si Ale lo pide.
+			 * disponible real hoy es ≈73vw (no 100vw) porque entonces `--ancho-hilo-ruta` todavía
+			 * reservaba su ancho en mobile. HiloRuta ya se retiró: este valor queda con aire de sobra y
+			 * puede ensancharse si hace falta.
 			 */
 			width: 68vw;
 		}

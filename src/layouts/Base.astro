@@ -4,7 +4,7 @@
  *
  * Sin analytics de terceros en la v1 (ver docs/planes/2026-08-20-landing-inversores.md, paso 10).
  *
- * Incluye HiloRuta (barra de navegación general, fija al borde izquierdo) y Escenario (la capa
+ * Incluye Escenario (la capa
  * fija de fondo + celular, docs/planes/2026-09-22-recomposicion-ui-vertical.md §14.7 paso 11 —
  * Paso 1.5 de §5). `<main>` contiene las 5 <Seccion> directamente, scroll de documento nativo —
  * reemplaza a la mecánica "cinta" (contenedor horizontal rotado, rotation hack + script de
@@ -16,7 +16,6 @@ import '../styles/fuentes.css';
 import '../styles/tokens.css';
 import '../styles/base.css';
 import Preloader from '../components/Preloader.astro';
-import HiloRuta from '../components/HiloRuta.astro';
 import Escenario from '../components/Escenario.astro';
 
 interface Props {
@@ -98,7 +97,6 @@ const urlImagenOG = new URL('/og-image.png', Astro.site ?? 'https://surenruta.uy
 	<body>
 		<Preloader />
 		<a href="#contenido-principal" class="skip-link">Saltar al contenido principal</a>
-		<HiloRuta />
 		<Escenario />
 		<main id="contenido-principal">
 			<slot />
