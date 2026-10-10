@@ -33,7 +33,10 @@ import Seccion from '../Seccion.astro';
 
 		<div class="p1-texto">
 			<div class="p1-texto__cuerpo">
-				<h1 class="p1-titular">¿Qué es <span class="marca">Sur en Ruta</span>?</h1>
+				<h1 class="p1-titular">
+					<span class="p1-pregunta">¿Qué es</span>
+					<span class="p1-linea"><span class="marca">Sur en Ruta</span><span class="p1-pregunta">?</span></span>
+				</h1>
 				<p class="p1-respuesta">
 					Una forma nueva de recorrer Uruguay: <strong>por etapas, conectada, a tu ritmo.</strong>
 				</p>
@@ -50,6 +53,18 @@ import Seccion from '../Seccion.astro';
 	.p1 {
 		position: relative;
 		align-content: center;
+	}
+
+	/* Marco de composición: en pantallas más anchas que `--marco-max` el padding lateral crece para
+	 * que el texto quede encuadrado en el mismo ancho que a 1440 (ver tokens.css). A ≤1440 los dos
+	 * términos de max() dan 4vw → no cambia nada. Mismo padding vertical que `.seccion__caja`. */
+	@media (width >= 900px) {
+		.p1 {
+			padding-inline: max(
+				clamp(1.25rem, 4vw, 4rem),
+				calc((100% - var(--marco-max)) / 2 + clamp(1.25rem, 4vw, 4rem))
+			);
+		}
 	}
 
 	/* Mobile: texto arriba y centrado (§4.3 — el celular asoma abajo, y aunque acá no se ve el
@@ -119,18 +134,39 @@ import Seccion from '../Seccion.astro';
 		}
 	}
 
+	/* Titular en dos líneas: "¿Qué es" chico (Archivo 800) y el nombre de la marca grande, SIEMPRE en
+	 * una sola línea (`nowrap`). El tamaño del titular es el del nombre; la pregunta y los signos
+	 * son .52em de eso. */
 	.p1-titular {
 		margin: 0;
+		display: flex;
+		flex-direction: column;
+		align-items: flex-start;
+		gap: 0.12em;
 		font-family: var(--fuente-display);
 		font-weight: 800;
-		font-size: clamp(2.75rem, 1.4rem + 4.6vw, 6rem);
-		line-height: 1.02;
+		font-size: clamp(2.6rem, 0.8rem + 4.6vw, 5.25rem);
+		line-height: 1.05;
 		color: var(--color-texto-sobre-foto);
+	}
+
+	.p1-pregunta {
+		font-size: 0.52em;
+		line-height: 1;
+	}
+
+	.p1-linea {
+		white-space: nowrap;
+		display: flex;
+		align-items: baseline;
+		gap: 0.15em;
 	}
 
 	@media (width < 900px) {
 		.p1-titular {
-			font-size: clamp(2.1rem, 1.2rem + 4vw, 3.5rem);
+			align-items: center;
+			/* El nombre mide ≈7,4em: a 11,5vw entra en 390px con aire (≈332px de 390). */
+			font-size: min(11.5vw, 3.25rem);
 		}
 	}
 

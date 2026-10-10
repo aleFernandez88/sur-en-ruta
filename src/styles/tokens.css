@@ -153,6 +153,15 @@
    */
   --color-texto-sobre-foto: #ffffff;
 
+  /* === Marco de composición (monitores anchos) ===
+   * Ancho al que está diseñada la composición (1440, donde se revisó todo): en pantallas más
+   * anchas (27" 2K = 2560) el texto y el celular se separaban sin proporción. El contenido se
+   * encuadra en este ancho, centrado, y el celular se topa con `--telefono-alto-max`, que es el
+   * alto que tiene a 1440×900 (56svh de 900). Por ahora lo usa P1; el resto de las pantallas se
+   * migra una por una. */
+  --marco-max: 1440px;
+  --telefono-alto-max: 504px;
+
   /* === Velo de contraste sobre foto (Hero) ===
    * Capa oscura translúcida adicional al tinte de --hero-overlay. Se dejó negro liso a propósito,
    * independiente de --color-tinta: su trabajo es garantizar contraste para el texto claro de

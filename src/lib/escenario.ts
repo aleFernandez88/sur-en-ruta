@@ -156,6 +156,9 @@ export function escalonado(inicio: number, i: number, paso: number, duracion: nu
 export interface EstadoTelefono {
 	/** % del ancla (100vw × 100svh), eje X. */
 	x: number;
+	/** Tope opcional del desplazamiento X en px (`min(x%, Npx)`): en pantallas más anchas que el
+	 * marco (`--marco-max`) el celular no se aleja más de lo que se aleja dentro del marco. */
+	xMaxPx?: number;
 	/** % del ancla, eje Y. */
 	y: number;
 	/** Sobre un celular base de 56svh de alto (Telefono.astro). */
@@ -168,7 +171,8 @@ export interface EstadoTelefono {
  * distinto de 0. Valores INICIALES: se afinan en E13, solo tocando esta tabla, con capturas. */
 export const TELEFONO: Record<string, { escritorio: EstadoTelefono; movil: EstadoTelefono }> = {
 	'que-es': {
-		escritorio: { x: 20, y: 0, escala: 1 },
+		// 288 = 20% de --marco-max (1440px).
+		escritorio: { x: 20, xMaxPx: 288, y: 0, escala: 1 },
 		movil: { x: 0, y: 30, escala: 0.88 },
 	},
 	'que-hace': {

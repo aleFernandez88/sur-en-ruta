@@ -127,7 +127,9 @@ const srcVivo = `${base}app-demo/index.html?embed=1`;
 	 * `transform-style: preserve-3d` acá, no en .telefono. */
 	.telefono__marco {
 		position: relative;
-		height: 56%;
+		/* 56% del alto del escenario, con tope (`--telefono-alto-max`, tokens.css): en un monitor de
+		 * 1440px de alto el celular crecía a 806px y perdía proporción con el texto. */
+		height: min(56%, var(--telefono-alto-max));
 		aspect-ratio: 9 / 17;
 		transform-style: preserve-3d;
 		will-change: transform;

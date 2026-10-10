@@ -136,7 +136,7 @@ export function keyframesTelefono(modo: 'escritorio' | 'movil'): string {
 		const rotHasta = 0;
 
 		const propsBase = {
-			'--tel-x': `${estado.x}%`,
+			'--tel-x': estado.xMaxPx === undefined ? `${estado.x}%` : `min(${estado.x}%, ${estado.xMaxPx}px)`,
 			'--tel-y': `${estado.y}%`,
 			'--tel-escala': `${estado.escala}`,
 		};
