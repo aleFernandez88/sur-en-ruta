@@ -50,8 +50,11 @@ import Seccion from '../Seccion.astro';
 </Seccion>
 
 <style>
+	/* Sin `position: relative`: pisaba el `position: absolute; inset: 0` de `.seccion__caja` y la caja
+	 * medía solo su contenido (≈570px) en vez de toda la sección — el texto quedaba pegado arriba y
+	 * el velo cortaba el fondo con una costura. Con la caja completa, `align-content: center` centra
+	 * el texto a la altura del celular. */
 	.p1 {
-		position: relative;
 		align-content: center;
 	}
 
