@@ -1,0 +1,36 @@
+name: Build de verificación (sin deploy)
+
+# Compila la rama y sube el dist/ como artefacto descargable. NO publica nada: el deploy sigue
+# siendo deploy.yml (solo `main`) y lo ejecuta Ale. Existe porque en la PC de desarrollo el binding
+# nativo de Astro lo bloquea Application Control y no se puede correr `npm run build` local.
+
+on:
+  push:
+    branches: ['feat/**', 'fix/**']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - name: Chrome rechaza `animation` con scroll()/timeline dentro del shorthand
+        run: |
+          if grep -rhoE 'animation:[^;}]*(scroll\(|--(que|como|donde|cierre)[a-z-]*)' dist/_astro/*.css dist/index.html; then
+            echo "::error::El minificador fusionó animation-timeline dentro del shorthand animation"
+            exit 1
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist
+          retention-days: 7
