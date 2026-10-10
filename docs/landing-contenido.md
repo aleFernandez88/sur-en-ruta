@@ -242,7 +242,7 @@ tintado + ícono).
 - **Pendientes del Bloque E (2026-09-23), ver plan §8:** iPhone real (T1-T6 en iOS, bloquea el
   deploy); D2 (licencia de fotos de ruta, antes del deploy); el demo carga Google Fonts de un
   tercero; el demo presenta como reales km por ruta y nombres de comercios inventados (lo revisa
-  Ale); `public/img/oportunidad/` (4 fotos) sin uso pero publicado; prueba manual en Android real
+  Ale); (resuelto 2026-10-09: `public/img/oportunidad/` borrado, sin uso); prueba manual en Android real
   y Chrome con rueda real pendiente de Ale.
 - **`app-demo`:** las 4 rutas ya están renombradas a la lista canónica de §3 y alineadas con
   `src/data/rutas.ts`. Sigue pendiente: conseguir fotos deployables (ver la corrección de §3 —
