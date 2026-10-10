@@ -132,6 +132,20 @@ body {
   }
 }
 
+/* El nombre de la marca ("Sur en Ruta") siempre en la tipografía de marca, sin importar la fuente ni
+ * el peso del texto que lo rodea. Italiana tiene un solo peso (400): `font-synthesis: none` evita que
+ * un titular en 800 la deforme con un negrita falso. Además es una fuente chica de x-height — 1.1em
+ * la iguala ópticamente a Archivo/Lora de al lado. Ver src/lib/marca.ts. */
+.marca {
+  font-family: var(--fuente-marca);
+  font-weight: 400;
+  font-style: normal;
+  font-synthesis: none;
+  font-size: 1.1em;
+  letter-spacing: 0.01em;
+  text-transform: none;
+}
+
 h1,
 h2,
 h3,

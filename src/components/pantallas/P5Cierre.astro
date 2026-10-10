@@ -23,6 +23,7 @@
 import Seccion from '../Seccion.astro';
 import logoUrl from '../../assets/logo/isotipo-original.svg?url';
 import { titular, cta } from '../../data/cierre.ts';
+import { conMarca } from '../../lib/marca.ts';
 ---
 
 <Seccion id="cierre">
@@ -34,7 +35,7 @@ import { titular, cta } from '../../data/cierre.ts';
 			</div>
 
 			<div class="p5-mensaje">
-				<h2 class="p5-titular">{titular}</h2>
+				<h2 class="p5-titular" set:html={conMarca(titular)} />
 				<div class="p5-accion">
 					{
 						cta ? (
