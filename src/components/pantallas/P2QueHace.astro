@@ -274,8 +274,11 @@ const rangoTarjeta = (i: number): string => `contain ${2 + 12 * i}% contain ${20
 		.p2-tarjeta-items li::before {
 			display: none;
 		}
+		/* Los <li> son ítems flex: los espacios de ' · ' en `content` colapsan y el punto quedaba pegado
+		 * al ítem siguiente ("clara ·Paradas"). El aire se da con margen, simétrico. */
 		.p2-tarjeta-items li:not(:last-child)::after {
-			content: ' · ';
+			content: '·';
+			margin-inline: 0.4em;
 			color: var(--color-tinta-suave);
 		}
 	}

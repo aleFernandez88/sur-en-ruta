@@ -90,6 +90,19 @@ body {
     inset: auto;
     min-height: 100svh;
   }
+
+  /* Mobile sin scroll-driven (Firefox): no hay celular que ocupe la otra mitad de la pantalla, así
+   * que forzar 100svh dejaba ~media pantalla de fondo vacío bajo el texto (P1, P2, P5). Acá la
+   * sección mide lo que mide su contenido; el padding de `.seccion__caja` da el aire. */
+  @media (width < 900px) {
+    .seccion__pin,
+    .seccion .seccion__caja {
+      min-height: 0;
+    }
+    .seccion .seccion__caja {
+      padding-bottom: 3rem;
+    }
+  }
 }
 
 /* Utilidad de layout para el contenido de cada pantalla (P1-P5, E7-E11): ocupa toda la sección
