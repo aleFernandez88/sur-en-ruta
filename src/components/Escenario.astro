@@ -43,6 +43,8 @@
  * `perspective(1700px) rotateY()`, con `perspective` explícito.
  */
 import Telefono from './Telefono.astro';
+import { Image } from 'astro:assets';
+import fondoP1 from '../assets/fondos/p1-provisoria.webp';
 import Icono from './Icono.astro';
 import tokensCss from '../styles/tokens.css?raw';
 import { keyframesFondo, keyframesGlow, keyframesTelefono, parsearTokens } from '../lib/escenario-keyframes.ts';
@@ -78,7 +80,20 @@ bandaD += ` L 100 ${BANDA_ALTO} L 0 ${BANDA_ALTO} Z`;
 ---
 
 <div class="escenario" aria-hidden="true">
-	<div class="escenario__glow"></div>
+	<div class="escenario__glow">
+		<div class="escenario__foto">
+			<Image
+				class="escenario__foto-img"
+				src={fondoP1}
+				alt=""
+				widths={[960, 1920, 2560]}
+				sizes="100vw"
+				loading="eager"
+				fetchpriority="high"
+				decoding="async"
+			/>
+		</div>
+	</div>
 	<div class="escenario__ancla">
 		<div class="escenario__entrada">
 			<div class="escenario__telefono">
@@ -172,6 +187,76 @@ bandaD += ` L 100 ${BANDA_ALTO} L 0 ${BANDA_ALTO} Z`;
 		.escenario__glow {
 			animation: escenario-glow linear both;
 			animation-timeline: scroll(root block);
+		}
+	}
+
+	/* === Foto de fondo de P1 ===
+	 * Vive DENTRO de `.escenario__glow`: hereda su opacidad, así que se funde al verde de P2 en la misma
+	 * ventana que el glow (escenario-keyframes.ts, keyframesGlow) sin una animación propia de opacidad.
+	 * Dos animaciones en dos elementos, para no pelear por el mismo `transform`:
+	 *   - `.escenario__foto` (scroll-driven, atada al tramo pineado de P1): sube un poco y se acerca,
+	 *     como si el camino se fuera quedando atrás.
+	 *   - `.escenario__foto-img` (por tiempo, arranca con `:root.entrada`): acercamiento muy lento
+	 *     (Ken Burns). Sin movimiento con prefers-reduced-motion. */
+	.escenario__foto {
+		position: absolute;
+		inset: 0;
+		overflow: hidden;
+	}
+
+	.escenario__foto :global(.escenario__foto-img) {
+		position: absolute;
+		inset: 0;
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		/* La foto es ambiente, no protagonista: queda bajo un velo marino y el glow de abajo la tiñe. */
+		opacity: 0.5;
+		filter: saturate(0.85);
+		transform-origin: 62% 55%;
+	}
+
+	/* Velo marino: oscurece hacia la izquierda (donde va el texto) y los bordes. */
+	.escenario__foto::after {
+		content: '';
+		position: absolute;
+		inset: 0;
+		background:
+			linear-gradient(100deg, color-mix(in srgb, var(--color-marino-noche) 82%, transparent) 0%, color-mix(in srgb, var(--color-marino-noche) 45%, transparent) 55%, color-mix(in srgb, var(--color-marino-noche) 30%, transparent) 100%),
+			linear-gradient(180deg, transparent 60%, var(--color-marino-noche) 100%);
+	}
+
+	@keyframes foto-acerca {
+		from {
+			transform: scale(1);
+		}
+		to {
+			transform: scale(1.14);
+		}
+	}
+
+	@keyframes foto-sube {
+		from {
+			transform: translateY(0) scale(1);
+		}
+		to {
+			transform: translateY(-6%) scale(1.08);
+		}
+	}
+
+	@media (prefers-reduced-motion: no-preference) {
+		.escenario__foto :global(.escenario__foto-img) {
+			animation: foto-acerca 32s cubic-bezier(0.3, 0.1, 0.4, 1) both;
+		}
+		:global(:root.js:not(.entrada)) .escenario__foto :global(.escenario__foto-img) {
+			animation-play-state: paused;
+		}
+		@supports (animation-timeline: view()) {
+			.escenario__foto {
+				animation: foto-sube linear both;
+				animation-timeline: --que-es;
+				animation-range: contain 0% contain 100%;
+			}
 		}
 	}
 
