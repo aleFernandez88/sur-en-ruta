@@ -145,10 +145,13 @@ import Seccion from '../Seccion.astro';
 		display: flex;
 		flex-direction: column;
 		align-items: flex-start;
+		/* `max-content`: el nombre (nowrap) puede ser más ancho que `.p1-texto` (34rem) y el recorte de la
+		 * entrada (clip-path sobre este h1) se comía el "?" que sobresalía. */
+		width: max-content;
 		gap: 0.12em;
 		font-family: var(--fuente-display);
 		font-weight: 800;
-		font-size: clamp(2.6rem, 0.8rem + 4.6vw, 5.25rem);
+		font-size: clamp(2.6rem, 0.8rem + 4.6vw, 4.95rem);
 		line-height: 1.05;
 		color: var(--color-texto-sobre-foto);
 	}
@@ -162,7 +165,7 @@ import Seccion from '../Seccion.astro';
 		white-space: nowrap;
 		display: flex;
 		align-items: baseline;
-		gap: 0.15em;
+		gap: 0.08em;
 	}
 
 	@media (width < 900px) {
