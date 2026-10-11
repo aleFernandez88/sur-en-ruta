@@ -24,10 +24,11 @@ fallback N3). Ya **no existe** la secuencia de frames de scroll-scrub de P1.
 
 ### Se mantiene del diseño base
 **Escenario vertical** (`Escenario` + `Seccion`, secciones pineadas con scroll vertical; la línea
-de tiempo sale de `src/lib/escenario.ts`, sin porcentajes calibrados a mano), Preloader, HiloRuta
-lateral, **un gesto propio por pantalla** (no se repite el mismo), e identidad visual ya cerrada —
+de tiempo sale de `src/lib/escenario.ts`, sin porcentajes calibrados a mano), Preloader, **un gesto propio por pantalla** (no se repite el mismo), e identidad visual ya cerrada —
 paleta (verde oliva `#5a6b2e` + celeste `#6cace4` + marino `#0f2b4d`), tipografías (Archivo display, Space Grotesk,
 Lora + Source Sans 3), íconos SVG propios. Ver `docs/decisiones/identidad-visual.md`.
+**HiloRuta (barra/menú lateral) se eliminó el 2026-10-10**: era del scroll horizontal. El nombre
+"Sur en Ruta" se compone siempre en la fuente de marca (Italiana, MAYÚSCULAS, 0.06em; clase `.marca`).
 
 ### Reglas de contenido vigentes
 - **Moneda:** todo monto se escribe con moneda explícita (`$U` o `UYU`, nunca `$` a secas). No
