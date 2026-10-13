@@ -3,7 +3,7 @@
 | Archivo | Familia | Rol | Token |
 |---|---|---|---|
 | `italiana-latin.woff2` | Italiana (400, estática) | **solo el logotipo / nombre de marca** | `--fuente-marca` |
-| `archivo-latin.woff2` + `-ext` | Archivo (variable 400–900) | enunciados a tamaño display (hoy: frase de la Portada) | `--fuente-display` |
+| `archivo-latin.woff2` + `-ext` | Archivo (variable 100–900) | enunciados a tamaño display (hoy: frase de la Portada) | `--fuente-display` |
 | `lora-latin.woff2` + `-ext` + `-italic` | Lora (variable 400–700) | títulos de sección, cifras | `--fuente-titular` |
 | `source-sans-3-latin.woff2` + `-ext` | Source Sans 3 (variable) | cuerpo, bajadas, UI, labels | `--fuente-texto` |
 

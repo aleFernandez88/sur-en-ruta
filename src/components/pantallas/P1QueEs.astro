@@ -25,6 +25,43 @@
  * scroll del documento entero.
  */
 import Seccion from '../Seccion.astro';
+import Icono from '../Icono.astro';
+import logoSvg from '../../assets/logo/isotipo-bandera.svg?raw';
+
+/**
+ * Isotipo en línea para animar cada pieza por separado: cada <path> entra desde un lugar distinto
+ * (dx/dy en unidades del viewBox, rot en grados, d = retardo en ms) y se arma en su sitio. Los
+ * índices son el orden de los 19 paths del SVG (0 carrocería, 1-3/13/16 detalles del motorhome, 4 y
+ * 6 ruta, 5/7/9 colina y pasto, 8/14 sol, 10 pin, 11/12 ruedas, 15/17/18 pájaros).
+ */
+const PIEZAS: Record<number, [number, number, number, number, string?]> = {
+	5: [-1500, 300, 0, 0],
+	7: [1500, -300, 0, 90],
+	4: [-1400, -200, 0, 160],
+	6: [1500, 100, 0, 240],
+	9: [-1800, 700, 0, 330],
+	8: [0, -1300, 0, 420],
+	14: [0, -1300, 0, 440],
+	0: [1600, 300, 0, 520],
+	1: [1500, 200, 0, 640],
+	2: [1500, 200, 0, 660],
+	3: [1500, 200, 0, 680],
+	13: [0, 900, 0, 700],
+	16: [0, 900, 0, 720],
+	11: [-500, 900, -540, 820],
+	12: [500, 900, 540, 860],
+	10: [0, -1500, 0, 1000, 'pin'],
+	15: [1200, -800, 0, 1120],
+	17: [1200, -800, 0, 1140],
+	18: [1200, -800, 0, 1160],
+};
+let n = -1;
+const interior = (logoSvg.match(/<svg[^>]*>([\s\S]*)<\/svg>/) ?? [])[1] ?? '';
+const isotipoPiezas = interior.replace(/<path /g, () => {
+	n += 1;
+	const [dx, dy, rot, d, tipo] = PIEZAS[n] ?? [0, 0, 0, 0];
+	return `<path class="p1-pieza${tipo ? ' p1-pieza--' + tipo : ''}" style="--dx:${dx};--dy:${dy};--rot:${rot};--d:${d}ms" `;
+});
 ---
 
 <Seccion id="que-es">
@@ -33,17 +70,31 @@ import Seccion from '../Seccion.astro';
 
 		<div class="p1-texto">
 			<div class="p1-texto__cuerpo">
-				<h1 class="p1-titular">
-					<span class="p1-pregunta">¿Qué es</span>
-					<span class="p1-linea"><span class="marca">Sur en Ruta</span><span class="p1-pregunta">?</span></span>
-				</h1>
+				<div class="p1-titular-caja">
+					<h1 class="p1-titular">
+						<span class="p1-pregunta">¿Qué es</span>
+						<span class="p1-linea"><span class="marca">Sur en Ruta</span><span class="p1-pregunta">?</span></span>
+					</h1>
+				</div>
 				<p class="p1-respuesta">
-					Una forma nueva de recorrer Uruguay: <strong>por etapas, conectada, a tu ritmo.</strong>
+					Una forma nueva de recorrer <span class="p1-realce">Uruguay</span>: <strong>por etapas, conectada, a tu ritmo.</strong>
 				</p>
 				<p class="p1-bajada">
-					La app y la red que conecta a quien viaja con los puntos, servicios y rutas del país.
+					<span class="p1-realce">La app</span> y la red que conecta a quien viaja con los puntos, servicios y rutas del país.
 				</p>
-				<p class="p1-marca">Explorá. Conectá. Viví.</p>
+				<div class="p1-promesa">
+					<div class="p1-promesa__logo">
+						<svg class="p1-isotipo" viewBox="0 0 1830 1670" aria-hidden="true" set:html={isotipoPiezas} />
+					</div>
+					<div class="p1-promesa__texto">
+						<p class="p1-marca">Explorá. Conectá. Viví.</p>
+						<ul class="p1-iconos" aria-hidden="true">
+							<li><Icono nombre="ubicacion" tamano={26} /></li>
+							<li><Icono nombre="comunidad" tamano={26} /></li>
+							<li><Icono nombre="experiencias" tamano={26} /></li>
+						</ul>
+					</div>
+				</div>
 			</div>
 		</div>
 	</div>
@@ -112,7 +163,7 @@ import Seccion from '../Seccion.astro';
 	.p1-texto {
 		position: relative;
 		z-index: 1;
-		max-width: min(34rem, 42vw);
+		max-width: min(38rem, 46vw);
 	}
 
 	.p1-texto__cuerpo {
@@ -176,10 +227,83 @@ import Seccion from '../Seccion.astro';
 		}
 	}
 
+	/* Isotipo dentro de la promesa: a la izquierda del texto, en la misma línea (desktop). Colores
+	 * sólidos de la variante «Bandera». En mobile no se muestra (el celular ocupa ese lugar). */
+	.p1-promesa__logo {
+		display: none;
+	}
+
+	@media (width >= 900px) {
+		.p1-promesa__logo {
+			display: flex;
+			align-items: center;
+		}
+		.p1-isotipo {
+			display: block;
+			width: clamp(6rem, 8.5vw, 8rem);
+			height: auto;
+			pointer-events: none;
+		}
+	}
+
+	.p1-titular {
+		position: relative;
+		z-index: 1;
+	}
+
+	/* Entrada del isotipo: cada pieza llega desde un lado distinto y se arma en su lugar (transición,
+	 * no @keyframes: así `calc()` con `var()` funciona en Chrome). Arranca con :root.entrada, después
+	 * de los textos. Sin JS o con movimiento reducido, el isotipo se ve armado. */
+	.p1-isotipo :global(.p1-pieza) {
+		transform-box: fill-box;
+		transform-origin: center;
+	}
+
+	:global(:root.js:not(.entrada)) .p1-isotipo :global(.p1-pieza) {
+		opacity: 0;
+		transform: translate(calc(var(--dx) * 1px), calc(var(--dy) * 1px)) rotate(calc(var(--rot) * 1deg)) scale(0.5);
+	}
+
+	:global(:root.entrada) .p1-isotipo :global(.p1-pieza) {
+		transition:
+			transform 1100ms cubic-bezier(0.16, 1, 0.3, 1) calc(900ms + var(--d)),
+			opacity 450ms ease-out calc(900ms + var(--d));
+	}
+
+	:global(:root.entrada) .p1-isotipo :global(.p1-pieza--pin) {
+		transition:
+			transform 900ms cubic-bezier(0.34, 1.56, 0.64, 1) calc(900ms + var(--d)),
+			opacity 300ms ease-out calc(900ms + var(--d));
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		:global(:root.js:not(.entrada)) .p1-isotipo :global(.p1-pieza) {
+			opacity: 1;
+			transform: none;
+		}
+		:global(:root.entrada) .p1-pieza,
+		:global(:root.entrada) .p1-isotipo :global(.p1-pieza--pin) {
+			transition: none;
+		}
+	}
+
+	/* Realce: palabra en MAYÚSCULAS, celeste, con un subrayado curvo (trazo SVG que se estira al ancho). */
+	.p1-realce {
+		display: inline-block;
+		text-transform: uppercase;
+		letter-spacing: 0.03em;
+		font-weight: 700;
+		color: var(--color-celeste);
+		padding-bottom: 0.28em;
+		background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 10' preserveAspectRatio='none'%3E%3Cpath fill='%236cace4' d='M0 6.7 C30 3.2 68 2.4 100 4.9 L100 5.7 C68 3.9 30 5.2 0 9.3 Z'/%3E%3C/svg%3E")
+			no-repeat left bottom / 100% 0.36em;
+		line-height: 1;
+	}
+
 	.p1-respuesta {
 		margin: 0;
 		font-family: var(--fuente-display);
-		font-weight: 500;
+		font-weight: 200;
 		font-size: clamp(1.35rem, 1.1rem + 1vw, 1.85rem);
 		line-height: 1.3;
 		color: color-mix(in srgb, var(--color-texto-sobre-foto) 92%, transparent);
@@ -192,7 +316,8 @@ import Seccion from '../Seccion.astro';
 	}
 
 	.p1-respuesta strong {
-		font-weight: 700;
+		display: block;
+		font-weight: 800;
 		/* --color-verde (#5a6b2e) da 3,36:1 sobre #050b14 y falla AA para texto normal;
 		 * --color-verde-vivo da 6,56:1 — existe en tokens.css exactamente para "acentos sobre
 		 * fondo oscuro". */
@@ -217,13 +342,57 @@ import Seccion from '../Seccion.astro';
 	}
 
 	.p1-marca {
-		margin: var(--espacio-xs) 0 0;
+		margin: 0;
 		font-family: var(--fuente-display);
 		font-weight: 800;
 		font-size: var(--texto-sm);
 		letter-spacing: 0.14em;
 		text-transform: uppercase;
 		color: var(--color-celeste);
+	}
+
+	/* Promesa (frase + íconos): único bloque centrado, respecto del ancho de la columna de texto de la
+	 * izquierda y con el mismo aire arriba y abajo. El resto del texto queda alineado a la izquierda. */
+	.p1-promesa {
+		display: flex;
+		flex-direction: row;
+		align-items: center;
+		justify-content: center;
+		gap: 1.5rem;
+		margin-block: var(--espacio-md);
+	}
+
+	.p1-promesa__texto {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 0.9rem;
+	}
+
+	/* Íconos de la promesa (Explorá / Conectá / Viví), en el mismo orden que la frase. Decorativos. */
+	.p1-iconos {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+		display: flex;
+		gap: 0.85rem;
+	}
+
+	.p1-iconos li {
+		display: grid;
+		place-items: center;
+		width: 3.25rem;
+		height: 3.25rem;
+		border-radius: 50%;
+		color: var(--color-celeste);
+		border: 1.5px solid color-mix(in srgb, var(--color-celeste) 55%, transparent);
+		background: color-mix(in srgb, var(--color-marino-noche) 45%, transparent);
+	}
+
+	@media (width < 900px) {
+		.p1-iconos {
+			justify-content: center;
+		}
 	}
 
 	/* ============================================================================
@@ -267,7 +436,8 @@ import Seccion from '../Seccion.astro';
 	}
 
 	:global(:root.js) .p1-bajada,
-	:global(:root.js) .p1-marca {
+	:global(:root.js) .p1-marca,
+	:global(:root.js) .p1-iconos {
 		opacity: 0;
 		transform: translateY(0.9rem);
 	}
@@ -277,8 +447,12 @@ import Seccion from '../Seccion.astro';
 	:global(:root.js) .p1-marca {
 		animation: p1-texto-sube 620ms cubic-bezier(0.2, 0.7, 0.2, 1) 610ms both paused;
 	}
+	:global(:root.js) .p1-iconos {
+		animation: p1-texto-sube 620ms cubic-bezier(0.2, 0.7, 0.2, 1) 760ms both paused;
+	}
 	:global(:root.entrada) .p1-bajada,
-	:global(:root.entrada) .p1-marca {
+	:global(:root.entrada) .p1-marca,
+	:global(:root.entrada) .p1-iconos {
 		animation-play-state: running;
 	}
 
@@ -289,7 +463,8 @@ import Seccion from '../Seccion.astro';
 		}
 		:global(:root.js) .p1-respuesta,
 		:global(:root.js) .p1-bajada,
-		:global(:root.js) .p1-marca {
+		:global(:root.js) .p1-marca,
+		:global(:root.js) .p1-iconos {
 			animation: none !important;
 			opacity: 1;
 			transform: none;

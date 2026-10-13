@@ -1,7 +1,11 @@
 # Fondos de pantalla (P1)
 
+Origen: `117456.jpg` (1440×1920, vertical), foto elegida por Ale (2026-10-13), ubicada en Downloads/fotos.
+Parece la costa de Piriápolis / Punta Colorada (Uruguay); **sin confirmar**.
+
 | Archivo | Qué es | Estado |
 |---|---|---|
-| `p1-provisoria.webp` | Ruta recta entre campos de colza, 1000×563. Salió de `public/img/oportunidad/s2.webp` (enfoque viejo del sitio, borrado el 2026-10-09; sigue en el historial de git). | **PROVISORIA — para juzgar la animación.** Sin autor ni licencia registrados, y de resolución insuficiente para pantalla completa en un monitor 2K. No se publica así: reemplazar por una foto en HD (≥ 2560 px de ancho) con licencia registrada acá (autor, URL, licencia). |
+| `p1-escritorio.webp` | Recorte 16:9 (1440×810 originales, y 600–1410) escalado a 2560×1440 con Lanczos + enfoque leve. | **PENDIENTE: autor y licencia.** Detalle suavizado por el escalado (el original no da más de 1440 px de ancho). |
+| `p1-movil.webp` | Foto completa (recorte lateral leve) a 1080×1571, para pantallas en retrato. | Ídem. |
 
-Regla (CLAUDE.md §6): nada de imagen publicada sin fuente registrada.
+Regla (CLAUDE.md §6): nada de imagen publicada sin fuente registrada. Antes del deploy: completar autor, URL y licencia acá.

@@ -43,11 +43,17 @@
  * `perspective(1700px) rotateY()`, con `perspective` explícito.
  */
 import Telefono from './Telefono.astro';
-import { Image } from 'astro:assets';
-import fondoP1 from '../assets/fondos/p1-provisoria.webp';
+import { getImage } from 'astro:assets';
+import fondoEscritorio from '../assets/fondos/p1-escritorio.webp';
+import fondoMovil from '../assets/fondos/p1-movil.webp';
 import Icono from './Icono.astro';
 import tokensCss from '../styles/tokens.css?raw';
 import { keyframesFondo, keyframesGlow, keyframesTelefono, parsearTokens } from '../lib/escenario-keyframes.ts';
+
+// Fondo de P1 con dirección de arte: recorte apaisado en pantallas anchas, la foto vertical en retrato.
+const imgEscritorio = await getImage({ src: fondoEscritorio, format: 'webp', widths: [1280, 1920, 2560] });
+const imgMovil = await getImage({ src: fondoMovil, format: 'webp', widths: [540, 810, 1080] });
+const srcset = (i: Awaited<ReturnType<typeof getImage>>) => i.srcSet.attribute;
 
 const tokens = parsearTokens(tokensCss);
 const keyframes = [
@@ -82,16 +88,21 @@ bandaD += ` L 100 ${BANDA_ALTO} L 0 ${BANDA_ALTO} Z`;
 <div class="escenario" aria-hidden="true">
 	<div class="escenario__glow">
 		<div class="escenario__foto">
-			<Image
-				class="escenario__foto-img"
-				src={fondoP1}
-				alt=""
-				widths={[960, 1920, 2560]}
-				sizes="100vw"
-				loading="eager"
-				fetchpriority="high"
-				decoding="async"
-			/>
+			<picture>
+				<source media="(orientation: portrait)" srcset={srcset(imgMovil)} sizes="100vw" />
+				<img
+					class="escenario__foto-img"
+					src={imgEscritorio.src}
+					srcset={srcset(imgEscritorio)}
+					sizes="100vw"
+					width={imgEscritorio.attributes.width}
+					height={imgEscritorio.attributes.height}
+					alt=""
+					loading="eager"
+					fetchpriority="high"
+					decoding="async"
+				/>
+			</picture>
 		</div>
 	</div>
 	<div class="escenario__ancla">
@@ -210,9 +221,9 @@ bandaD += ` L 100 ${BANDA_ALTO} L 0 ${BANDA_ALTO} Z`;
 		width: 100%;
 		height: 100%;
 		object-fit: cover;
-		/* La foto es ambiente, no protagonista: queda bajo un velo marino y el glow de abajo la tiñe. */
-		opacity: 0.5;
-		filter: saturate(0.85);
+		/* Foto a plena opacidad: el contraste del texto lo da el velo direccional (opción A, 2026-10-13). */
+		object-position: 50% 45%;
+		filter: saturate(0.9);
 		transform-origin: 62% 55%;
 	}
 
@@ -222,8 +233,8 @@ bandaD += ` L 100 ${BANDA_ALTO} L 0 ${BANDA_ALTO} Z`;
 		position: absolute;
 		inset: 0;
 		background:
-			linear-gradient(100deg, color-mix(in srgb, var(--color-marino-noche) 82%, transparent) 0%, color-mix(in srgb, var(--color-marino-noche) 45%, transparent) 55%, color-mix(in srgb, var(--color-marino-noche) 30%, transparent) 100%),
-			linear-gradient(180deg, transparent 60%, var(--color-marino-noche) 100%);
+			linear-gradient(100deg, color-mix(in srgb, var(--color-marino-noche) 85%, transparent) 0%, color-mix(in srgb, var(--color-marino-noche) 55%, transparent) 45%, color-mix(in srgb, var(--color-marino-noche) 8%, transparent) 80%),
+			linear-gradient(180deg, transparent 65%, color-mix(in srgb, var(--color-marino-noche) 70%, transparent) 100%);
 	}
 
 	@keyframes foto-acerca {

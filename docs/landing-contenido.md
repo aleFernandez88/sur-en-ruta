@@ -84,6 +84,8 @@ salen de `src/data/recorrido.ts`; el largo de scroll de cada una, de `PRESUPUEST
 - **Titular:** ¿Qué es Sur en Ruta?
 - **Respuesta (copy propuesto):**
   > Una forma nueva de recorrer Uruguay: **por etapas, conectada, a tu ritmo.**
+>
+> (Diseño 2026-10-13: «Uruguay» y «La app» van en MAYÚSCULAS, celeste y con subrayado curvo; la primera mitad de la frase en peso fino; isotipo en silueta detrás del «?» del titular.)
 - **Bajada:** La app y la red que conecta a quien viaja con los puntos, servicios y rutas del país.
 - **Marca:** "Explorá. Conectá. Viví."
 - **Elemento visual:** el celular del escenario (chrome fijo, `Escenario.astro`) con el demo de la

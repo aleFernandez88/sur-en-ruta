@@ -22,3 +22,8 @@ por los tokens exactos (regla del proyecto: "se toma la etiqueta, no el píxel",
 | `#C35A30` | `--color-terracota` `#c55a3a` | Pin |
 
 El SVG ya tiene los hex de la derecha, no los de la izquierda.
+
+
+## Variante «Bandera» (2026-10-13)
+
+`isotipo-bandera.svg`: mismo isotipo con la paleta 4 del tablero de paletas (Ale la eligió para P1). Equivalencias: estructura `#0f2b4d`→`#1f4e8c`, colina `#5a6b2e`→`#6cace4`, pin `#c55a3a`→`#f2b705`, sol `#e7dfc9`→`#ffffff`. Son colores propuestos, todavía fuera de `tokens.css` y de `identidad-visual.md`; el original no se tocó.
