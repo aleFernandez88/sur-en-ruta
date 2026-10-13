@@ -59,10 +59,16 @@
   /* D-A resuelto 2026-09-23 (Opción 3 · Demo viva): vuelve el oliva de
    * docs/decisiones/identidad-visual.md. El verde bosque que lo reemplazó el 2026-09-01 queda
    * retirado. Sobre fondo oscuro se usa --color-verde-vivo. */
-  --color-verde: #5a6b2e;
+  --color-verde: #2c8a3c;
   /* Verde oliva levantado, para acentos SOBRE fondo oscuro (donde el oliva se
    * empasta) y para resaltar palabras sueltas. Derivado, no está en los boards. */
-  --color-verde-vivo: #8c9c50;
+  --color-verde-vivo: #8cc84b;
+  /* Verdes vivos (2026-10-13, tablero de verdes, Pradera + Primavera). Ale dejó el oliva (#5a6b2e / #8c9c50)
+   * por "amargo": --color-verde pasó a un verde profundo de la familia Pradera (#2c8a3c, 4,4:1 con blanco) y
+   * --color-verde-vivo a Primavera (#8cc84b) para acentos sobre oscuro. Pradera puro se usa en el isotipo
+   * y en los bordes de los íconos de P1. */
+  --color-verde-pradera: #4fae3f;
+  --color-verde-primavera: #8cc84b;
 
   /* Terracota acento: marcadores de mapa "territorial", detalles, el pin del logo. */
   --color-terracota: #c55a3a;

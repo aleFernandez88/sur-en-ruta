@@ -72,12 +72,11 @@ const isotipoPiezas = interior.replace(/<path /g, () => {
 			<div class="p1-texto__cuerpo">
 				<div class="p1-titular-caja">
 					<h1 class="p1-titular">
-						<span class="p1-pregunta">¿Qué es</span>
-						<span class="p1-linea"><span class="marca">Sur en Ruta</span><span class="p1-pregunta">?</span></span>
+						<span class="p1-linea"><span class="marca">Sur en Ruta</span></span>
 					</h1>
 				</div>
 				<p class="p1-respuesta">
-					Una forma nueva de recorrer <span class="p1-realce">Uruguay</span>: <strong>por etapas, conectada, a tu ritmo.</strong>
+					Una forma nueva de recorrer <span class="p1-realce p1-realce--grande">Uruguay</span>: <strong>por etapas, conectada, a tu ritmo.</strong>
 				</p>
 				<p class="p1-bajada">
 					<span class="p1-realce">La app</span> y la red que conecta a quien viaja con los puntos, servicios y rutas del país.
@@ -202,7 +201,7 @@ const isotipoPiezas = interior.replace(/<path /g, () => {
 		gap: 0.12em;
 		font-family: var(--fuente-display);
 		font-weight: 800;
-		font-size: clamp(2.6rem, 0.8rem + 4.6vw, 4.95rem);
+		font-size: clamp(2.8rem, 0.9rem + 5vw, 5.4rem);
 		line-height: 1.05;
 		color: var(--color-texto-sobre-foto);
 	}
@@ -223,7 +222,7 @@ const isotipoPiezas = interior.replace(/<path /g, () => {
 		.p1-titular {
 			align-items: center;
 			/* El nombre mide ≈7,4em: a 11,5vw entra en 390px con aire (≈332px de 390). */
-			font-size: min(11.5vw, 3.25rem);
+			font-size: min(12vw, 3.5rem);
 		}
 	}
 
@@ -298,6 +297,10 @@ const isotipoPiezas = interior.replace(/<path /g, () => {
 		background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 10' preserveAspectRatio='none'%3E%3Cpath fill='%236cace4' d='M0 6.7 C30 3.2 68 2.4 100 4.9 L100 5.7 C68 3.9 30 5.2 0 9.3 Z'/%3E%3C/svg%3E")
 			no-repeat left bottom / 100% 0.36em;
 		line-height: 1;
+	}
+
+	.p1-realce--grande {
+		font-size: 1.14em;
 	}
 
 	.p1-respuesta {
@@ -384,8 +387,8 @@ const isotipoPiezas = interior.replace(/<path /g, () => {
 		width: 3.25rem;
 		height: 3.25rem;
 		border-radius: 50%;
-		color: var(--color-celeste);
-		border: 1.5px solid color-mix(in srgb, var(--color-celeste) 55%, transparent);
+		color: var(--color-texto-sobre-foto);
+		border: 1.5px solid var(--color-texto-sobre-foto);
 		background: color-mix(in srgb, var(--color-marino-noche) 45%, transparent);
 	}
 

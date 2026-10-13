@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Comparativa de tratamientos de fondo P1</title>
+<style>
+:root{--noche:#050b14;--marino:#0f2b4d;--oliva:#9bb24e}
+*{box-sizing:border-box}
+body{margin:0;background:#111;color:#eee;font:14px/1.4 system-ui,sans-serif;padding:20px}
+h1{font-size:18px;margin:0 0 4px}p.s{margin:0 0 18px;color:#aaa}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+@media(max-width:1000px){.grid{grid-template-columns:1fr}}
+figure{margin:0}figcaption{padding:8px 2px;font-weight:600}figcaption span{display:block;font-weight:400;color:#aaa;font-size:12px}
+.v{position:relative;aspect-ratio:1536/695;overflow:hidden;background:var(--noche);container-type:inline-size;border-radius:6px}
+.v>img,.v>.cap{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.v>.cap{pointer-events:none}
+.txt{position:absolute;left:6.5%;top:15%;width:45%;color:#fff;z-index:5;font-family:system-ui}
+.txt .q{font-weight:800;font-size:3.2cqw;margin:0}
+.txt .n{white-space:nowrap;font:400 6cqw/1 'Italiana',Georgia,serif;letter-spacing:.06em;margin:.3cqw 0 2cqw}
+.txt .b{font-weight:700;font-size:2.4cqw;margin:0}.txt .b em{color:var(--oliva);font-style:normal;display:block}
+.txt .c{font-size:1.9cqw;margin:2cqw 0;opacity:.9;width:60%}
+.txt .k{font-weight:800;font-size:1.5cqw;letter-spacing:.12em;color:#6fb0ee}
+.tel{position:absolute;left:62%;top:22%;width:12.5%;aspect-ratio:9/17;background:#f4f1e8;border:.5cqw solid #0b0f16;border-radius:2cqw;z-index:5}
+.l{position:absolute;inset:0;z-index:2}
+/* A: velo direccional */
+.A .l{background:linear-gradient(100deg,rgba(5,11,20,.85) 0%,rgba(5,11,20,.55) 45%,rgba(5,11,20,.08) 80%),linear-gradient(180deg,transparent 65%,rgba(5,11,20,.7) 100%)}
+.A>img{object-position:50% 45%}
+/* B: duotono */
+.B>img{filter:grayscale(1) contrast(1.05) brightness(1.05)}
+.B .l{background:linear-gradient(120deg,#0a2036 0%,#2e7fb0 100%);mix-blend-mode:color}
+.B .l2{position:absolute;inset:0;z-index:3;background:linear-gradient(100deg,rgba(5,11,20,.7) 0%,rgba(5,11,20,.3) 55%,rgba(5,11,20,0) 85%)}
+.B>img{object-position:50% 45%}
+/* C: desenfoque progresivo */
+.C>img.n{object-position:50% 45%}
+.C>img.bl{object-position:50% 45%;filter:blur(16px) brightness(.8);transform:scale(1.06);-webkit-mask-image:linear-gradient(90deg,#000 0,#000 38%,transparent 68%);mask-image:linear-gradient(90deg,#000 0,#000 38%,transparent 68%);z-index:1}
+.C .l{background:linear-gradient(100deg,rgba(5,11,20,.55) 0%,rgba(5,11,20,.25) 45%,rgba(5,11,20,0) 75%)}
+/* D: reencuadre con más cielo (foto vertical) */
+.D>img{object-position:50% 22%}
+.D .l{background:linear-gradient(100deg,rgba(5,11,20,.5) 0%,rgba(5,11,20,.2) 50%,rgba(5,11,20,0) 80%),linear-gradient(180deg,rgba(5,11,20,.35) 0%,transparent 40%)}
+</style></head><body>
+<h1>Fondo de P1 — 4 tratamientos sobre la misma foto</h1>
+<p class="s">Ventana simulada 1536×695 con el texto real de P1 y un marcador del celular. Foto sin licencia confirmada: material interno, no se publica.</p>
+<div class="grid">
+<figure><div class="v A"><img src="p1-escritorio.webp" alt=""><div class="l"></div><div class="txt"><p class="q">¿Qué es</p><p class="n">SUR EN RUTA?</p><p class="b">Una forma nueva de recorrer Uruguay:<em>por etapas, conectada, a tu ritmo.</em></p><p class="c">La app y la red que conecta a quien viaja con los puntos, servicios y rutas del país.</p><div class="k">EXPLORÁ. CONECTÁ. VIVÍ.</div></div><div class="tel"></div></div>
+<figcaption>A · Velo direccional<span>Degradé marino de izquierda a derecha + viñeta inferior. El texto lee bien, el mar queda visible a la derecha.</span></figcaption></figure>
+
+<figure><div class="v B"><img src="p1-escritorio.webp" alt=""><div class="l"></div><div class="l2"></div><div class="txt"><p class="q">¿Qué es</p><p class="n">SUR EN RUTA?</p><p class="b">Una forma nueva de recorrer Uruguay:<em>por etapas, conectada, a tu ritmo.</em></p><p class="c">La app y la red que conecta a quien viaja con los puntos, servicios y rutas del país.</p><div class="k">EXPLORÁ. CONECTÁ. VIVÍ.</div></div><div class="tel"></div></div>
+<figcaption>B · Duotono marino-celeste<span>Se quita el color de la foto (amarillo y rojo) y se tiñe con la paleta. Velo más suave porque el ruido de color ya bajó.</span></figcaption></figure>
+
+<figure><div class="v C"><img class="n" src="p1-escritorio.webp" alt=""><img class="bl" src="p1-escritorio.webp" alt=""><div class="l"></div><div class="txt"><p class="q">¿Qué es</p><p class="n">SUR EN RUTA?</p><p class="b">Una forma nueva de recorrer Uruguay:<em>por etapas, conectada, a tu ritmo.</em></p><p class="c">La app y la red que conecta a quien viaja con los puntos, servicios y rutas del país.</p><div class="k">EXPLORÁ. CONECTÁ. VIVÍ.</div></div><div class="tel"></div></div>
+<figcaption>C · Desenfoque progresivo<span>Borroso donde está el texto, nítido hacia el mar. Casi sin oscurecer, así que la foto conserva luz.</span></figcaption></figure>
+
+<figure><div class="v D"><img src="p1-movil.webp" alt=""><div class="l"></div><div class="txt"><p class="q">¿Qué es</p><p class="n">SUR EN RUTA?</p><p class="b">Una forma nueva de recorrer Uruguay:<em>por etapas, conectada, a tu ritmo.</em></p><p class="c">La app y la red que conecta a quien viaja con los puntos, servicios y rutas del país.</p><div class="k">EXPLORÁ. CONECTÁ. VIVÍ.</div></div><div class="tel"></div></div>
+<figcaption>D · Reencuadre con más cielo<span>Usa la foto vertical completa y sube el encuadre: el titular cae sobre cielo y la costa queda abajo. Velo mínimo.</span></figcaption></figure>
+</div></body></html>

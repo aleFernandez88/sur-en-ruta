@@ -27,3 +27,5 @@ El SVG ya tiene los hex de la derecha, no los de la izquierda.
 ## Variante «Bandera» (2026-10-13)
 
 `isotipo-bandera.svg`: mismo isotipo con la paleta 4 del tablero de paletas (Ale la eligió para P1). Equivalencias: estructura `#0f2b4d`→`#1f4e8c`, colina `#5a6b2e`→`#6cace4`, pin `#c55a3a`→`#f2b705`, sol `#e7dfc9`→`#ffffff`. Son colores propuestos, todavía fuera de `tokens.css` y de `identidad-visual.md`; el original no se tocó.
+
+Actualización 2026-10-13: el pasto (base inferior) de `isotipo-bandera.svg` pasó de celeste `#6cace4` a verde Pradera `#4fae3f` (propuesto, ver `--color-verde-pradera` en tokens.css).

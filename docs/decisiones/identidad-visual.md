@@ -5,6 +5,8 @@
 **Aplica en:** `src/styles/tokens.css` (capa de color), `src/styles/base.css` (viñeta del fondo).
 **Revisado:** 2026-10-09 — alineado con el código real.
 
+> **Nota 2026-10-13 — verdes.** Ale descartó el oliva por «amargo». `--color-verde` pasó a `#2c8a3c` (verde profundo, familia Pradera) y `--color-verde-vivo` a `#8cc84b` (Primavera). Pradera `#4fae3f` se usa en el pasto de `isotipo-bandera.svg` (variante con paleta Bandera: `#1f4e8c`, `#6cace4`, `#f2b705`, `#ffffff`). Esto reemplaza lo confirmado en D-A (oliva `#5a6b2e`). Los valores de abajo en esta tabla y los contrastes citados siguen siendo los del oliva hasta que se actualicen.
+
 > **Nota 2026-09-23 (Bloque E) — D-A resuelto.** El oliva `#5a6b2e` queda **confirmado** como verde
 > de marca. `--color-verde-vivo` (`#8c9c50`) es solo para acento sobre fondo oscuro. El isotipo
 > **volvió al oliva**. El marino sobre oliva **no se usa** como combinación de texto (2,43:1, no
