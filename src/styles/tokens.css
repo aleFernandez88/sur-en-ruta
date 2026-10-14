@@ -153,6 +153,11 @@
    */
   --color-celeste: #6cace4;
 
+  /* Paleta Bandera (identidad de P1, ver docs/decisiones/identidad-visual.md): azul de base de P2
+   * y amarillo del subrayado marcador. */
+  --color-bandera-azul: #1f4e8c;
+  --color-bandera-amarillo: #f2b705;
+
   /* === Color de texto sobre foto (Hero) ===
    * El resto de la landing usa texto oscuro (--color-tinta) sobre fondo claro. Encima de la foto
    * del Hero eso no funciona: hace falta texto claro con buen contraste. Blanco liso.

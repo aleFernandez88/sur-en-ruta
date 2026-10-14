@@ -1,134 +1,110 @@
 ---
 /**
  * P2QueHace.astro — P2 · ¿Qué hace? (`que-hace`), 2ª de las 5 secciones del escenario vertical.
- * Reescrita sobre `<Seccion>` en Bloque E, E8 (docs/planes/2026-09-23-bloque-e-secciones-chrome.md
- * §5). Copy literal de `docs/landing-contenido.md` § P2, datos en `src/data/beneficios.ts`.
+ * Datos en `src/data/beneficios.ts` (copy literal del mazo).
  *
- * === Corrección de contraste (H8 del plan de Bloque E) ===
- * §11.3 del plan mayor pedía tipografía marino sobre el fondo oliva de esta sección — marino sobre
- * `#5a6b2e` da 2,43:1, no pasa ni AA de texto grande (3:1). El titular pasa a
- * `--color-texto-sobre-foto` (blanco), que da 5,87:1.
+ * === Gesto propio: «Órbita, el valor da la vuelta» ===
+ * Un anillo con tres medallones (viajero → comercios → territorios) y una estela amarilla que gira
+ * en sentido horario: el valor del paso del viajero vuelve a todos. Sin tarjetas rectangulares.
+ * Entrada atada al scroll (timeline `--que-hace`, igual que el resto de las secciones): el anillo
+ * llega girando, cada medallón recorre la órbita hasta su lugar y los textos suben. La estela
+ * entra con fade y después gira por tiempo (único loop de la pantalla).
  *
- * === Gesto propio, "dispersión desde el celular" ===
- * En "que-hace" el celular queda a `x: 27%` (escenario.ts, TELEFONO). Cada tarjeta *i* arranca
- * ENCIMA de esa posición (distancias decrecientes por tarjeta: la 1ª viaja más lejos que la 3ª,
- * que ya nace casi en su lugar) y viaja a su posición final — igual que si "salieran" del celular
- * hacia la fila. Dos `@keyframes` por tarjeta (escritorio/móvil), generados acá con valores
- * literales (nunca `calc()`+`var()` dentro de un `@keyframes` — restricción 3 de escenario.ts) e
- * inyectados con `<style is:global set:html>`, igual mecanismo que `Escenario.astro`.
+ * === Geometría ===
+ * Todo se deriva de tres variables en `.p2-contenido`: `--r` (diámetro del anillo, limitado por
+ * ancho y por ALTO de ventana), `--rx` y `--ry` (esquina del anillo). Los medallones se ubican en
+ * % del anillo y los bloques de texto en múltiplos de `--r`, así que toda la composición escala
+ * junta y no hay `top` fijos que choquen con el titular en pantallas bajas. El celular queda
+ * de fondo (chrome fijo): la composición no le reserva lugar.
  *
- * === Qué se borra respecto de la versión "cinta" ===
- * el shell de pantalla/lámina de la cinta, la convergencia en X (columnas desde ±45%), los wipes de `clip-path` por
- * columna, la regla verde animada del cierre y `.pie-footer`. La firma "URUGUAY — conecta · ordena
- * · potencia" se muda a la banda del escenario (E12) — deja de vivir acá.
+ * Restricciones de escenario.ts: nada de `calc()`+`var()` dentro de `@keyframes` (los de acá son
+ * literales) y `animation-range` nunca con `var()`.
  */
 import Seccion from '../Seccion.astro';
 import Icono from '../Icono.astro';
 import { beneficios } from '../../data/beneficios.ts';
 
-// === Keyframes de "dispersión desde el celular" (ver comentario grande arriba) ===
-// Distancias en vw (escritorio) decrecientes por tarjeta: la tarjeta 0 arranca más lejos de su
-// lugar final que la 2 — sensación de que las 3 "salen" del mismo punto (el celular) y se abren.
-const TRASLADO_X_ESCRITORIO_VW = [58, 42, 26];
-const ESCALA_INICIAL = 0.42;
-const TRASLADO_Y_MOVIL_SVH = 40;
-const ESCALA_INICIAL_MOVIL = 0.5;
+// Íconos propios (Icono.astro), uno por beneficiario: viajeros / economía local / base conectada.
+const ICON = ['viajeros', 'economia-local', 'base-conectada'] as const;
 
-function keyframesEscritorio(i: number): string {
-	const x = TRASLADO_X_ESCRITORIO_VW[i];
-	return `@keyframes p2-sale-${i}-escritorio {
-  from { transform: translate(${x}vw, 4svh) scale(${ESCALA_INICIAL}); opacity: 0; }
-  12% { opacity: 1; }
-  to { transform: none; opacity: 1; }
-}`;
-}
-
-function keyframesMovil(i: number): string {
-	return `@keyframes p2-sale-${i}-movil {
-  from { transform: translateY(${TRASLADO_Y_MOVIL_SVH}svh) scale(${ESCALA_INICIAL_MOVIL}); opacity: 0; }
-  12% { opacity: 1; }
-  to { transform: none; opacity: 1; }
-}`;
-}
-
-const keyframesTarjetas = beneficios
-	.map((_, i) => `${keyframesEscritorio(i)}\n\n${keyframesMovil(i)}`)
-	.join('\n\n');
-
-// Rangos inline (restricción 4: animation-range nunca con var()): tarjeta i, contain (2+12i)% →
-// contain (20+12i)% — 2-20 / 14-32 / 26-44. Las 3 asientan bien antes del 50% del tramo.
-//
-// AJUSTE DEL EJECUTOR sobre el plan (E8), con evidencia — anotar para revisión de Ale/arquitecto:
-// el plan literal decía "10+15i / 35+15i" (10-35 / 25-50 / 40-65), sincronizado a mano con
-// `telefono.ts` (E5: "la ficha se expande en local ≥ 0.5, cuando la 2ª tarjeta termina de
-// llegar" — con esa fórmula la tarjeta 1 termina justo en 50%). Verificado con el checkpoint real
-// del verificador ("que-hace · mitad de meseta" = local 50%, escritorio 1440×900 y 1920×1080): la
-// TARJETA 2 (la más cercana al celular, `x` final más chica) recién está al 40% de su propio
-// recorrido en ese instante — su texto ("Para el territorio" / "Circulación ordenada") queda a
-// mitad de camino, superpuesto de verdad sobre `.telefono__marco` (confirmado con
-// `elementFromPoint()`, no es un falso positivo del verificador). Comprimir el total a 2-44%
-// deja las 3 tarjetas asentadas con margen antes del 50%: la ficha del demo sigue expandiéndose
-// "cuando la 2ª tarjeta llega" (E5 ya lo llama "aproximado"), solo que ahora las 3 tarjetas —no
-// solo la 2ª— ya están en su lugar para ese momento.
-const rangoTarjeta = (i: number): string => `contain ${2 + 12 * i}% contain ${20 + 12 * i}%`;
+// Posición de cada medallón sobre el anillo (centro, en % del anillo): −90°, 30° y 150°, sentido horario.
+const POSICION = [
+	{ x: 50, y: 0 },
+	{ x: 93.3, y: 75 },
+	{ x: 6.7, y: 75 },
+];
 ---
 
 <Seccion id="que-hace">
 	<div class="p2 seccion__caja">
 		<div class="p2-contenido">
 			<h2 class="p2-titular">
-				<span class="p2-titular-chica">Una red que</span>
-				<span class="p2-titular-grande">beneficia a todos</span>
+				<span class="p2-t1">Una <span class="realce p2-realce">red</span> que</span>
+				<span class="p2-t2">Beneficia a todos</span>
 			</h2>
 
-			<div class="p2-tarjetas">
+			<div class="p2-orbita">
+				<div class="p2-anillo" aria-hidden="true"></div>
+				<div class="p2-estela" aria-hidden="true"></div>
+				{
+					POSICION.map((p, i) => (
+						<div class={`p2-orb p2-orb--${i}`} aria-hidden="true">
+							<span class="p2-medallon" style={`left: ${p.x}%; top: ${p.y}%`}>
+								<Icono nombre={ICON[i]} tamano={32} acento="var(--color-celeste)" />
+							</span>
+						</div>
+					))
+				}
+				<div class="p2-cierre-caja">
+				<p class="p2-cierre">
+					La red transforma el paso del viajero en
+					<span class="realce p2-realce">valor</span>
+					para todos
+				</p>
+				</div>
+			</div>
+
+			<ul class="p2-bloques">
 				{
 					beneficios.map((bloque, i) => (
-						<div class={`p2-tarjeta p2-tarjeta--${i}`} style={`animation-range: ${rangoTarjeta(i)}`}>
-							<span class="p2-tarjeta-icono">
-								<Icono nombre={bloque.icono} tamano={32} acento="var(--color-verde)" />
+						<li class={`p2-bloque p2-bloque--${i}`}>
+							<span class="p2-mini" aria-hidden="true">
+								<Icono nombre={ICON[i]} tamano={32} acento="var(--color-celeste)" />
 							</span>
-							<h3 class="p2-tarjeta-titulo">{bloque.titulo}</h3>
-							<ul class="p2-tarjeta-items">
+							<h3 class="p2-bloque-titulo">{bloque.titulo}</h3>
+							<ul class="p2-chips">
 								{bloque.items.map((item) => (
 									<li>{item}</li>
 								))}
 							</ul>
-						</div>
+						</li>
 					))
 				}
-			</div>
-
-			<p class="p2-cierre">
-				La red transforma <strong>el paso del viajero en valor para cada lugar.</strong>
-			</p>
+			</ul>
 		</div>
 	</div>
 </Seccion>
 
-<style is:global set:html={keyframesTarjetas} />
-
 <style>
-	.p2 {
-		align-content: center;
+	/* === Base (mobile, flujo normal) === */
+	/* Fondo: solo un halo translúcido detrás del anillo, sobre el azul sólido del escenario. Nunca un fondo
+	 * opaco a pantalla completa: taparía el celular, que es el chrome fijo y debe verse siempre. */
+	.p2::before {
+		content: '';
+		position: absolute;
+		inset: 0;
+		pointer-events: none;
+		background: radial-gradient(circle at 50% 36%, color-mix(in srgb, var(--color-celeste) 38%, transparent) 0%, transparent 52%);
 	}
 
 	.p2-contenido {
+		position: relative;
+		--r: min(240px, 62vw);
 		display: flex;
 		flex-direction: column;
-		gap: var(--espacio-lg);
-		/* AJUSTE DEL EJECUTOR sobre el plan (E8), con evidencia: el plan literal decía 58vw ("grid-
-		 * column que termina en 58vw"). A 1024×768 (aspecto casi cuadrado, el celular ocupa
-		 * relativamente más ancho que a 1440×900/1920×1080) el titular grande invadía 8px el borde
-		 * izquierdo de `.telefono__marco` (confirmado con elementFromPoint, overlap real, no falso
-		 * positivo). 46vw deja margen en los 3 anchos de escritorio verificados. */
-		max-width: 46vw;
-	}
-
-	@media (width < 900px) {
-		.p2-contenido {
-			max-width: none;
-		}
+		align-items: stretch;
+		gap: 0;
+		padding-top: 1.25rem;
 	}
 
 	.p2-titular {
@@ -136,249 +112,403 @@ const rangoTarjeta = (i: number): string => `contain ${2 + 12 * i}% contain ${20
 		display: flex;
 		flex-direction: column;
 		font-family: var(--fuente-display);
-		font-weight: 800;
-		line-height: 1.02;
-		text-transform: uppercase;
 		color: var(--color-texto-sobre-foto);
+		text-transform: uppercase;
 	}
 
-	.p2-titular-chica {
-		font-size: var(--texto-xl);
+	.p2-t1 {
+		font-size: 24px;
+		font-weight: 200;
+		line-height: 1.2;
+		text-transform: none;
 	}
 
-	.p2-titular-grande {
-		font-size: clamp(3rem, 1.5rem + 6vw, 7.5rem);
+	.p2-t2 {
+		font-size: 29px;
+		font-weight: 800;
+		line-height: 1;
+		letter-spacing: -0.01em;
+		white-space: nowrap;
 	}
 
-	@media (width < 900px) {
-		.p2-titular-chica {
-			font-size: var(--texto-sm);
-		}
-		.p2-titular-grande {
-			font-size: clamp(1.3rem, 0.7rem + 5vw, 2.1rem);
-		}
+	/* «red» y «valor»: palabra clave de P1 (global .realce); acá un poco más grande que el texto fino. */
+	.p2-realce {
+		font-size: 1.14em;
 	}
 
-	.p2-tarjetas {
-		display: grid;
-		grid-template-columns: repeat(3, minmax(0, 1fr));
-		gap: clamp(1rem, 2vw, 1.75rem);
+	.p2-orbita {
+		position: relative;
+		width: var(--r);
+		height: var(--r);
+		margin: 2.4rem auto 2rem;
 	}
 
-	@media (width < 900px) {
-		.p2-tarjetas {
-			grid-template-columns: minmax(0, 1fr);
-		}
+	.p2-anillo {
+		position: absolute;
+		inset: 0;
+		border-radius: 50%;
+		border: 2px solid rgba(255, 255, 255, 0.3);
 	}
 
-	.p2-tarjeta {
-		display: flex;
-		flex-direction: column;
-		align-items: flex-start;
-		gap: var(--espacio-xs);
-		padding: clamp(1.1rem, 2vw, 1.5rem);
-		background: var(--color-superficie);
-		border-radius: var(--radio-lg);
-		box-shadow: 0 14px 28px -16px rgba(5, 11, 20, 0.45);
+	/* Estela: aro fino con cola amarilla que gira en sentido horario. */
+	.p2-estela {
+		position: absolute;
+		inset: -3px;
+		border-radius: 50%;
+		background: conic-gradient(from 0deg, transparent 0 62%, var(--color-verde-primavera) 100%);
+		-webkit-mask: radial-gradient(closest-side, transparent 96.5%, #000 97.5% 100%, transparent 100%);
+		mask: radial-gradient(closest-side, transparent 96.5%, #000 97.5% 100%, transparent 100%);
+		animation: p2-gira 6s linear infinite;
+		pointer-events: none;
 	}
 
-	.p2-tarjeta-icono {
+	.p2-orb {
+		position: absolute;
+		inset: 0;
+		pointer-events: none;
+	}
+
+	.p2-medallon {
+		position: absolute;
+		width: 25%;
+		aspect-ratio: 1;
+		transform: translate(-50%, -50%);
 		display: grid;
 		place-items: center;
-		width: 3rem;
-		height: 3rem;
 		border-radius: 50%;
-		border: 1.5px solid var(--color-verde);
-		color: var(--color-verde);
+		background: color-mix(in srgb, var(--color-marino-noche) 60%, transparent);
+		border: 2px solid #fff;
+		box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+		color: #fff;
 	}
 
-	.p2-tarjeta-titulo {
-		margin: 0;
-		font-family: var(--fuente-texto);
-		font-weight: 700;
-		font-size: clamp(1.05rem, 0.95rem + 0.5vw, 1.25rem);
-		color: var(--color-marino);
+	.p2-medallon :global(svg) {
+		width: 56%;
+		height: 56%;
 	}
 
-	.p2-tarjeta-items {
-		margin: 0;
-		padding: 0;
-		list-style: none;
-		display: flex;
-		flex-direction: column;
-		gap: var(--espacio-2xs);
-	}
-
-	.p2-tarjeta-items li {
-		font-family: var(--fuente-texto);
-		font-size: var(--texto-sm);
-		line-height: 1.4;
-		color: var(--color-tinta-suave);
-		padding-left: 1.1em;
-		position: relative;
-	}
-
-	.p2-tarjeta-items li::before {
-		content: '';
+	.p2-cierre-caja {
 		position: absolute;
-		left: 0;
-		top: 0.55em;
-		width: 0.4rem;
-		height: 0.4rem;
-		border-radius: 50%;
-		background: var(--color-verde);
-	}
-
-	/* === Mobile: tarjetas compactas — título + ítems en una línea (E8 del plan, 2ª mitad de la
-	 * instrucción "si igual no entra": bajar `y` hasta 44% no alcanzó, verificado con el
-	 * verificador contra 390×844/369×698 — la 3ª tarjeta seguía tapada por el celular). Ningún
-	 * ítem se saca, el cuerpo sigue en --texto-sm (regla explícita del plan). */
-	@media (width < 900px) {
-		.p2-contenido {
-			gap: 0.3rem;
-		}
-		.p2-tarjetas {
-			gap: 0.2rem;
-		}
-		.p2-tarjeta {
-			flex-direction: row;
-			flex-wrap: wrap;
-			align-items: center;
-			gap: 0.15rem 0.35rem;
-			padding: 0.3rem 0.5rem;
-		}
-		.p2-tarjeta-icono {
-			width: 1.3rem;
-			height: 1.3rem;
-		}
-		/* El ícono interno se pide a tamaño fijo (tamano={32}, prop de Icono.astro) — sin este
-		 * override desbordaría el círculo achicado de acá arriba. */
-		.p2-tarjeta-icono :global(svg) {
-			width: 0.8rem;
-			height: 0.8rem;
-		}
-		.p2-tarjeta-titulo {
-			flex: 1 1 auto;
-			font-size: var(--texto-sm);
-		}
-		.p2-tarjeta-items {
-			flex-direction: row;
-			flex-wrap: wrap;
-			width: 100%;
-			gap: 0;
-		}
-		.p2-tarjeta-items li {
-			padding-left: 0;
-			line-height: 1.25;
-		}
-		.p2-tarjeta-items li::before {
-			display: none;
-		}
-		/* Los <li> son ítems flex: los espacios de ' · ' en `content` colapsan y el punto quedaba pegado
-		 * al ítem siguiente ("clara ·Paradas"). El aire se da con margen, simétrico. */
-		.p2-tarjeta-items li:not(:last-child)::after {
-			content: '·';
-			margin-inline: 0.4em;
-			color: var(--color-tinta-suave);
-		}
+		inset: 0;
+		display: grid;
+		place-content: center;
+		padding: 0 19%;
+		pointer-events: none;
 	}
 
 	.p2-cierre {
 		margin: 0;
+		text-align: center;
+		text-wrap: balance;
 		font-family: var(--fuente-texto);
-		font-size: clamp(1.15rem, 1rem + 0.6vw, 1.4rem);
-		line-height: 1.4;
-		max-width: 42ch;
+		font-size: 15px;
+		font-weight: 200;
+		line-height: 1.25;
 		color: var(--color-texto-sobre-foto);
 	}
 
-	@media (width < 900px) {
+	/* Leyenda (mobile): una fila por beneficiario, ítems en una sola línea separados por « · ». */
+	.p2-bloques {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+		display: flex;
+		flex-direction: column;
+		gap: 16px;
+	}
+
+	.p2-bloque {
+		display: grid;
+		grid-template-columns: 32px minmax(0, 1fr);
+		column-gap: 12px;
+		align-items: center;
+		color: var(--color-texto-sobre-foto);
+	}
+
+	.p2-mini {
+		grid-row: 1 / span 2;
+		align-self: start;
+		display: grid;
+		place-items: center;
+		width: 32px;
+		height: 32px;
+		border-radius: 50%;
+		background: color-mix(in srgb, var(--color-marino-noche) 60%, transparent);
+		border: 2px solid #fff;
+		color: #fff;
+	}
+
+	.p2-mini :global(svg) {
+		width: 18px;
+		height: 18px;
+	}
+
+	.p2-bloque-titulo {
+		margin: 0;
+		font-family: var(--fuente-display);
+		font-size: 16px;
+		font-weight: 800;
+		line-height: 1.2;
+	}
+
+	.p2-chips {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+		display: flex;
+		flex-wrap: wrap;
+		font-family: var(--fuente-texto);
+		font-size: 14px;
+		line-height: 1.35;
+		color: rgba(255, 255, 255, 0.85);
+	}
+
+	.p2-chips li:not(:last-child)::after {
+		content: '·';
+		margin-inline: 0.4em;
+	}
+
+	/* === Escritorio: composición absoluta (referencia 1536×695) === */
+	@media (width >= 900px) {
+		.p2-contenido {
+			--r: min(50svh, 400px, 25vw);
+			--ts: min(280px, 17vw);
+			--rx: calc(2.6vw + var(--ts) + var(--r) * 0.1 + 8px);
+			--ry: 32svh;
+			position: absolute;
+			inset: 0;
+			display: block;
+			padding: 0;
+		}
+
+		.p2::before {
+			background: radial-gradient(circle at 36% 62%, color-mix(in srgb, var(--color-celeste) 38%, transparent) 0%, transparent 52%);
+		}
+
+		.p2-titular {
+			position: absolute;
+			left: 6.25vw;
+			top: clamp(24px, 7.5svh, 52px);
+		}
+
+		.p2-t1 {
+			font-size: clamp(20px, 5.4svh, 38px);
+		}
+
+		.p2-t2 {
+			font-size: clamp(36px, min(10.5svh, 4.6vw), 72px);
+		}
+
+		.p2-orbita {
+			position: absolute;
+			left: var(--rx);
+			top: var(--ry);
+			margin: 0;
+		}
+
+		.p2-medallon {
+			width: 24%;
+		}
+
+		.p2-cierre-caja {
+			padding: 0 17.5%;
+		}
+
 		.p2-cierre {
-			/* AJUSTE DEL EJECUTOR sobre el plan (E8), con evidencia: bajo movimiento reducido el
-			 * cierre se muestra SIEMPRE (sin esperar su entrada por scroll), y su bloque natural
-			 * quedaba superpuesto con el celular en 390×844/369×698 (confirmado con
-			 * elementFromPoint, overlap real de hasta ~70px). Sin `max-width` (que en mobile
-			 * angostaba de más, forzando más líneas de las que hacían falta) y line-height más
-			 * ajustado — el `<strong>` no se toca (regla de contraste, ver abajo). */
-			max-width: none;
-			line-height: 1.2;
-			font-size: var(--texto-sm);
+			font-size: clamp(14px, calc(var(--r) * 0.0575), 23px);
+		}
+
+		.p2-bloques {
+			display: block;
+		}
+
+		.p2-bloque {
+			position: absolute;
+			display: block;
+		}
+
+		.p2-mini {
+			display: none;
+		}
+
+		.p2-bloque-titulo {
+			font-size: clamp(16px, 1.45vw, 22px);
+			margin-bottom: 0.55rem;
+		}
+
+		.p2-chips {
+			gap: 8px;
+			font-size: clamp(12px, 1vw, 15px);
+			font-weight: 500;
+			line-height: 1.25;
+			color: #fff;
+		}
+
+		.p2-chips li {
+			padding: 0.45em 0.9em;
+			border-radius: 999px;
+			background: rgba(255, 255, 255, 0.12);
+			border: 1.5px solid rgba(255, 255, 255, 0.55);
+		}
+
+		.p2-chips li:not(:last-child)::after {
+			content: none;
+		}
+
+		/* Viajero: a la derecha de su medallón (arriba). */
+		.p2-bloque--0 {
+			left: calc(var(--rx) + var(--r) * 0.67);
+			top: calc(var(--ry) - var(--r) * 0.085);
+			width: 420px;
+		}
+
+		/* Comercios: a la derecha de su medallón (abajo a la derecha). */
+		.p2-bloque--1 {
+			left: calc(var(--rx) + var(--r) * 1.1);
+			top: calc(var(--ry) + var(--r) * 0.62);
+			width: 290px;
+		}
+
+		/* Territorios: a la izquierda de su medallón, alineado a la derecha. */
+		.p2-bloque--2 {
+			left: 2.6vw;
+			top: calc(var(--ry) + var(--r) * 0.62);
+			width: var(--ts);
+			text-align: right;
+		}
+
+		.p2-bloque--2 .p2-chips {
+			justify-content: flex-end;
 		}
 	}
 
-	.p2-cierre strong {
-		/* --color-arena da 4,42:1 sobre --color-verde — válido SOLO porque este texto es ≥1.5rem
-		 * 700 (texto grande, umbral WCAG 3:1). No bajar el tamaño sin volver a blanco. */
-		color: var(--color-arena);
-		font-weight: 700;
-		font-size: clamp(1.5rem, 1.2rem + 1vw, 1.85rem);
-	}
-
-	/* === Animación — "dispersión desde el celular" (ver frontmatter) === */
-	@supports (animation-timeline: scroll(root)) {
-		.p2-tarjeta--0 {
-			animation: p2-sale-0-escritorio linear both;
-			animation-timeline: --que-hace;
-		}
-		.p2-tarjeta--1 {
-			animation: p2-sale-1-escritorio linear both;
-			animation-timeline: --que-hace;
-		}
-		.p2-tarjeta--2 {
-			animation: p2-sale-2-escritorio linear both;
-			animation-timeline: --que-hace;
-		}
-
-		@media (width < 900px) {
-			.p2-tarjeta--0 {
-				animation-name: p2-sale-0-movil;
-			}
-			.p2-tarjeta--1 {
-				animation-name: p2-sale-1-movil;
-			}
-			.p2-tarjeta--2 {
-				animation-name: p2-sale-2-movil;
-			}
+	/* Alto bajo: comercios y territorios quedan solo con su título; el viajero conserva los chips. */
+	@media (width >= 900px) and (height < 560px) {
+		.p2-bloque--1 .p2-chips,
+		.p2-bloque--2 .p2-chips {
+			display: none;
 		}
 	}
 
-	@media (prefers-reduced-motion: reduce) {
-		.p2-tarjeta--0,
-		.p2-tarjeta--1,
-		.p2-tarjeta--2 {
-			animation: none !important;
-			opacity: 1;
-			transform: none;
-		}
-	}
-
-	/* === Cierre — entra cuando las 3 tarjetas ya asentaron (contain 70% → 85%) === */
-	@keyframes p2-cierre-entra {
+	/* === Animación de entrada (atada al scroll de la sección) === */
+	@keyframes p2-sube {
 		from {
 			opacity: 0;
-			transform: translateY(1rem);
+			transform: translateY(18px);
 		}
 		to {
 			opacity: 1;
-			transform: translateY(0);
+			transform: none;
+		}
+	}
+
+	@keyframes p2-anillo-entra {
+		from {
+			opacity: 0;
+			transform: scale(0.55) rotate(-90deg);
+		}
+		to {
+			opacity: 1;
+			transform: none;
+		}
+	}
+
+	@keyframes p2-orbita-entra {
+		from {
+			opacity: 0;
+			transform: rotate(-150deg);
+		}
+		to {
+			opacity: 1;
+			transform: none;
+		}
+	}
+
+	@keyframes p2-fade {
+		from {
+			opacity: 0;
+		}
+		to {
+			opacity: 1;
+		}
+	}
+
+	@keyframes p2-gira {
+		to {
+			transform: rotate(360deg);
 		}
 	}
 
 	@supports (animation-timeline: scroll(root)) {
-		.p2-cierre {
-			opacity: 0;
-			transform: translateY(1rem);
-			animation: p2-cierre-entra linear both;
+		.p2::before {
+			animation: p2-fade linear both;
 			animation-timeline: --que-hace;
-			animation-range: contain 70% contain 85%;
+			animation-range: contain 0% contain 6%;
+		}
+
+		.p2-titular,
+		.p2-cierre,
+		.p2-bloque {
+			animation: p2-sube cubic-bezier(0.2, 0.8, 0.2, 1) both;
+			animation-timeline: --que-hace;
+		}
+		.p2-titular {
+			animation-range: contain 0% contain 6%;
+		}
+		.p2-cierre {
+			animation-range: contain 24% contain 34%;
+		}
+		.p2-bloque--0 {
+			animation-range: contain 28% contain 38%;
+		}
+		.p2-bloque--1 {
+			animation-range: contain 31% contain 41%;
+		}
+		.p2-bloque--2 {
+			animation-range: contain 34% contain 44%;
+		}
+
+		.p2-anillo {
+			animation: p2-anillo-entra cubic-bezier(0.2, 0.8, 0.2, 1) both;
+			animation-timeline: --que-hace;
+			animation-range: contain 2% contain 14%;
+		}
+
+		.p2-orb {
+			animation: p2-orbita-entra cubic-bezier(0.2, 0.8, 0.2, 1) both;
+			animation-timeline: --que-hace;
+		}
+		.p2-orb--0 {
+			animation-range: contain 6% contain 20%;
+		}
+		.p2-orb--1 {
+			animation-range: contain 10% contain 24%;
+		}
+		.p2-orb--2 {
+			animation-range: contain 14% contain 28%;
+		}
+
+		/* Estela: fade atado al scroll + giro por tiempo (timeline `auto`). */
+		.p2-estela {
+			animation: p2-fade linear both, p2-gira 6s linear infinite;
+			animation-timeline: --que-hace, auto;
+			animation-range: contain 22% contain 32%, normal;
 		}
 	}
 
 	@media (prefers-reduced-motion: reduce) {
-		.p2-cierre {
+		.p2-titular,
+		.p2-cierre,
+		.p2-bloque,
+		.p2-anillo,
+		.p2-orb {
 			animation: none !important;
 			opacity: 1;
 			transform: none;
+		}
+		.p2-estela {
+			animation: none !important;
+			opacity: 1;
 		}
 	}
 </style>

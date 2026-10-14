@@ -207,3 +207,18 @@ svg {
     scroll-behavior: auto !important;
   }
 }
+
+
+/* Realce: palabra clave en MAYÚSCULAS, celeste, con subrayado de marcador (grueso al inicio, se afina, con
+ * una leve panza). El trazo es un SVG que se estira al ancho de la palabra. Usado en P1 y P2. */
+.realce {
+  display: inline-block;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  font-weight: 700;
+  color: var(--color-celeste);
+  padding-bottom: 0.28em;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 10' preserveAspectRatio='none'%3E%3Cpath fill='%236cace4' d='M0 6.7 C30 3.2 68 2.4 100 4.9 L100 5.7 C68 3.9 30 5.2 0 9.3 Z'/%3E%3C/svg%3E")
+    no-repeat left bottom / 100% 0.36em;
+  line-height: 1;
+}

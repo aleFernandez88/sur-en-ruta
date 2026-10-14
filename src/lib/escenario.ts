@@ -233,7 +233,7 @@ function tokenDeVar(valor: string): string {
 /** Fondo, rótulo y glow por sección — tabla §4.1 del plan de Bloque E (sustituye a la de §11.3). */
 export const FONDO: Record<string, FondoSeccion> = {
 	'que-es': { tokens: ['--color-marino-noche'], glow: true },
-	'que-hace': { tokens: ['--color-verde'] },
+	'que-hace': { tokens: ['--color-bandera-azul'] },
 	'como-lo-hace': { tokens: ['--color-marino-noche'] },
 	donde: { tokens: rutas.map((r) => tokenDeVar(r.colorTrazo)), mezclaNoche: 0.2 },
 	cierre: { tokens: ['--color-arena'] },
@@ -242,7 +242,7 @@ export const FONDO: Record<string, FondoSeccion> = {
 /** Tratamiento del rótulo "Vista conceptual de la app" (claro/oscuro) por sección — §4.1. */
 export const ROTULO: Record<string, 'oscuro' | 'claro'> = {
 	'que-es': 'oscuro',
-	'que-hace': 'claro',
+	'que-hace': 'oscuro',
 	'como-lo-hace': 'oscuro',
 	donde: 'oscuro',
 	cierre: 'claro',

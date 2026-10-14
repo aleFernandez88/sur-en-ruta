@@ -76,10 +76,10 @@ const isotipoPiezas = interior.replace(/<path /g, () => {
 					</h1>
 				</div>
 				<p class="p1-respuesta">
-					Una forma nueva de recorrer <span class="p1-realce p1-realce--grande">Uruguay</span>: <strong>por etapas, conectada, a tu ritmo.</strong>
+					Una forma nueva de recorrer <span class="realce p1-realce--grande">Uruguay</span>: <strong>por etapas, conectada, a tu ritmo.</strong>
 				</p>
 				<p class="p1-bajada">
-					<span class="p1-realce">La app</span> y la red que conecta a quien viaja con los puntos, servicios y rutas del país.
+					<span class="realce">La app</span> y la red que conecta a quien viaja con los puntos, servicios y rutas del país.
 				</p>
 				<div class="p1-promesa">
 					<div class="p1-promesa__logo">
@@ -284,19 +284,6 @@ const isotipoPiezas = interior.replace(/<path /g, () => {
 		:global(:root.entrada) .p1-isotipo :global(.p1-pieza--pin) {
 			transition: none;
 		}
-	}
-
-	/* Realce: palabra en MAYÚSCULAS, celeste, con un subrayado curvo (trazo SVG que se estira al ancho). */
-	.p1-realce {
-		display: inline-block;
-		text-transform: uppercase;
-		letter-spacing: 0.03em;
-		font-weight: 700;
-		color: var(--color-celeste);
-		padding-bottom: 0.28em;
-		background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 10' preserveAspectRatio='none'%3E%3Cpath fill='%236cace4' d='M0 6.7 C30 3.2 68 2.4 100 4.9 L100 5.7 C68 3.9 30 5.2 0 9.3 Z'/%3E%3C/svg%3E")
-			no-repeat left bottom / 100% 0.36em;
-		line-height: 1;
 	}
 
 	.p1-realce--grande {
