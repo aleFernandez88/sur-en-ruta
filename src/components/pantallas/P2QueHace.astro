@@ -27,6 +27,12 @@ import { beneficios } from '../../data/beneficios.ts';
 // Íconos propios (Icono.astro), uno por beneficiario: viajeros / economía local / base conectada.
 const ICON = ['viajeros', 'economia-local', 'base-conectada'] as const;
 
+// «Para el viajero» → prefijo en blanco + sustantivo resaltado en verde.
+const partirTitulo = (t: string) => {
+	const m = t.match(/^(Para (?:el|los) )(.+)$/);
+	return m ? { pre: m[1], clave: m[2] } : { pre: '', clave: t };
+};
+
 // Posición de cada medallón sobre el anillo (centro, en % del anillo): −90°, 30° y 150°, sentido horario.
 const POSICION = [
 	{ x: 50, y: 0 },
@@ -66,19 +72,24 @@ const POSICION = [
 
 			<ul class="p2-bloques">
 				{
-					beneficios.map((bloque, i) => (
-						<li class={`p2-bloque p2-bloque--${i}`}>
-							<span class="p2-mini" aria-hidden="true">
-								<Icono nombre={ICON[i]} tamano={32} acento="var(--color-celeste)" />
-							</span>
-							<h3 class="p2-bloque-titulo">{bloque.titulo}</h3>
-							<ul class="p2-chips">
-								{bloque.items.map((item) => (
-									<li>{item}</li>
-								))}
-							</ul>
-						</li>
-					))
+					beneficios.map((bloque, i) => {
+						const t = partirTitulo(bloque.titulo);
+						return (
+							<li class={`p2-bloque p2-bloque--${i}`}>
+								<span class="p2-mini" aria-hidden="true">
+									<Icono nombre={ICON[i]} tamano={32} acento="var(--color-celeste)" />
+								</span>
+								<h3 class="p2-bloque-titulo">
+									{t.pre}<span class="p2-clave">{t.clave}</span>
+								</h3>
+								<ul class="p2-chips">
+									{bloque.items.map((item) => (
+										<li>{item}</li>
+									))}
+								</ul>
+							</li>
+						);
+					})
 				}
 			</ul>
 		</div>
@@ -134,6 +145,13 @@ const POSICION = [
 	/* «red» y «valor»: palabra clave de P1 (global .realce); acá un poco más grande que el texto fino. */
 	.p2-realce {
 		font-size: 1.14em;
+		color: var(--color-verde-primavera);
+		background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 10' preserveAspectRatio='none'%3E%3Cpath fill='%238cc84b' d='M0 6.7 C30 3.2 68 2.4 100 4.9 L100 5.7 C68 3.9 30 5.2 0 9.3 Z'/%3E%3C/svg%3E");
+	}
+
+	/* Sustantivo del título de cada card («viajero», «comercios y privados», «territorio»): verde sobre el azul. */
+	.p2-clave {
+		color: var(--color-verde-primavera);
 	}
 
 	.p2-orbita {
@@ -178,8 +196,23 @@ const POSICION = [
 		border-radius: 50%;
 		background: color-mix(in srgb, var(--color-marino-noche) 60%, transparent);
 		border: 2px solid #fff;
-		box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+		box-shadow:
+			0 0 0 0 rgba(140, 200, 75, 0),
+			0 12px 30px rgba(0, 0, 0, 0.35);
 		color: #fff;
+		animation: p2-pulso-med 6s linear infinite;
+	}
+
+	/* Pulso de valor: la cabeza de la estela pasa por cada medallón a t = 0 s, 2 s y 4 s del giro de 6 s
+	 * (arranca arriba, sentido horario, medallones a 0°/120°/240°). Cada pulso arranca 0,3 s antes. */
+	.p2-orb--0 .p2-medallon {
+		animation-delay: 5.7s;
+	}
+	.p2-orb--1 .p2-medallon {
+		animation-delay: 1.7s;
+	}
+	.p2-orb--2 .p2-medallon {
+		animation-delay: 3.7s;
 	}
 
 	.p2-medallon :global(svg) {
@@ -380,6 +413,68 @@ const POSICION = [
 		.p2-bloque--2 .p2-chips {
 			justify-content: flex-end;
 		}
+
+		/* Hilo de valor: rayita vertical entre el medallón y su card (a la izquierda en viajero y comercios, a
+		 * la derecha en territorio) con un nodo a la altura del centro del medallón. Aparece con la card. */
+		.p2-bloque::before {
+			content: '';
+			position: absolute;
+			top: 0;
+			bottom: 0;
+			left: calc(var(--r) * -0.035 - 1px);
+			width: 2px;
+			border-radius: 1px;
+			background: rgba(255, 255, 255, 0.3);
+			animation: p2-pulso-hilo 6s linear infinite;
+		}
+
+		.p2-bloque::after {
+			content: '';
+			position: absolute;
+			left: calc(var(--r) * -0.035 - 4px);
+			top: calc(var(--r) * 0.085 - 4px);
+			width: 8px;
+			height: 8px;
+			border-radius: 50%;
+			background: var(--color-verde-primavera);
+			animation: p2-pulso-nodo 6s linear infinite;
+		}
+
+		/* Centro del medallón respecto del borde superior de cada card. */
+		.p2-bloque--1::after,
+		.p2-bloque--2::after {
+			top: calc(var(--r) * 0.13 - 4px);
+		}
+
+		.p2-bloque--2::before {
+			left: auto;
+			right: calc(var(--r) * -0.035 - 1px);
+		}
+		.p2-bloque--2::after {
+			left: auto;
+			right: calc(var(--r) * -0.035 - 4px);
+		}
+
+		.p2-chips li {
+			animation: p2-pulso-chip 6s linear infinite;
+		}
+
+		/* Mismo desfase que su medallón. */
+		.p2-bloque--0::before,
+		.p2-bloque--0::after,
+		.p2-bloque--0 .p2-chips li {
+			animation-delay: 5.7s;
+		}
+		.p2-bloque--1::before,
+		.p2-bloque--1::after,
+		.p2-bloque--1 .p2-chips li {
+			animation-delay: 1.7s;
+		}
+		.p2-bloque--2::before,
+		.p2-bloque--2::after,
+		.p2-bloque--2 .p2-chips li {
+			animation-delay: 3.7s;
+		}
 	}
 
 	/* Alto bajo: comercios y territorios quedan solo con su título; el viajero conserva los chips. */
@@ -430,6 +525,59 @@ const POSICION = [
 		}
 		to {
 			opacity: 1;
+		}
+	}
+
+	/* Pulsos de valor (valores literales: sin calc()+var() en @keyframes). Pico a los 0,3 s, vuelta a base a 1,5 s. */
+	@keyframes p2-pulso-med {
+		0%,
+		25%,
+		100% {
+			border-color: #fff;
+			box-shadow:
+				0 0 0 0 rgba(140, 200, 75, 0),
+				0 12px 30px rgba(0, 0, 0, 0.35);
+		}
+		5% {
+			border-color: #8cc84b;
+			box-shadow:
+				0 0 0 8px rgba(140, 200, 75, 0.35),
+				0 12px 30px rgba(0, 0, 0, 0.35);
+		}
+	}
+
+	@keyframes p2-pulso-hilo {
+		0%,
+		25%,
+		100% {
+			background: rgba(255, 255, 255, 0.3);
+		}
+		5% {
+			background: #8cc84b;
+		}
+	}
+
+	@keyframes p2-pulso-nodo {
+		0%,
+		25%,
+		100% {
+			box-shadow: 0 0 0 0 rgba(140, 200, 75, 0);
+		}
+		5% {
+			box-shadow: 0 0 0 7px rgba(140, 200, 75, 0.4);
+		}
+	}
+
+	@keyframes p2-pulso-chip {
+		0%,
+		25%,
+		100% {
+			border-color: rgba(255, 255, 255, 0.55);
+			background: rgba(255, 255, 255, 0.12);
+		}
+		5% {
+			border-color: #8cc84b;
+			background: rgba(140, 200, 75, 0.22);
 		}
 	}
 
@@ -509,6 +657,12 @@ const POSICION = [
 		.p2-estela {
 			animation: none !important;
 			opacity: 1;
+		}
+		.p2-medallon,
+		.p2-bloque::before,
+		.p2-bloque::after,
+		.p2-chips li {
+			animation: none !important;
 		}
 	}
 </style>
