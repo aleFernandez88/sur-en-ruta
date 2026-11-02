@@ -19,6 +19,17 @@
  * frontmatter) para que no haya pantalla vacía en los bordes de la sección. El fondo lo cambia
  * `Escenario.astro` en las mismas 6 sub-mesetas (E3) — quedan alineados por construcción.
  *
+ * === Fotos de fondo (2026-11-02, PROVISORIAS) ===
+ * Cada ruta tiene su foto a pantalla completa con un velo del color de la ruta. Viven en
+ * `Escenario.astro` (debajo del celular, que siempre queda visible), no acá. Siguen bloqueadas por
+ * D2 (licencia): ver el comentario de `FOTOS_RUTA` en Escenario.astro.
+ *
+ * === Selector de rutas (2026-11-02) ===
+ * Los 6 puntos decorativos pasaron a pastillas clickeables (como las de P3). Click = cambio DIRECTO a
+ * esa ruta, sin recorrer las intermedias: el contenido se desvanece, una capa del color actual tapa
+ * el fondo (y las fotos), el scroll salta al centro de la sub-meseta de la ruta y la capa se funde.
+ * (El celular fijo no se tapa: la capa va DEBAJO de él.)
+ *
  * === Accesibilidad ===
  * Los 6 bloques son un `<ul>` real: visualmente se ve uno por vez (opacity), pero los 6 quedan en
  * el árbol de accesibilidad — la opacidad no los saca. El índice de 6 puntos es decorativo
@@ -34,6 +45,11 @@ import Icono from '../Icono.astro';
 import { rutas } from '../../data/rutas.ts';
 
 const TOTAL = rutas.length;
+
+// Nombre corto de cada ruta para las pastillas (mismo orden que `rutas.ts`).
+const CORTOS = ['Vino', 'Oceánica', 'Termal', 'Rural', 'Patrimonial', 'Naturaleza'];
+// Centro de la sub-meseta de cada ruta, en % del tramo pineado: ahí el bloque está completo y quieto.
+const CENTRO = rutas.map((_, k) => Number((((k + 0.5) * 100) / TOTAL).toFixed(2)));
 
 // Rango contain-relativo de la ruta k — 6 sub-mesetas parejas dentro del tramo pineado de esta
 // sección (restricción 4: animation-range nunca con var(), literal calculado acá).
@@ -58,17 +74,22 @@ function keyframesRuta(k: number): string {
 }`;
 }
 
-// Mismo criterio que la ruta, aplicado al punto k del índice (solo opacidad: lleno/apagado).
+// Mismo criterio que la ruta, aplicado a la pastilla k del selector: apagada (relleno del color de SU
+// ruta, `--c`) ⇄ encendida (relleno blanco con el texto en el color de la ruta, halo y un poco más de tamaño). La primera arranca encendida y la última termina encendida.
+const APAGADA =
+	'transform: scale(1); background-color: var(--c); color: #ffffff; box-shadow: 0 0 0 0 transparent;';
+const ENCENDIDA =
+	'transform: scale(1.08); background-color: #ffffff; color: color-mix(in srgb, var(--c) 72%, #000); box-shadow: 0 0 0 4px rgb(255 255 255 / 0.35);';
 function keyframesPunto(k: number): string {
 	const esPrimera = k === 0;
 	const esUltima = k === TOTAL - 1;
-	const inicio = esPrimera ? 1 : 0.35;
-	const fin = esUltima ? 1 : 0.35;
+	const inicio = esPrimera ? ENCENDIDA : APAGADA;
+	const fin = esUltima ? ENCENDIDA : APAGADA;
 	return `@keyframes p4-punto-${k} {
-  0% { opacity: ${inicio}; }
-  15% { opacity: 1; }
-  85% { opacity: 1; }
-  100% { opacity: ${fin}; }
+  0% { ${inicio} }
+  15% { ${ENCENDIDA} }
+  85% { ${ENCENDIDA} }
+  100% { ${fin} }
 }`;
 }
 
@@ -81,7 +102,7 @@ const keyframesGenerados = rutas
 	<div class="p4 seccion__caja">
 		<div class="p4-caja">
 			<div class="p4-cabecera">
-				<h2 class="p4-titular">Rutas que cuentan Uruguay</h2>
+				<h2 class="p4-titular">Rutas que <span class="realce">cuentan</span> Uruguay</h2>
 				<p class="p4-bajada">Experiencias temáticas para descubrir el país a otro ritmo.</p>
 			</div>
 
@@ -99,8 +120,20 @@ const keyframesGenerados = rutas
 				}
 			</ul>
 
-			<div class="p4-indice" aria-hidden="true">
-				{rutas.map((_, i) => <span class={`p4-punto p4-punto--${i}`} style={`animation-range: ${rangoRuta(i)}`} />)}
+			<div class="p4-indice" role="group" aria-label="Rutas temáticas">
+				{
+					rutas.map((r, i) => (
+						<button
+							type="button"
+							class={`p4-punto p4-punto--${i}`}
+							data-centro={CENTRO[i]}
+							aria-label={`Ver ${r.nombre}`}
+							style={`--c: ${r.colorTrazo}; animation-range: ${rangoRuta(i)}`}
+						>
+							<span class="p4-punto-texto">{CORTOS[i]}</span>
+						</button>
+					))
+				}
 			</div>
 
 			<p class="p4-cierre">
@@ -117,11 +150,23 @@ const keyframesGenerados = rutas
 		align-content: center;
 	}
 
+	/* Marco de composición (como P1, ver `--marco-max` en tokens.css): en pantallas más anchas que 1440
+	 * el padding lateral crece para que el texto quede a la misma distancia del celular que a 1440.
+	 * A ≤1440 los dos términos de max() dan lo mismo que `.seccion__caja`. */
+	@media (width >= 900px) {
+		.p4 {
+			padding-inline: max(
+				clamp(1.25rem, 4vw, 4rem),
+				calc((100% - var(--marco-max)) / 2 + clamp(1.25rem, 4vw, 4rem))
+			);
+		}
+	}
+
 	.p4-caja {
 		display: flex;
 		flex-direction: column;
 		gap: var(--espacio-md);
-		max-width: 50vw;
+		max-width: min(50vw, calc(var(--marco-max) / 2));
 	}
 
 	@media (width < 900px) {
@@ -142,16 +187,26 @@ const keyframesGenerados = rutas
 	.p4-titular {
 		margin: 0;
 		font-family: var(--fuente-display);
-		font-weight: 700;
-		font-size: var(--texto-lg);
+		font-weight: 200;
+		font-size: clamp(1.9rem, 1.1rem + 2.6vw, 3rem);
+		line-height: 1.05;
 		color: var(--color-texto-sobre-foto);
+	}
+
+	/* La palabra clave: celeste de la marca (como el `.realce` global) con sombreado oscuro, tanto en el
+	 * texto como en el trazo, para que se lea también sobre el azul de Oceánica. */
+	.p4-titular .realce {
+		color: var(--color-celeste);
+		font-weight: 800;
+		text-shadow: 0 2px 10px rgb(4 16 31 / 0.7), 0 1px 2px rgb(4 16 31 / 0.6);
+		background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 10' preserveAspectRatio='none'%3E%3Cpath fill='%2304101f' fill-opacity='0.7' transform='translate(0 0.9)' d='M0 6.7 C30 3.2 68 2.4 100 4.9 L100 5.7 C68 3.9 30 5.2 0 9.3 Z'/%3E%3Cpath fill='%236cace4' transform='translate(0 -0.5)' d='M0 6.7 C30 3.2 68 2.4 100 4.9 L100 5.7 C68 3.9 30 5.2 0 9.3 Z'/%3E%3C/svg%3E") no-repeat left bottom / 100% 0.36em;
 	}
 
 	.p4-bajada {
 		margin: 0;
 		font-family: var(--fuente-texto);
-		font-size: var(--texto-base);
-		color: color-mix(in srgb, var(--color-texto-sobre-foto) 80%, transparent);
+		font-size: clamp(1.05rem, 0.95rem + 0.5vw, 1.4rem);
+		color: color-mix(in srgb, var(--color-texto-sobre-foto) 88%, transparent);
 	}
 
 	.p4-escenario {
@@ -160,6 +215,8 @@ const keyframesGenerados = rutas
 		padding: 0;
 		list-style: none;
 		min-height: clamp(14rem, 30svh, 20rem);
+		/* fundido al cambiar de ruta con una pastilla (ver el script del final) */
+		transition: opacity 0.16s ease;
 	}
 
 	.p4-ruta {
@@ -176,24 +233,30 @@ const keyframesGenerados = rutas
 	}
 
 	.p4-ruta-nombre {
+		text-shadow: 0 2px 22px rgb(0 0 0 / 0.35);
 		margin: 0;
 		font-family: var(--fuente-display);
 		font-weight: 800;
-		font-size: clamp(2.5rem, 1.2rem + 5vw, 6.5rem);
+		font-size: clamp(2.5rem, 1.2rem + 5vw, 5.7rem); /* tope = lo que mide a 1440px */
 		line-height: 1.02;
 		color: var(--color-texto-sobre-foto);
 	}
 
 	.p4-ruta-bajada {
+		text-shadow: 0 1px 14px rgb(0 0 0 / 0.4);
 		margin: 0;
 		font-family: var(--fuente-texto);
 		font-size: var(--texto-lg);
 		color: color-mix(in srgb, var(--color-texto-sobre-foto) 85%, transparent);
 	}
 
+	/* Selector de rutas: 6 pastillas siempre visibles; la activa (atada al scroll) se enciende. */
 	.p4-indice {
 		display: flex;
-		gap: var(--espacio-xs);
+		flex-wrap: wrap;
+		gap: 0.55rem;
+		padding: 0.3rem;
+		pointer-events: auto;
 	}
 
 	/* === Mobile: bloque más compacto — AJUSTE DEL EJECUTOR sobre el plan (E10), con evidencia: en
@@ -222,11 +285,43 @@ const keyframesGenerados = rutas
 	}
 
 	.p4-punto {
-		width: 0.55rem;
-		height: 0.55rem;
-		border-radius: 50%;
-		background: var(--color-texto-sobre-foto);
-		opacity: 0.35;
+		font-family: var(--fuente-display);
+		font-weight: 700;
+		font-size: 0.85rem;
+		line-height: 1.2;
+		color: #ffffff;
+		background-color: var(--c);
+		border: 1px solid rgb(255 255 255 / 0.7);
+		border-radius: 999px;
+		padding: 0.4rem 0.95rem;
+		cursor: pointer;
+		-webkit-tap-highlight-color: transparent;
+	}
+
+	.p4-punto:hover {
+		filter: brightness(1.2);
+	}
+
+	.p4-punto:focus-visible {
+		outline: 2px solid var(--color-bandera-amarillo);
+		outline-offset: 3px;
+	}
+
+	/* Mobile: solo puntos (el nombre sigue en el aria-label y en el bloque grande). */
+	@media (width < 900px) {
+		.p4-punto {
+			width: 1.7rem;
+			height: 1.7rem;
+			padding: 0;
+		}
+		.p4-punto-texto {
+			position: absolute;
+			width: 1px;
+			height: 1px;
+			overflow: hidden;
+			clip-path: inset(50%);
+			white-space: nowrap;
+		}
 	}
 
 	.p4-cierre {
@@ -239,7 +334,14 @@ const keyframesGenerados = rutas
 	}
 
 	.p4-cierre strong {
-		color: var(--color-verde-vivo);
+		color: var(--color-celeste);
+		font-weight: 700;
+		text-shadow: 0 2px 10px rgb(4 16 31 / 0.7), 0 1px 2px rgb(4 16 31 / 0.6);
+		/* mismo trazo celeste con sombra que el titular; `clone` lo repite en cada línea */
+		padding-bottom: 0.22em;
+		background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 10' preserveAspectRatio='none'%3E%3Cpath fill='%2304101f' fill-opacity='0.7' transform='translate(0 0.9)' d='M0 6.7 C30 3.2 68 2.4 100 4.9 L100 5.7 C68 3.9 30 5.2 0 9.3 Z'/%3E%3Cpath fill='%236cace4' transform='translate(0 -0.5)' d='M0 6.7 C30 3.2 68 2.4 100 4.9 L100 5.7 C68 3.9 30 5.2 0 9.3 Z'/%3E%3C/svg%3E") no-repeat left bottom / 100% 0.3em;
+		-webkit-box-decoration-break: clone;
+		box-decoration-break: clone;
 	}
 
 	@supports (animation-timeline: scroll(root)) {
@@ -339,3 +441,74 @@ const keyframesGenerados = rutas
 		}
 	}
 </style>
+
+<script>
+	// Click en una pastilla de P4: cambia DIRECTO a esa ruta, sin recorrer las intermedias.
+	// Las rutas y el color de fondo están atados al scroll, así que: el contenido se desvanece; una
+	// capa del color ACTUAL se pone sobre el fondo (debajo del celular); el scroll salta al centro de
+	// la sub-meseta de la ruta elegida; y la capa se funde, mostrando el color nuevo sin corte seco.
+	// Se cancela si el usuario mueve la rueda, toca la pantalla o usa el teclado.
+	const seccion = document.getElementById('donde');
+	const escena = document.querySelector<HTMLElement>('.escenario');
+	const lista = document.querySelector<HTMLElement>('.p4-escenario');
+	let cancelar: (() => void) | null = null;
+
+	const posicion = (porcentaje: number) => {
+		if (!seccion) return 0;
+		const arriba = seccion.getBoundingClientRect().top + window.scrollY;
+		return arriba + ((seccion.offsetHeight - window.innerHeight) * porcentaje) / 100;
+	};
+	const saltar = (y: number) => window.scrollTo({ top: y, behavior: 'instant' });
+
+	function cambiarA(centro: number, reducido: boolean) {
+		cancelar?.();
+		if (!escena || !lista || reducido) {
+			saltar(posicion(centro));
+			return;
+		}
+		// Capa = color actual + copia CONGELADA de las fotos (con la opacidad que tienen ahora), puesta justo
+		// antes del celular: queda por encima de fondo y fotos, y por debajo del celular.
+		const capa = document.createElement('div');
+		capa.style.cssText = `position:absolute;inset:0;background:${getComputedStyle(escena).backgroundColor};opacity:1;transition:opacity .45s ease;pointer-events:none;`;
+		const fotos = escena.querySelector<HTMLElement>('.escenario__rutas');
+		if (fotos) {
+			const copia = fotos.cloneNode(true) as HTMLElement;
+			const originales = fotos.querySelectorAll<HTMLElement>('.escenario__ruta');
+			copia.querySelectorAll<HTMLElement>('.escenario__ruta').forEach((f, i) => {
+				f.style.animation = 'none';
+				f.style.opacity = getComputedStyle(originales[i]).opacity;
+			});
+			capa.append(copia);
+		}
+		(escena.querySelector('.escenario__ancla') ?? escena.lastElementChild)?.before(capa);
+		let espera = 0;
+		let id = 0;
+		const parar = () => {
+			clearTimeout(espera);
+			cancelAnimationFrame(id);
+			lista.style.opacity = '';
+			capa.remove();
+			cancelar = null;
+			['wheel', 'touchstart', 'keydown'].forEach((e) => window.removeEventListener(e, parar));
+		};
+		cancelar = parar;
+		['wheel', 'touchstart', 'keydown'].forEach((e) => window.addEventListener(e, parar, { passive: true }));
+
+		lista.style.opacity = '0'; // 1) se desvanece el bloque actual
+		espera = window.setTimeout(() => {
+			saltar(posicion(centro)); // 2) salto directo (el fondo cambia debajo de la capa)
+			id = requestAnimationFrame(() => {
+				lista.style.opacity = ''; // 3) aparece la ruta elegida…
+				capa.style.opacity = '0'; // …y el color viejo se funde al nuevo
+				espera = window.setTimeout(parar, 500);
+			});
+		}, 170);
+	}
+
+	document.querySelectorAll<HTMLButtonElement>('.p4-punto').forEach((boton) => {
+		boton.addEventListener('click', () => {
+			const reducido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+			cambiarA(Number(boton.dataset.centro), reducido);
+		});
+	});
+</script>

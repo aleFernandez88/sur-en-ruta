@@ -243,3 +243,46 @@ export function keyframesGlow(): string {
 	];
 	return construirBloqueKeyframes('escenario-glow', stops);
 }
+
+// ================================================================================================
+// keyframesRutasFoto — opacidad de las 6 fotos de fondo de P4 (`donde`), un keyframes por ruta.
+// ================================================================================================
+
+/**
+ * Cada foto de ruta se funde con la MISMA ventana que `keyframesFondo` usa para el color de esa
+ * ruta (±4svh entre rutas consecutivas; ±15svh en las fronteras con la sección anterior y la
+ * siguiente), así foto y color de fondo cambian juntos por construcción. Salen 6 `@keyframes`
+ * (`escenario-ruta-0` … `escenario-ruta-5`), todos atados a `scroll(root block)`.
+ */
+export function keyframesRutasFoto(): string {
+	const off = offsets();
+	const svhAPct = svhAPctFactory();
+	const idx = off.findIndex((o) => o.id === 'donde');
+	const o = off[idx];
+	const anterior = off[idx - 1];
+	if (!o || !anterior || anterior.fronteraSvh === null || o.fronteraSvh === null) {
+		throw new Error('escenario-keyframes.ts: "donde" necesita una sección anterior y una siguiente.');
+	}
+	const rango = o.pinHastaSvh - o.desdeSvh;
+	const n = rutas.length;
+	const inicioSeccion = anterior.fronteraSvh + 15;
+	const finSeccion = o.fronteraSvh - 15;
+	const inicioRuta = (k: number) => (k === 0 ? inicioSeccion : o.desdeSvh + (k / n) * rango + 4);
+	const finRuta = (k: number) => (k === n - 1 ? finSeccion : o.desdeSvh + ((k + 1) / n) * rango - 4);
+
+	return rutas
+		.map((_, k) => {
+			const entraDesde = k === 0 ? anterior.fronteraSvh! - 15 : finRuta(k - 1);
+			const saleHasta = k === n - 1 ? o.fronteraSvh! + 15 : inicioRuta(k + 1);
+			const stops: Stop[] = [
+				{ pct: 0, props: { opacity: '0' } },
+				{ pct: svhAPct(entraDesde), props: { opacity: '0' } },
+				{ pct: svhAPct(inicioRuta(k)), props: { opacity: '1' } },
+				{ pct: svhAPct(finRuta(k)), props: { opacity: '1' } },
+				{ pct: svhAPct(saleHasta), props: { opacity: '0' } },
+				{ pct: 100, props: { opacity: '0' } },
+			];
+			return construirBloqueKeyframes(`escenario-ruta-${k}`, stops);
+		})
+		.join('\n\n');
+}

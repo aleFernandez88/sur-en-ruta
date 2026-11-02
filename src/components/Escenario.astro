@@ -48,7 +48,8 @@ import fondoEscritorio from '../assets/fondos/p1-escritorio.webp';
 import fondoMovil from '../assets/fondos/p1-movil.webp';
 import Icono from './Icono.astro';
 import tokensCss from '../styles/tokens.css?raw';
-import { keyframesFondo, keyframesGlow, keyframesTelefono, parsearTokens } from '../lib/escenario-keyframes.ts';
+import { keyframesFondo, keyframesGlow, keyframesRutasFoto, keyframesTelefono, parsearTokens } from '../lib/escenario-keyframes.ts';
+import { rutas } from '../data/rutas.ts';
 
 // Fondo de P1 con dirección de arte: recorte apaisado en pantallas anchas, la foto vertical en retrato.
 const imgEscritorio = await getImage({ src: fondoEscritorio, format: 'webp', widths: [1280, 1920, 2560] });
@@ -61,7 +62,18 @@ const keyframes = [
 	keyframesTelefono('movil'),
 	keyframesFondo(tokens),
 	keyframesGlow(),
+	keyframesRutasFoto(),
 ].join('\n\n');
+
+// === Fotos de fondo de P4 (una por ruta, mismo orden que `rutas.ts`) ===
+// ⚠ PROVISORIO — D2 SIN RESOLVER. Son las 6 imágenes del demo (`public/app-demo/rutas/`, 720 px de
+// ancho): 2 generadas con IA y 4 SIN autor ni licencia registrada. Sirven para ver la composición;
+// NO se pueden publicar así. Antes del deploy: reemplazar por fotos con licencia (≥1920 px), registrar
+// la fuente y recién ahí pasar el campo `foto` de `rutas.ts`. Ver CLAUDE.md §6 y el plan del 2026-09-04 (D2).
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+const FOTOS_RUTA = ['vino', 'oceanica', 'termal', 'rural', 'patrimonial', 'naturaleza'].map(
+	(n) => `${base}/app-demo/rutas/${n}.webp`,
+);
 
 // === Banda inferior con la onda (D-F de §11.3, Bloque E, E12) ===
 // Misma fórmula de onda que usaba la lámina del mazo viejo (BASE + AMP·sin), a escala menor:
@@ -104,6 +116,16 @@ bandaD += ` L 100 ${BANDA_ALTO} L 0 ${BANDA_ALTO} Z`;
 				/>
 			</picture>
 		</div>
+	</div>
+	<!-- Fotos de las rutas de P4: entre el fondo y el celular (el celular siempre queda encima). -->
+	<div class="escenario__rutas">
+		{
+			rutas.map((r, i) => (
+				<figure class={`escenario__ruta escenario__ruta--${i}`} style={`--ruta: ${r.colorTrazo}`}>
+					<img src={FOTOS_RUTA[i]} alt="" decoding="async" />
+				</figure>
+			))
+		}
 	</div>
 	<div class="escenario__ancla">
 		<div class="escenario__entrada">
@@ -273,6 +295,73 @@ bandaD += ` L 100 ${BANDA_ALTO} L 0 ${BANDA_ALTO} Z`;
 
 	/* `100svh`, NO `inset:0`: en iOS un `fixed` con `inset:0` cambia de alto cuando se esconde la
 	 * barra de URL, y el celular cambiaría de tamaño en pleno scroll. */
+	/* === Fotos de ruta de P4 ===
+	 * Cada foto lleva un velo del color de SU ruta (mantiene la identidad y da contraste al texto, que va a
+	 * la izquierda): opaco a la izquierda, casi transparente hacia el celular. La opacidad de cada una se
+	 * anima sobre `scroll(root block)` con la misma ventana que el color de fondo (keyframesRutasFoto). */
+	.escenario__rutas {
+		position: absolute;
+		inset: 0;
+	}
+
+	.escenario__ruta {
+		position: absolute;
+		inset: 0;
+		margin: 0;
+		opacity: 0;
+		overflow: hidden;
+	}
+
+	.escenario__ruta img {
+		display: block;
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+	}
+
+	/* El velo está anclado al MARCO de composición (`--marco-max`, 1440px), no al ancho de la pantalla:
+	 * `--l` es el margen izquierdo que sobra en monitores anchos. Dentro del marco, el velo es denso
+	 * donde va el texto (≈ primeros 650px) y se desvanece rápido: del 62% del marco en adelante la
+	 * foto se ve casi sin tinte (la zona del celular). */
+	.escenario__ruta::after {
+		--l: max(0px, calc((100% - var(--marco-max)) / 2));
+		content: '';
+		position: absolute;
+		inset: 0;
+		background:
+			linear-gradient(180deg, transparent 70%, rgb(5 11 20 / 0.5) 100%),
+			linear-gradient(
+				100deg,
+				color-mix(in srgb, var(--ruta) 92%, #000) 0%,
+				color-mix(in srgb, var(--ruta) 92%, #000) var(--l),
+				color-mix(in srgb, var(--ruta) 78%, transparent) calc(var(--l) + 360px),
+				color-mix(in srgb, var(--ruta) 45%, transparent) calc(var(--l) + 648px),
+				color-mix(in srgb, var(--ruta) 12%, transparent) calc(var(--l) + 893px),
+				color-mix(in srgb, var(--ruta) 6%, transparent) 100%
+			);
+	}
+
+	@media (width < 900px) {
+		.escenario__ruta::after {
+			/* En móvil el texto va ARRIBA y el celular abajo: el velo es vertical. */
+			background: linear-gradient(
+				180deg,
+				color-mix(in srgb, var(--ruta) 94%, #000) 0%,
+				color-mix(in srgb, var(--ruta) 70%, transparent) 45%,
+				color-mix(in srgb, var(--ruta) 28%, transparent) 100%
+			);
+		}
+	}
+
+	@supports (animation-timeline: scroll(root)) {
+		.escenario__ruta--0 { animation: escenario-ruta-0 linear both; animation-timeline: scroll(root block); }
+		.escenario__ruta--1 { animation: escenario-ruta-1 linear both; animation-timeline: scroll(root block); }
+		.escenario__ruta--2 { animation: escenario-ruta-2 linear both; animation-timeline: scroll(root block); }
+		.escenario__ruta--3 { animation: escenario-ruta-3 linear both; animation-timeline: scroll(root block); }
+		.escenario__ruta--4 { animation: escenario-ruta-4 linear both; animation-timeline: scroll(root block); }
+		.escenario__ruta--5 { animation: escenario-ruta-5 linear both; animation-timeline: scroll(root block); }
+	}
+
 	.escenario__ancla {
 		position: absolute;
 		left: 0;

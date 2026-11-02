@@ -202,7 +202,8 @@ export const TELEFONO: Record<string, { escritorio: EstadoTelefono; movil: Estad
 		movil: { x: 0, y: 40, escala: 0.72 },
 	},
 	donde: {
-		escritorio: { x: 25, y: 2, escala: 0.9 },
+		// 360 = 25% de --marco-max (1440px): en monitores anchos el celular no se aleja del texto.
+		escritorio: { x: 25, xMaxPx: 360, y: 2, escala: 0.9 },
 		movil: { x: 0, y: 34, escala: 0.8 },
 	},
 	cierre: {

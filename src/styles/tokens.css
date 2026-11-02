@@ -142,7 +142,9 @@
   --color-ruta-vino: #7a3540;
   --color-ruta-oceanica: #2f5d78;
   --color-ruta-termal: #bf6b3a;
-  --color-ruta-rural: #6b7d3a;
+  /* Rural: verde Pradera profundo (2026-11-02; antes oliva #6b7d3a, retirado de la identidad). Más
+   * amarillento que Naturaleza (#3d7a5c, verde azulado) para que no se confundan. */
+  --color-ruta-rural: #4a8f35;
   --color-ruta-patrimonial: #75607f;
   --color-ruta-naturaleza: #3d7a5c;
 
