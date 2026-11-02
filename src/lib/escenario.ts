@@ -176,7 +176,8 @@ export const TELEFONO: Record<string, { escritorio: EstadoTelefono; movil: Estad
 		movil: { x: 0, y: 30, escala: 0.88 },
 	},
 	'que-hace': {
-		escritorio: { x: 27, y: 2, escala: 0.86 },
+		// 389 = 27% de --marco-max (1440px).
+		escritorio: { x: 27, xMaxPx: 389, y: 2, escala: 0.86 },
 		// y: 40 → 44 (E8 del plan, mobile, ajuste explícitamente autorizado: "si C2 falla porque
 		// las 3 tarjetas no entran arriba del celular, primero se sube y ... hasta 44%"). Verificado
 		// con el verificador contra 390×844 y 369×698: seguía sin alcanzar, así que además se aplicó
@@ -198,7 +199,8 @@ export const TELEFONO: Record<string, { escritorio: EstadoTelefono; movil: Estad
 		movil: { x: 0, y: 58, escala: 0.72 },
 	},
 	'como-lo-hace': {
-		escritorio: { x: -25, y: 2, escala: 0.84 },
+		// 360 = 25% de --marco-max (1440px); negativo = el celular va a la izquierda.
+		escritorio: { x: -25, xMaxPx: 360, y: 2, escala: 0.84 },
 		movil: { x: 0, y: 40, escala: 0.72 },
 	},
 	donde: {

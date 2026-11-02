@@ -304,23 +304,28 @@ const POSICION = [
 	/* === Escritorio: composición absoluta (referencia 1536×695) === */
 	@media (width >= 900px) {
 		.p2-contenido {
-			--r: min(50svh, 400px, 25vw);
-			--ts: min(280px, 17vw);
-			--rx: calc(2.6vw + var(--ts) + var(--r) * 0.1 + 8px);
+			/* Marco de composición (`--marco-max`, 1440px, como P1/P4): la composición se diseñó con vw; `--vw` es
+			 * 1vw con tope (1440/100 = 14,4px), así que en monitores anchos no se estira, y la caja se centra con
+			 * el margen que sobra. A ≤1440 todo da exactamente lo mismo que antes. */
+			--vw: min(1vw, calc(var(--marco-max) / 100));
+			--r: min(50svh, 400px, calc(25 * var(--vw)));
+			--ts: min(280px, calc(17 * var(--vw)));
+			--rx: calc(2.6 * var(--vw) + var(--ts) + var(--r) * 0.1 + 8px);
 			--ry: 32svh;
 			position: absolute;
-			inset: 0;
+			inset-block: 0;
+			inset-inline: max(0px, calc((100% - var(--marco-max)) / 2));
 			display: block;
 			padding: 0;
 		}
 
 		.p2::before {
-			background: radial-gradient(circle at 36% 62%, color-mix(in srgb, var(--color-celeste) 38%, transparent) 0%, transparent 52%);
+			background: radial-gradient(circle at calc(max(0px, (100% - var(--marco-max)) / 2) + min(36%, 518px)) 62%, color-mix(in srgb, var(--color-celeste) 38%, transparent) 0%, transparent 52%);
 		}
 
 		.p2-titular {
 			position: absolute;
-			left: 6.25vw;
+			left: calc(6.25 * var(--vw));
 			top: clamp(24px, 7.5svh, 52px);
 		}
 
@@ -329,7 +334,7 @@ const POSICION = [
 		}
 
 		.p2-t2 {
-			font-size: clamp(36px, min(10.5svh, 4.6vw), 72px);
+			font-size: clamp(36px, min(10.5svh, calc(4.6 * var(--vw))), 72px);
 		}
 
 		.p2-orbita {
@@ -404,7 +409,7 @@ const POSICION = [
 
 		/* Territorios: a la izquierda de su medallón, alineado a la derecha. */
 		.p2-bloque--2 {
-			left: 2.6vw;
+			left: calc(2.6 * var(--vw));
 			top: calc(var(--ry) + var(--r) * 0.62);
 			width: var(--ts);
 			text-align: right;

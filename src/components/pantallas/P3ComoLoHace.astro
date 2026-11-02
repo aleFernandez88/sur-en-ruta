@@ -235,9 +235,20 @@ const keyframesPasos =
 		align-content: center;
 	}
 
+	/* Marco de composición (como P1/P4, ver `--marco-max` en tokens.css): en pantallas más anchas que 1440 el
+	 * padding lateral crece, y los anchos en vw tienen tope en lo que miden a 1440. */
+	@media (width >= 900px) {
+		.p3 {
+			padding-inline: max(
+				clamp(1.25rem, 4vw, 4rem),
+				calc((100% - var(--marco-max)) / 2 + clamp(1.25rem, 4vw, 4rem))
+			);
+		}
+	}
+
 	.p3-caja {
 		display: grid;
-		margin-left: 40vw;
+		margin-left: min(40vw, calc(var(--marco-max) * 0.4));
 	}
 
 	@media (width < 900px) {
@@ -269,7 +280,7 @@ const keyframesPasos =
 		margin: 0;
 		font-family: var(--fuente-display);
 		font-weight: 200;
-		font-size: clamp(2rem, 1.2rem + 3vw, 3.8rem);
+		font-size: clamp(2rem, 1.2rem + 3vw, 3.3rem);
 		line-height: 1.05;
 		max-width: 22ch;
 		color: var(--color-texto-sobre-foto);
@@ -311,14 +322,14 @@ const keyframesPasos =
 
 	/* Alto fijo + ancho automático por la proporción del viewBox. */
 	.p3-slide-obj :global(svg) {
-		height: min(40svh, 26vw);
+		height: min(40svh, 26vw, 374px);
 		width: auto;
 		overflow: visible;
 		filter: drop-shadow(0 12px 18px rgb(0 0 0 / 0.45));
 	}
 
 	.p3-slide-obj .p3-flecha {
-		height: min(16svh, 11vw);
+		height: min(16svh, 11vw, 158px);
 		color: var(--c);
 		filter: none;
 	}
@@ -414,7 +425,7 @@ const keyframesPasos =
 
 	/* Sello: 40% más chico que el resto de las ilustraciones (pedido de Ale, 2026-11-02). */
 	.p3-slide--sello .p3-slide-obj :global(svg) {
-		height: min(24svh, 15.6vw);
+		height: min(24svh, 15.6vw, 225px);
 	}
 
 	.p3-beat-a-cierre {

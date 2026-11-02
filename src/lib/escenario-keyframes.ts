@@ -136,7 +136,12 @@ export function keyframesTelefono(modo: 'escritorio' | 'movil'): string {
 		const rotHasta = 0;
 
 		const propsBase = {
-			'--tel-x': estado.xMaxPx === undefined ? `${estado.x}%` : `min(${estado.x}%, ${estado.xMaxPx}px)`,
+			'--tel-x':
+				estado.xMaxPx === undefined
+					? `${estado.x}%`
+					: estado.x >= 0
+						? `min(${estado.x}%, ${estado.xMaxPx}px)`
+						: `max(${estado.x}%, -${estado.xMaxPx}px)`, // x < 0: el tope es el MÁS CERCANO a 0
 			'--tel-y': `${estado.y}%`,
 			'--tel-escala': `${estado.escala}`,
 		};
