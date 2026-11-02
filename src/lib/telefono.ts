@@ -33,6 +33,7 @@
  *     el pin 1 de la sección anterior). Ahora esas dos secciones piden `pin: 0` explícito.
  */
 import { offsets, type Offset } from './escenario.ts';
+import { B_FIN, FRONTERAS, pasoActivo } from './p3-pasos.ts';
 
 export interface EstadoDemo {
 	pantalla: 'mapa' | 'rutas' | 'perfil';
@@ -85,17 +86,19 @@ function estadoParaSeccion(id: string, local: number): EstadoDemo {
 			};
 
 		case 'como-lo-hace': {
-			// Beat A (local < 0.35): las 4 herramientas + el cierre del beat, sección todavía en
-			// su estado de reposo. Beat B (el resto): 5 pasos del carril, uno por 1/5 de `b`.
-			if (local < 0.35) return { pantalla: 'mapa', scroll: 0, pin: 0, ficha: 'colapsada', animar: true };
-			const b = Math.min(1, (local - 0.35) / 0.6);
-			if (b < 0.2) return { pantalla: 'mapa', scroll: 0, pin: 0, ficha: 'colapsada', animar: true };
-			if (b < 0.4) return { pantalla: 'mapa', scroll: 0, pin: 0, ficha: 'expandida', animar: true };
-			if (b < 0.6) return { pantalla: 'rutas', scroll: 0, pin: null, ficha: 'colapsada', animar: true };
-			if (b < 0.8) return { pantalla: 'perfil', scroll: 0, pin: null, ficha: 'colapsada', animar: true };
+			// Beat A (4 herramientas): el demo en reposo. Beat B: UNA pantalla por paso, cambiando en el MISMO
+			// punto de scroll que las láminas de P3 (`p3-pasos.ts` es la fuente única de esos tramos):
+			//   1 Encontrá puntos y rutas → mapa · 2 Planificá tu recorrido → ficha del punto expandida ·
+			//   3 Accedé a servicios → rutas · 4 Sumá sellos → perfil · 5 Viajá responsable → perfil con scroll.
+			const paso = pasoActivo(local * 100);
+			if (paso <= 0) return { pantalla: 'mapa', scroll: 0, pin: 0, ficha: 'colapsada', animar: true };
+			if (paso === 1) return { pantalla: 'mapa', scroll: 0, pin: 0, ficha: 'expandida', animar: true };
+			if (paso === 2) return { pantalla: 'rutas', scroll: 0, pin: null, ficha: 'colapsada', animar: true };
+			if (paso === 3) return { pantalla: 'perfil', scroll: 0, pin: null, ficha: 'colapsada', animar: true };
+			const ultimo = FRONTERAS[4];
 			return {
 				pantalla: 'perfil',
-				scroll: (b - 0.8) / 0.2,
+				scroll: Math.min(1, Math.max(0, (local * 100 - ultimo) / (B_FIN - ultimo))),
 				pin: null,
 				ficha: 'colapsada',
 				animar: true,

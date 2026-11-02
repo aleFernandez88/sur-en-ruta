@@ -40,6 +40,7 @@ import IlusSenaletica from '../ilustraciones/IlusSenaletica.astro';
 import { herramientas } from '../../data/herramientas.ts';
 import { conMarca } from '../../lib/marca.ts';
 import { pasos } from '../../data/pasos.ts';
+import { B_INICIO, CENTROS, CRUCE, FRONTERAS } from '../../lib/p3-pasos.ts';
 
 // Tramo de scroll (rango `contain`, relativo al pin de ESTA sección) de cada herramienta del Beat A,
 // en el orden de `herramientas`: App · Pasaporte · Sello · Señalética. Los cruces entre láminas
@@ -67,6 +68,68 @@ const CORTOS = ['App', 'Pasaporte', 'Sello', 'Señalética'];
 // App, la palabra «App» pasa a un peso liviano para que el protagonista sea «SUR EN RUTA».
 const nombreHtml = (nombre: string) =>
 	conMarca(nombre).replace(/^App /, '<span class="p3-app">App</span> ');
+// === Beat B: los 5 pasos, UNO A UNO (2026-11-02) ===
+// Tramos de `p3-pasos.ts` (fuente única, la comparte `telefono.ts` para que el celular cambie de pantalla
+// en el mismo punto). Cada lámina k vive de `FRONTERAS[k] − CRUCE/2` a `FRONTERAS[k+1] + CRUCE/2`: el
+// cruce con la vecina es el MISMO tramo para las dos, así que la suma de opacidades da 1 (sin bache).
+const N = pasos.length;
+const ini = (k: number) => (k === 0 ? B_INICIO : FRONTERAS[k] - CRUCE / 2);
+const fin = (k: number) => (k === N - 1 ? 100 : FRONTERAS[k + 1] + CRUCE / 2);
+const RANGOS_B = pasos.map((_, k) => `contain ${ini(k).toFixed(2)}% contain ${fin(k).toFixed(2)}%`);
+const relLamina = (k: number, x: number) => (((x - ini(k)) / (fin(k) - ini(k))) * 100).toFixed(2);
+const relB = (x: number) => (((x - B_INICIO) / (100 - B_INICIO)) * 100).toFixed(2);
+
+const VISIBLE = 'opacity: 1; transform: none;';
+const ENTRA = 'opacity: 0; transform: translateY(1.5rem);';
+const SALE = 'opacity: 0; transform: translateY(-1.5rem);';
+function keyframesLamina(k: number): string {
+	const stops: string[] = [];
+	stops.push(k === 0 ? `0% { ${VISIBLE} }` : `0% { ${ENTRA} }`);
+	if (k > 0) stops.push(`${relLamina(k, FRONTERAS[k] + CRUCE / 2)}% { ${VISIBLE} }`);
+	if (k < N - 1) {
+		stops.push(`${relLamina(k, FRONTERAS[k + 1] - CRUCE / 2)}% { ${VISIBLE} }`);
+		stops.push(`100% { ${SALE} }`);
+	} else {
+		stops.push(`100% { ${VISIBLE} }`);
+	}
+	return `@keyframes p3b-lamina-${k} {\n  ${stops.join('\n  ')}\n}`;
+}
+
+// Nodos del camino (01-05): futuro (anillo) → activo (relleno Primavera, halo) → hecho (relleno Pradera).
+const NODO_FUTURO =
+	'transform: scale(1); background-color: #14304d; color: #ffffff; box-shadow: 0 0 0 0 transparent;';
+const NODO_ACTIVO =
+	'transform: scale(1.5); background-color: #8cc84b; color: #0b1d36; box-shadow: 0 0 0 4px rgb(140 200 75 / 0.32);';
+const NODO_HECHO =
+	'transform: scale(1); background-color: #3d8f33; color: #ffffff; box-shadow: 0 0 0 0 transparent;';
+function keyframesNodo(k: number): string {
+	const stops: string[] = [];
+	if (k === 0) stops.push(`0% { ${NODO_ACTIVO} }`);
+	else {
+		stops.push(`0% { ${NODO_FUTURO} }`);
+		stops.push(`${relB(FRONTERAS[k] - CRUCE / 2)}% { ${NODO_FUTURO} }`);
+		stops.push(`${relB(FRONTERAS[k] + CRUCE / 2)}% { ${NODO_ACTIVO} }`);
+	}
+	if (k < N - 1) {
+		stops.push(`${relB(FRONTERAS[k + 1] - CRUCE / 2)}% { ${NODO_ACTIVO} }`);
+		stops.push(`${relB(FRONTERAS[k + 1] + CRUCE / 2)}% { ${NODO_HECHO} }`);
+		stops.push(`100% { ${NODO_HECHO} }`);
+	} else {
+		stops.push(`100% { ${NODO_ACTIVO} }`);
+	}
+	return `@keyframes p3b-nodo-${k} {\n  ${stops.join('\n  ')}\n}`;
+}
+
+// La línea verde de avance une los nodos: llega al nodo k justo cuando ese paso se activa (en `FRONTERAS[k]`,
+// el centro del cruce), así que va de la frontera del paso 1 a la del paso N (los pasos son parejos, el
+// avance es lineal). Antes terminaba en el centro del último tramo y el nodo 05 se encendía sin línea.
+const RANGO_LINEA = `contain ${FRONTERAS[0]}% contain ${FRONTERAS[N - 1]}%`;
+
+// El `animation-range` de un pseudo-elemento no se puede poner en línea: va en una regla global con el literal.
+const keyframesPasos =
+	pasos.map((_, k) => `${keyframesLamina(k)}\n\n${keyframesNodo(k)}`).join('\n\n') +
+	// 3 clases: la regla con scope usa el shorthand `animation`, que resetearía el rango si ésta tuviera menos peso.
+	`\n\n.p3-camino.p3-camino.p3-camino::after { animation-range: ${RANGO_LINEA}; }`;
 ---
 
 <Seccion id="como-lo-hace">
@@ -121,26 +184,41 @@ const nombreHtml = (nombre: string) =>
 				<p class="p3-beat-a-cierre">Tecnología, comunidad y comunicación al servicio del viaje.</p>
 			</div>
 
-			<!-- Beat B — 5 pasos -->
+			<!-- Beat B — 5 pasos, uno a uno; el celular cambia de pantalla con cada paso -->
 			<div class="p3-beat-b">
-				<p class="p3-subtitulo">Una experiencia simple, organizada y conectada.</p>
-				<div class="p3-carril">
-					<div class="p3-carril-fila">
-						{
-							pasos.map((p, k) => (
-								<div class="p3-paso">
-									<span class="p3-paso-numeral" aria-hidden="true">
-										{String(k + 1).padStart(2, '0')}
-									</span>
-									<span class="p3-paso-icono">
-										<Icono nombre={p.icono} tamano={34} acento="var(--color-verde)" />
-									</span>
+				<p class="p3-subtitulo">Una experiencia simple, organizada y <span class="realce">conectada</span>.</p>
+				<ol class="p3-camino" style={`--rango-linea: ${RANGO_LINEA}`}>
+					{
+						pasos.map((p, k) => (
+							<li>
+								<button
+									type="button"
+									class={`p3-nodo p3-nodo--${k}`}
+									data-centro={CENTROS[k]}
+									aria-label={`Paso ${k + 1}: ${p.titulo}`}
+									style={`animation-range: contain ${B_INICIO}% contain 100%`}
+								>
+									{String(k + 1).padStart(2, '0')}
+								</button>
+							</li>
+						))
+					}
+				</ol>
+				<div class="p3-pasos">
+					{
+						pasos.map((p, k) => (
+							<div class={`p3-paso p3-paso--${k}`} style={`animation-range: ${RANGOS_B[k]}`}>
+								<span class="p3-paso-icono" aria-hidden="true">
+									<Icono nombre={p.icono} tamano={48} acento="var(--color-verde-vivo)" />
+								</span>
+								<div class="p3-paso-texto">
+									<span class="p3-paso-etq">Paso {String(k + 1).padStart(2, '0')}</span>
 									<h3 class="p3-paso-titulo">{p.titulo}</h3>
 									<p class="p3-paso-frase">{p.frase}</p>
 								</div>
-							))
-						}
-					</div>
+							</div>
+						))
+					}
 				</div>
 				<p class="p3-beat-b-cierre">
 					Una red que <strong>organiza el viaje</strong> y <strong>potencia los destinos</strong>.
@@ -149,6 +227,8 @@ const nombreHtml = (nombre: string) =>
 		</div>
 	</div>
 </Seccion>
+
+<style is:global set:html={keyframesPasos} />
 
 <style>
 	.p3 {
@@ -180,6 +260,8 @@ const nombreHtml = (nombre: string) =>
 	/* Beat B está después en el DOM (= encima): sin esto taparía los chips del Beat A. */
 	.p3-beat-b {
 		pointer-events: none;
+		/* los 5 pasos son más bajos que el Beat A: se centran en la caja en vez de pegarse arriba */
+		align-self: center;
 	}
 
 	/* === Beat A — 4 herramientas, UNA A LA VEZ === */
@@ -581,119 +663,200 @@ const nombreHtml = (nombre: string) =>
 			animation: none !important;
 			opacity: 1;
 		}
-		.p3-carril-fila {
+		/* Sin movimiento: se muestra solo el ÚLTIMO paso (el estado final) y se oculta el camino. */
+		.p3-paso,
+		.p3-nodo,
+		.p3-camino::after {
 			animation: none !important;
-			/* AJUSTE DEL EJECUTOR (E13): mismo valor que el "to" de @keyframes p3-carril-escritorio
-			 * (ver ese comentario) — -70vw → -80vw. */
-			transform: translateX(-80vw);
+		}
+		.p3-paso:not(:last-child) {
+			display: none;
+		}
+		.p3-paso:last-child {
+			opacity: 1;
+		}
+		.p3-camino {
+			display: none;
 		}
 	}
 
-	@media (prefers-reduced-motion: reduce) and (width < 900px) {
-		.p3-carril-fila {
-			/* AJUSTE DEL EJECUTOR (E13): mismo valor que el "to" de @keyframes p3-carril-movil (ver
-			 * ese comentario) — -308vw → -328vw. */
-			transform: translateX(-328vw);
-		}
-	}
-
-	/* === Beat B — 5 pasos === */
+	/* === Beat B — 5 pasos, UNO A UNO ===
+	 * Camino de 5 nodos (01-05) con una línea punteada y una línea verde de avance; debajo, el paso activo
+	 * (ícono grande, «Paso 0N», título y frase). Las láminas comparten celda (grid-area 1/1). Los nodos son
+	 * botones: click = cambio directo a ese paso (ver el script del final). */
 	.p3-subtitulo {
 		margin: 0;
 		font-family: var(--fuente-display);
-		font-weight: 500;
-		font-size: clamp(1.15rem, 1rem + 0.6vw, 1.5rem);
+		font-weight: 200;
+		font-size: clamp(1.5rem, 1rem + 1.8vw, 2.7rem);
+		line-height: 1.1;
+		max-width: 24ch;
 		color: var(--color-texto-sobre-foto);
 	}
 
-	.p3-carril {
-		overflow: clip;
-		/* AJUSTE DEL EJECUTOR sobre el plan (E13), con evidencia: 56vw → 46vw. El gate visual
-		 * encontró que `.p3-caja` (`margin-left: 40vw` + el ancho de ESTE carril, que fija el ancho
-		 * de la columna compartida con Beat A vía `grid-area: 1/1`) desbordaba el viewport en
-		 * 1440×900: medido con Puppeteer, el borde derecho de `.p3-caja` caía en 1504px contra un
-		 * viewport de 1440px — las tarjetas "Pasaporte de Ruta" y "Señalética e identidad" quedaban
-		 * cortadas contra el borde real de la pantalla (no lo detecta C2: ese chequeo mide
-		 * solapamiento entre nodos de texto o contra el celular/banda, no desborde contra el
-		 * viewport — ver el comentario de arriba sobre el mismo punto ciego). 40vw + 46vw = 86vw,
-		 * dentro del `calc()` real de `.seccion__caja` (ya sin barra lateral: el ancho
-		 * disponible es mayor que los ≈87,6vw medidos en 1440px cuando existía HiloRuta). Cambia también cuántos pasos se ven a la vez en el
-		 * carril — ver el ajuste espejado en los `translateX` de abajo.
-		 */
-		width: 46vw;
+	.p3-subtitulo .realce {
+		font-weight: 800;
 	}
 
-	@media (width < 900px) {
-		.p3-carril {
-			/* AJUSTE DEL EJECUTOR sobre el plan (E13), con evidencia: 88vw → 68vw. Mismo hallazgo que
-			 * arriba pero en mobile (390×844/369×698): sin `margin-left` acá, pero la columna
-			 * disponible real hoy es ≈73vw (no 100vw) porque entonces `--ancho-hilo-ruta` todavía
-			 * reservaba su ancho en mobile. HiloRuta ya se retiró: este valor queda con aire de sobra y
-			 * puede ensancharse si hace falta.
-			 */
-			width: 68vw;
-		}
-	}
-
-	.p3-carril-fila {
+	.p3-camino {
+		position: relative;
+		list-style: none;
+		margin: clamp(0.5rem, 2svh, 1.25rem) 0 0;
+		padding: 0.4rem 0;
+		width: min(46vw, 36rem);
 		display: flex;
-		gap: 2vw;
+		justify-content: space-between;
 	}
 
-	@media (width < 900px) {
-		.p3-carril-fila {
-			gap: 4vw;
-		}
+	/* línea punteada de fondo */
+	.p3-camino::before {
+		content: '';
+		position: absolute;
+		left: 1.3rem;
+		right: 1.3rem;
+		top: 50%;
+		border-top: 2px dotted rgb(255 255 255 / 0.55);
+	}
+
+	/* línea verde de avance (crece con el scroll) */
+	.p3-camino::after {
+		content: '';
+		position: absolute;
+		left: 1.3rem;
+		right: 1.3rem;
+		top: 50%;
+		margin-top: -1px;
+		border-top: 4px solid #8cc84b;
+		transform-origin: left center;
+		transform: scaleX(1);
+	}
+
+	.p3-camino li {
+		position: relative;
+		z-index: 1;
+	}
+
+	.p3-nodo {
+		display: grid;
+		place-items: center;
+		width: 2.7rem;
+		height: 2.7rem;
+		border-radius: 50%;
+		border: 2px solid rgb(255 255 255 / 0.85);
+		font-family: var(--fuente-display);
+		font-weight: 800;
+		font-size: 0.95rem;
+		color: #ffffff;
+		background-color: #3d8f33;
+		cursor: pointer;
+		-webkit-tap-highlight-color: transparent;
+	}
+
+	.p3-nodo:hover {
+		filter: brightness(1.2);
+	}
+
+	.p3-nodo:focus-visible {
+		outline: 2px solid var(--color-bandera-amarillo);
+		outline-offset: 4px;
+	}
+
+	.p3-pasos {
+		display: grid;
+		margin-top: clamp(1rem, 4svh, 2.5rem);
+		min-height: clamp(11rem, 28svh, 17rem);
+		/* fundido al cambiar de paso con un nodo (ver el script del final) */
+		transition: opacity 0.16s ease;
 	}
 
 	.p3-paso {
-		flex: 0 0 24vw;
-		display: flex;
-		flex-direction: column;
+		grid-area: 1 / 1;
+		display: grid;
+		grid-template-columns: auto minmax(0, 1fr);
 		align-items: center;
-		gap: clamp(0.4rem, 1.2vh, 0.65rem);
-		padding: clamp(1rem, 2.2vw, 1.6rem) clamp(0.85rem, 1.8vw, 1.25rem);
-		background: var(--color-superficie);
-		border-radius: clamp(0.9rem, 1.8vw, 1.5rem);
-		box-shadow: 0 14px 28px -16px rgba(15, 43, 77, 0.22);
-		text-align: center;
-	}
-
-	@media (width < 900px) {
-		.p3-paso {
-			flex-basis: 76vw;
-		}
-	}
-
-	.p3-paso-numeral {
-		font-family: var(--fuente-display);
-		font-weight: 800;
-		font-size: clamp(2.5rem, 2rem + 2vw, 4rem);
-		line-height: 1;
-		-webkit-text-stroke: 1.5px var(--color-arena);
-		color: transparent;
+		gap: clamp(1rem, 2.4vw, 2rem);
 	}
 
 	.p3-paso-icono {
-		color: var(--color-marino);
+		display: grid;
+		place-items: center;
+		width: clamp(5rem, 9vw, 7.5rem);
+		aspect-ratio: 1;
+		border-radius: 50%;
+		border: 3px solid #ffffff;
+		background: rgb(255 255 255 / 0.08);
+		color: #ffffff;
+	}
+
+	.p3-paso-icono :global(svg) {
+		width: 52%;
+		height: 52%;
+	}
+
+	.p3-paso-texto {
+		display: flex;
+		flex-direction: column;
+		gap: 0.4rem;
+		min-width: 0;
+	}
+
+	.p3-paso-etq {
+		font-family: var(--fuente-display);
+		font-weight: 600;
+		font-size: 0.8rem;
+		letter-spacing: 0.16em;
+		text-transform: uppercase;
+		color: var(--color-verde-vivo);
 	}
 
 	.p3-paso-titulo {
 		margin: 0;
-		font-family: var(--fuente-texto);
-		font-weight: 700;
-		font-size: clamp(0.95rem, 0.85rem + 0.4vw, 1.15rem);
-		line-height: 1.25;
-		color: var(--color-marino);
+		font-family: var(--fuente-display);
+		font-weight: 800;
+		font-size: clamp(1.7rem, 1rem + 2vw, 3rem);
+		line-height: 1.02;
+		color: #ffffff;
 	}
 
 	.p3-paso-frase {
 		margin: 0;
 		font-family: var(--fuente-texto);
-		font-weight: 400;
-		font-size: clamp(0.8rem, 0.75rem + 0.2vw, 0.9rem);
-		line-height: 1.35;
-		color: var(--color-tinta-suave);
+		font-size: clamp(1.05rem, 0.9rem + 0.5vw, 1.4rem);
+		line-height: 1.3;
+		max-width: 28ch;
+		color: rgb(255 255 255 / 0.9);
+	}
+
+	@media (width < 900px) {
+		.p3-camino {
+			width: min(100%, 26rem);
+		}
+		.p3-nodo {
+			width: 2.2rem;
+			height: 2.2rem;
+			font-size: 0.8rem;
+		}
+		.p3-camino::before,
+		.p3-camino::after {
+			left: 1.1rem;
+			right: 1.1rem;
+		}
+		.p3-pasos {
+			margin-top: 0.6rem;
+			min-height: 8rem;
+		}
+		.p3-paso {
+			gap: 0.9rem;
+		}
+		.p3-paso-icono {
+			width: clamp(3.6rem, 17vw, 4.8rem);
+		}
+		.p3-paso-titulo {
+			font-size: clamp(1.3rem, 1rem + 1.6vw, 1.8rem);
+		}
+		.p3-paso-frase {
+			font-size: 0.95rem;
+		}
 	}
 
 	.p3-beat-b-cierre {
@@ -709,32 +872,6 @@ const nombreHtml = (nombre: string) =>
 		color: var(--color-verde-vivo);
 	}
 
-	@keyframes p3-carril-escritorio {
-		from {
-			transform: translateX(0);
-		}
-		to {
-			/* AJUSTE DEL EJECUTOR (E13): -70vw → -80vw, espejo del cambio de `.p3-carril` de 56vw a
-			 * 46vw. Fila de 5 tarjetas de 24vw + 4 huecos de 2vw = 128vw; ventana de 46vw; recorrido
-			 * hasta el borde = 128-46 = 82vw, menos 2vw (mismo margen que dejaba el valor viejo:
-			 * 128-56=72 contra el -70 real) = 80vw. */
-			transform: translateX(-80vw);
-		}
-	}
-
-	@keyframes p3-carril-movil {
-		from {
-			transform: translateX(0);
-		}
-		to {
-			/* AJUSTE DEL EJECUTOR (E13): -308vw → -328vw, espejo del cambio de `.p3-carril` mobile de
-			 * 88vw a 68vw. Fila de 5 tarjetas de 76vw + 4 huecos de 4vw = 396vw; ventana de 68vw;
-			 * recorrido exacto hasta el borde = 396-68 = 328vw (mismo criterio "exacto, sin margen"
-			 * que ya usaba el valor viejo: 396-88=308). */
-			transform: translateX(-328vw);
-		}
-	}
-
 	@keyframes p3-beat-b-cierre-entra {
 		from {
 			opacity: 0;
@@ -746,17 +883,46 @@ const nombreHtml = (nombre: string) =>
 		}
 	}
 
-	@supports (animation-timeline: scroll(root)) {
-		.p3-carril-fila {
-			animation: p3-carril-escritorio linear both;
-			animation-timeline: --como-lo-hace;
-			animation-range: contain 54% contain 96%;
+	@keyframes p3b-linea {
+		from {
+			transform: scaleX(0);
 		}
+		to {
+			transform: scaleX(1);
+		}
+	}
 
-		@media (width < 900px) {
-			.p3-carril-fila {
-				animation-name: p3-carril-movil;
-			}
+	@supports (animation-timeline: scroll(root)) {
+		.p3-paso {
+			opacity: 0;
+			animation-timing-function: linear;
+			animation-fill-mode: both;
+			animation-timeline: --como-lo-hace;
+		}
+		.p3-paso--0 {
+			opacity: 1;
+		}
+		.p3-paso--0 { animation-name: p3b-lamina-0; }
+		.p3-paso--1 { animation-name: p3b-lamina-1; }
+		.p3-paso--2 { animation-name: p3b-lamina-2; }
+		.p3-paso--3 { animation-name: p3b-lamina-3; }
+		.p3-paso--4 { animation-name: p3b-lamina-4; }
+
+		.p3-nodo {
+			animation-timing-function: linear;
+			animation-fill-mode: both;
+			animation-timeline: --como-lo-hace;
+		}
+		.p3-nodo--0 { animation-name: p3b-nodo-0; }
+		.p3-nodo--1 { animation-name: p3b-nodo-1; }
+		.p3-nodo--2 { animation-name: p3b-nodo-2; }
+		.p3-nodo--3 { animation-name: p3b-nodo-3; }
+		.p3-nodo--4 { animation-name: p3b-nodo-4; }
+
+		.p3-camino::after {
+			transform: scaleX(0);
+			animation: p3b-linea linear both;
+			animation-timeline: --como-lo-hace;
 		}
 
 		.p3-beat-b-cierre {
@@ -768,12 +934,7 @@ const nombreHtml = (nombre: string) =>
 		}
 	}
 
-	/* .p3-carril-fila NO se pisa acá (ver el bloque de arriba: queda en su posición final
-	 * trasladada, no en `transform:none` — ese sería el punto de PARTIDA, no el final). */
 	@media (prefers-reduced-motion: reduce) {
-		.p3-carril-fila {
-			animation: none !important;
-		}
 		.p3-beat-b-cierre {
 			animation: none !important;
 			opacity: 1;
@@ -804,18 +965,16 @@ const nombreHtml = (nombre: string) =>
 			gap: var(--espacio-lg);
 			margin-left: 0; /* el celular no se dibuja en este modo: no hay nada que esquivar */
 		}
-		/* Los 5 pasos eran un carril horizontal que se desplazaba con el scroll; sin eso, se
-		 * acomodan en filas y se ven todos. */
-		.p3-carril {
-			width: auto;
-			overflow: visible;
-		}
-		.p3-carril-fila {
-			flex-wrap: wrap;
-			gap: var(--espacio-sm);
+		/* Los 5 pasos se apilan en flujo (todos visibles, sin camino de nodos). */
+		.p3-pasos {
+			gap: var(--espacio-md);
+			min-height: 0;
 		}
 		.p3-paso {
-			flex: 1 1 12rem;
+			grid-area: auto;
+		}
+		.p3-camino {
+			display: none;
 		}
 	}
 </style>
@@ -828,7 +987,8 @@ const nombreHtml = (nombre: string) =>
 	// Los % son del tramo pineado de la sección (el mismo de `animation-range: contain`).
 	// Si el usuario mueve la rueda, toca la pantalla o usa el teclado, se cancela.
 	const seccion = document.getElementById('como-lo-hace');
-	const escena = document.querySelector<HTMLElement>('.p3-escena');
+	const escenaA = document.querySelector<HTMLElement>('.p3-escena'); // láminas del Beat A
+	const escenaB = document.querySelector<HTMLElement>('.p3-pasos'); // láminas del Beat B
 	let cancelar: (() => void) | null = null;
 
 	const posicion = (porcentaje: number) => {
@@ -839,7 +999,7 @@ const nombreHtml = (nombre: string) =>
 	};
 	const saltar = (y: number) => window.scrollTo({ top: y, behavior: 'instant' });
 
-	function cambiarA(inicio: number, destino: number, reducido: boolean) {
+	function cambiarA(escena: HTMLElement | null, inicio: number, destino: number, reducido: boolean) {
 		cancelar?.();
 		if (!escena || reducido) {
 			saltar(posicion(destino));
@@ -877,10 +1037,19 @@ const nombreHtml = (nombre: string) =>
 		}, 170);
 	}
 
+	// Nodos 01-05 del Beat B: el paso se ve completo y quieto en su centro, así que entrada = llegada.
+	document.querySelectorAll<HTMLButtonElement>('.p3-nodo').forEach((nodo) => {
+		nodo.addEventListener('click', () => {
+			const reducido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+			const centro = Number(nodo.dataset.centro);
+			cambiarA(escenaB, centro, centro, reducido);
+		});
+	});
+
 	document.querySelectorAll<HTMLButtonElement>('.p3-chip').forEach((chip) => {
 		chip.addEventListener('click', () => {
 			const reducido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-			cambiarA(Number(chip.dataset.inicio), Number(chip.dataset.destino), reducido);
+			cambiarA(escenaA, Number(chip.dataset.inicio), Number(chip.dataset.destino), reducido);
 		});
 	});
 </script>
