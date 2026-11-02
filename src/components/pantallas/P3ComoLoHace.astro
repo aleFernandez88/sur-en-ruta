@@ -62,6 +62,11 @@ const INICIO = [3, 12, 24, 36];
 const DESTINO = [4, 19, 31.5, 41];
 const COLORES = ['var(--color-celeste)', 'var(--color-bandera-amarillo)', 'var(--color-verde-vivo)', '#ffffff'];
 const CORTOS = ['App', 'Pasaporte', 'Sello', 'Señalética'];
+
+// Nombre de la herramienta con el nombre de la MARCA como en el logo (`.marca`, ver marca.ts). En la
+// App, la palabra «App» pasa a un peso liviano para que el protagonista sea «SUR EN RUTA».
+const nombreHtml = (nombre: string) =>
+	conMarca(nombre).replace(/^App /, '<span class="p3-app">App</span> ');
 ---
 
 <Seccion id="como-lo-hace">
@@ -89,7 +94,7 @@ const CORTOS = ['App', 'Pasaporte', 'Sello', 'Señalética'];
 									{h.icono === 'senaletica' && <IlusSenaletica rango={RANGOS[i]} />}
 								</div>
 								<div class="p3-slide-texto">
-									<p class="p3-slide-nombre" set:html={conMarca(h.nombre)} />
+									<p class="p3-slide-nombre" set:html={nombreHtml(h.nombre)} />
 									<p class="p3-slide-que">{h.que}</p>
 									{h.icono !== 'app' && <span class="p3-rotulo">Vista conceptual</span>}
 								</div>
@@ -250,6 +255,18 @@ const CORTOS = ['App', 'Pasaporte', 'Sello', 'Señalética'];
 		font-size: clamp(1.6rem, 1rem + 1.9vw, 2.9rem);
 		line-height: 1.02;
 		color: var(--c);
+	}
+
+	/* «App»: peso liviano, baja el peso visual frente al nombre de la marca. */
+	.p3-slide-nombre :global(.p3-app) {
+		font-weight: 300;
+	}
+
+	/* El nombre de la marca SIEMPRE como el logo: blanco, Italiana, MAYÚSCULAS con 0,06em (.marca,
+	 * base.css). Italiana es una Didone fina y se ve más chica que Archivo a igual tamaño: 1,18em. */
+	.p3-slide-nombre :global(.marca) {
+		color: #ffffff;
+		font-size: 1.18em;
 	}
 
 	.p3-slide-que {
