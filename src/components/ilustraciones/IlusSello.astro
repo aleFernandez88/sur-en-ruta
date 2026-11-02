@@ -1,0 +1,99 @@
+---
+/**
+ * IlusSello.astro — ilustración vectorial propia del Sello Viajero Responsable (P3, herramienta 3).
+ * Vista conceptual: sello circular con el lema del mazo ("Cuidamos lo que amamos") y la planta
+ * dentro de un pin. Se "estampa" con el scroll de P3 (timeline `--como-lo-hace`).
+ */
+interface Props {
+	/** `animation-range` literal ("contain X% contain Y%") — calculado afuera, nunca con var(). */
+	rango: string;
+}
+const { rango } = Astro.props;
+---
+
+<svg class="sello" style={`animation-range: ${rango}`} viewBox="0 0 200 200" role="img" aria-label="Sello Viajero Responsable (vista conceptual)">
+	<defs>
+		<radialGradient id="p3sel-fondo" cx=".4" cy=".35" r=".8">
+			<stop offset="0" stop-color="#ffffff"></stop>
+			<stop offset="1" stop-color="#e3edf7"></stop>
+		</radialGradient>
+		<path id="p3sel-arriba" d="M36 100 A64 64 0 0 1 164 100"></path>
+		<path id="p3sel-abajo" d="M17 100 A83 83 0 0 0 183 100"></path>
+	</defs>
+	<circle class="onda" style={`animation-range: ${rango}`} cx="100" cy="100" r="96" fill="none" stroke="#8cc84b" stroke-width="3"></circle>
+	<circle cx="100" cy="100" r="96" fill="url(#p3sel-fondo)" stroke="#b9d3ec" stroke-width="2"></circle>
+	<circle cx="100" cy="100" r="88" fill="none" stroke="#1f4e8c" stroke-opacity=".35"></circle>
+	<circle cx="100" cy="100" r="56" fill="none" stroke="#1f4e8c" stroke-opacity=".35"></circle>
+	<text fill="#1f4e8c" font-family="Archivo, sans-serif" font-weight="800" font-size="16" letter-spacing="3.5" text-anchor="middle">
+		<textPath href="#p3sel-arriba" startOffset="50%">VIAJERO</textPath>
+	</text>
+	<text fill="#1f4e8c" font-family="Archivo, sans-serif" font-weight="800" font-size="15" letter-spacing="2.6" text-anchor="middle">
+		<textPath href="#p3sel-abajo" startOffset="50%">RESPONSABLE</textPath>
+	</text>
+	<path d="M100 120 C100 120 79 100 79 86 A21 21 0 0 1 121 86 C121 100 100 120 100 120Z" fill="none" stroke="#3d8f33" stroke-width="2.4"></path>
+	<path d="M100 108 V80" stroke="#3d8f33" stroke-width="2.4" stroke-linecap="round"></path>
+	<path d="M100 96 C91 96 87 90 87 83 C95 83 100 88 100 96Z" fill="#4fae3f"></path>
+	<path d="M100 90 C109 90 113 84 113 77 C105 77 100 82 100 90Z" fill="#8cc84b"></path>
+	<text x="100" y="138" text-anchor="middle" fill="#1f4e8c" font-family="Archivo, sans-serif" font-weight="600" font-size="6.6" letter-spacing="1.2">CUIDAMOS LO</text>
+	<text x="100" y="147" text-anchor="middle" fill="#1f4e8c" font-family="Archivo, sans-serif" font-weight="600" font-size="6.6" letter-spacing="1.2">QUE AMAMOS</text>
+</svg>
+
+<style>
+	@keyframes p3sel-sella {
+		0%,
+		24% {
+			transform: scale(1.7) rotate(-16deg);
+			opacity: 0;
+		}
+		36% {
+			transform: scale(0.93) rotate(2deg);
+			opacity: 1;
+		}
+		46%,
+		100% {
+			transform: scale(1) rotate(0);
+			opacity: 1;
+		}
+	}
+	@keyframes p3sel-onda {
+		0%,
+		35% {
+			transform: scale(0.9);
+			opacity: 0;
+		}
+		37% {
+			transform: scale(0.95);
+			opacity: 0.7;
+		}
+		72%,
+		100% {
+			transform: scale(1.28);
+			opacity: 0;
+		}
+	}
+	.onda {
+		opacity: 0;
+	}
+	@supports (animation-timeline: scroll(root)) {
+		.sello,
+		.onda {
+			transform-box: fill-box;
+			transform-origin: center;
+			animation-timeline: --como-lo-hace;
+			animation-fill-mode: both;
+			animation-timing-function: linear;
+		}
+		.sello {
+			animation-name: p3sel-sella;
+		}
+		.onda {
+			animation-name: p3sel-onda;
+		}
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.sello,
+		.onda {
+			animation: none !important;
+		}
+	}
+</style>

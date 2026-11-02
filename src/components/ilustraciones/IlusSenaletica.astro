@@ -1,0 +1,130 @@
+---
+/**
+ * IlusSenaletica.astro — ilustración vectorial propia de la Señalética (P3, herramienta 4).
+ * Vista conceptual: poste de madera con tres carteles genéricos (no se nombran pueblos reales).
+ * Los carteles entran de a uno con el scroll de P3 (timeline `--como-lo-hace`).
+ */
+interface Props {
+	/** `animation-range` literal ("contain X% contain Y%") — calculado afuera, nunca con var(). */
+	rango: string;
+}
+const { rango } = Astro.props;
+const estilo = `animation-range: ${rango}`;
+---
+
+<svg viewBox="0 0 220 300" role="img" aria-label="Señalética de Sur en Ruta (vista conceptual)">
+	<defs>
+		<linearGradient id="p3sen-madera" x1="0" x2="1">
+			<stop offset="0" stop-color="#94704a"></stop>
+			<stop offset="1" stop-color="#5a4128"></stop>
+		</linearGradient>
+	</defs>
+	<ellipse cx="110" cy="290" rx="62" ry="7" fill="#000" opacity=".28"></ellipse>
+	<rect x="96" y="10" width="28" height="280" rx="3" fill="url(#p3sen-madera)"></rect>
+	<path d="M104 20 V280 M114 30 V270" stroke="#3a2813" stroke-opacity=".35"></path>
+	<path d="M70 292 q4-14 8 0 M82 292 q3-10 7 0 M136 292 q4-14 8 0 M148 292 q3-10 7 0" stroke="#8cc84b" stroke-width="2.4" fill="none" stroke-linecap="round"></path>
+
+	<g class="tabla t1" style={estilo}>
+		<g transform="rotate(-2 110 57)">
+			<rect x="34" y="34" width="152" height="46" rx="3" fill="#17407a" stroke="#0b2750" stroke-width="2"></rect>
+			<text x="44" y="53" fill="#fff" font-family="Archivo, sans-serif" font-weight="800" font-size="11.5" letter-spacing=".5">PUNTO DE RUTA</text>
+			<text x="44" y="70" fill="#cfe3f7" font-family="Archivo, sans-serif" font-weight="400" font-size="9.5">12 km</text>
+			<path d="M166 71 V44 M156 54 L166 44 L176 54" stroke="#fff" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"></path>
+			<circle cx="40" cy="40" r="1.6" fill="#cfe3f7"></circle>
+			<circle cx="180" cy="40" r="1.6" fill="#cfe3f7"></circle>
+		</g>
+	</g>
+
+	<g class="tabla t2" style={estilo}>
+		<g transform="rotate(1.5 110 120)">
+			<rect x="28" y="94" width="160" height="50" rx="3" fill="#3d8f33" stroke="#25601e" stroke-width="2"></rect>
+			<text x="38" y="114" fill="#fff" font-family="Archivo, sans-serif" font-weight="800" font-size="11.5" letter-spacing=".5">MIRADOR</text>
+			<text x="38" y="132" fill="#e3f4d9" font-family="Archivo, sans-serif" font-weight="400" font-size="9.5">5 km</text>
+			<rect x="152" y="101" width="22" height="15" rx="2.5" fill="none" stroke="#fff" stroke-width="2"></rect>
+			<circle cx="163" cy="108.5" r="4" fill="none" stroke="#fff" stroke-width="2"></circle>
+			<path d="M150 133 H176 M169 127 L176 133 L169 139" stroke="#fff" stroke-width="2.6" fill="none" stroke-linecap="round" stroke-linejoin="round"></path>
+			<circle cx="34" cy="100" r="1.6" fill="#e3f4d9"></circle>
+			<circle cx="182" cy="100" r="1.6" fill="#e3f4d9"></circle>
+		</g>
+	</g>
+
+	<g class="tabla t3" style={estilo}>
+		<g transform="rotate(-1 110 182)">
+			<rect x="36" y="158" width="150" height="48" rx="3" fill="#17407a" stroke="#0b2750" stroke-width="2"></rect>
+			<text x="46" y="175" fill="#fff" font-family="Archivo, sans-serif" font-weight="800" font-size="11.5" letter-spacing=".5">SERVICIOS</text>
+			<g stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+				<path d="M48 183 v14 M44 183 v6 M52 183 v6"></path>
+				<rect x="62" y="190" width="15" height="7" rx="1"></rect>
+				<path d="M62 187 v10 M77 193 v4"></path>
+				<rect x="88" y="183" width="9" height="14" rx="1"></rect>
+				<path d="M97 187 h4 v6"></path>
+				<path d="M114 183 v14 M107 190 h14"></path>
+			</g>
+			<path d="M154 182 H178 M171 176 L178 182 L171 188" stroke="#fff" stroke-width="2.6" fill="none" stroke-linecap="round" stroke-linejoin="round"></path>
+			<circle cx="42" cy="164" r="1.6" fill="#cfe3f7"></circle>
+			<circle cx="180" cy="164" r="1.6" fill="#cfe3f7"></circle>
+		</g>
+	</g>
+</svg>
+
+<style>
+	@keyframes p3sen-t1 {
+		0%,
+		30% {
+			transform: translateX(26px) rotate(-7deg);
+			opacity: 0;
+		}
+		48%,
+		100% {
+			transform: none;
+			opacity: 1;
+		}
+	}
+	@keyframes p3sen-t2 {
+		0%,
+		42% {
+			transform: translateX(26px) rotate(-7deg);
+			opacity: 0;
+		}
+		60%,
+		100% {
+			transform: none;
+			opacity: 1;
+		}
+	}
+	@keyframes p3sen-t3 {
+		0%,
+		54% {
+			transform: translateX(26px) rotate(-7deg);
+			opacity: 0;
+		}
+		72%,
+		100% {
+			transform: none;
+			opacity: 1;
+		}
+	}
+	@supports (animation-timeline: scroll(root)) {
+		.tabla {
+			transform-box: fill-box;
+			transform-origin: 85% 50%;
+			animation-timeline: --como-lo-hace;
+			animation-fill-mode: both;
+			animation-timing-function: linear;
+		}
+		.t1 {
+			animation-name: p3sen-t1;
+		}
+		.t2 {
+			animation-name: p3sen-t2;
+		}
+		.t3 {
+			animation-name: p3sen-t3;
+		}
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.tabla {
+			animation: none !important;
+		}
+	}
+</style>

@@ -1,0 +1,86 @@
+---
+/**
+ * IlusPasaporte.astro — ilustración vectorial propia del Pasaporte de Ruta (P3, herramienta 2).
+ * Vista conceptual: la tapa azul con el emblema del sol y el río, como en
+ * `docs/fuentes/deck-2026-09/pag-07-herramientas.png`. El río se traza con el scroll de P3
+ * (timeline `--como-lo-hace`, mismo `animation-range` que la lámina que lo contiene).
+ */
+interface Props {
+	/** `animation-range` literal ("contain X% contain Y%") — calculado afuera, nunca con var(). */
+	rango: string;
+}
+const { rango } = Astro.props;
+---
+
+<svg viewBox="0 0 200 280" role="img" aria-label="Pasaporte de Ruta (vista conceptual)">
+	<defs>
+		<linearGradient id="p3pas-tapa" x1="0" y1="0" x2="1" y2="1">
+			<stop offset="0" stop-color="#2d5fa3"></stop>
+			<stop offset="1" stop-color="#10305a"></stop>
+		</linearGradient>
+		<clipPath id="p3pas-clip"><circle r="40"></circle></clipPath>
+		<path id="p3pas-arco" d="M-55 0 A55 55 0 0 1 55 0"></path>
+	</defs>
+	<rect x="4" y="4" width="188" height="268" rx="10" fill="url(#p3pas-tapa)"></rect>
+	<rect x="4" y="4" width="15" height="268" rx="7" fill="#000" opacity=".2"></rect>
+	<rect x="27" y="16" width="156" height="244" rx="5" fill="none" stroke="#9cc4ee" stroke-opacity=".35"></rect>
+	<text x="105" y="46" text-anchor="middle" fill="#d6e8fa" font-family="Archivo, sans-serif" font-weight="600" font-size="12.5" letter-spacing="3.4">PASAPORTE</text>
+	<text x="105" y="62" text-anchor="middle" fill="#d6e8fa" font-family="Archivo, sans-serif" font-weight="600" font-size="12.5" letter-spacing="3.4">DE RUTA</text>
+	<g transform="translate(105 142)">
+		<circle r="47" fill="none" stroke="#cfe3f7" stroke-width="1.4"></circle>
+		<circle r="43" fill="none" stroke="#cfe3f7" stroke-opacity=".4"></circle>
+		<text fill="#cfe3f7" font-family="Archivo, sans-serif" font-weight="600" font-size="8.5" letter-spacing="2.6" text-anchor="middle">
+			<textPath href="#p3pas-arco" startOffset="50%">SUR EN RUTA</textPath>
+		</text>
+		<g clip-path="url(#p3pas-clip)">
+			<path d="M-40 14 Q-20 2 0 12 T40 8 V40 H-40Z" fill="#17407a" opacity=".9"></path>
+			<path class="rayos" d="M0 -6 V-16 M-12 -2 L-19 -9 M12 -2 L19 -9 M-18 8 H-28 M18 8 H28" stroke="#f2b705" stroke-width="2" stroke-linecap="round" fill="none"></path>
+			<path d="M-15 10 A15 15 0 0 1 15 10Z" fill="#f2b705"></path>
+			<path class="rio" style={`animation-range: ${rango}`} d="M-24 40 C8 34 -30 26 4 21 S-8 15 0 10" fill="none" stroke="#9fd0f5" stroke-width="3" stroke-linecap="round"></path>
+		</g>
+	</g>
+	<text x="105" y="224" text-anchor="middle" fill="#9fc3ea" font-family="Archivo, sans-serif" font-weight="400" font-size="8.5" letter-spacing="2.2">VIAJÁ POR ETAPAS</text>
+	<text x="105" y="237" text-anchor="middle" fill="#9fc3ea" font-family="Archivo, sans-serif" font-weight="400" font-size="8.5" letter-spacing="2.2">SUMÁ HISTORIAS</text>
+	<rect x="93" y="244" width="24" height="12" rx="2.5" fill="none" stroke="#9fc3ea" stroke-opacity=".7"></rect>
+	<path d="M99 250 H111" stroke="#9fc3ea" stroke-opacity=".7"></path>
+</svg>
+
+<style>
+	@keyframes p3pas-rio {
+		0%,
+		26% {
+			stroke-dashoffset: 140;
+		}
+		64%,
+		100% {
+			stroke-dashoffset: 0;
+		}
+	}
+	@keyframes p3pas-sol {
+		0%,
+		100% {
+			opacity: 0.5;
+		}
+		50% {
+			opacity: 1;
+		}
+	}
+	@media (prefers-reduced-motion: no-preference) {
+		.rayos {
+			animation: p3pas-sol 3.5s ease-in-out infinite;
+		}
+	}
+	@supports (animation-timeline: scroll(root)) {
+		.rio {
+			stroke-dasharray: 140;
+			animation: p3pas-rio linear both;
+			animation-timeline: --como-lo-hace;
+		}
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.rio {
+			animation: none !important;
+			stroke-dasharray: none;
+		}
+	}
+</style>

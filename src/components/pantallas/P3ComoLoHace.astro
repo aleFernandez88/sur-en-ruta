@@ -6,9 +6,15 @@
  * `docs/landing-contenido.md` § P3 (deck `pag-07-herramientas.png` + `pag-04-como-funciona.png`).
  *
  * === Dos beats superpuestos en la misma caja ===
- * Beat A (`contain 0% → 35%`, herramientas) y Beat B (`contain 32% → 100%`, los 5 pasos) ocupan el
- * MISMO `grid-area: 1/1` — se cruzan (Beat A sale con fade+translate entre 30%-38% mientras Beat B
+ * Beat A (`contain 0% → 44%`, herramientas) y Beat B (`contain 44% → 100%`, los 5 pasos) ocupan el
+ * MISMO `grid-area: 1/1` — se cruzan (Beat A sale con fade+translate entre 44%-52% mientras Beat B
  * ya está ahí), igual patrón de superposición que usa P4 para sus 6 rutas.
+ *
+ * === Beat A rediseñado (2026-11-02): ilustraciones, no cards ===
+ * Las 4 herramientas se muestran UNA A LA VEZ, cada una como objeto ilustrado propio (App = el
+ * celular fijo, con una flecha; Pasaporte, Sello y Señalética = SVG en `../ilustraciones/`), atadas al
+ * scroll: cada lámina entra/sale en su tramo de `RANGOS` y sus ilustraciones animan con el MISMO
+ * `animation-range`. Opción "C" del tablero de ideas aprobado por Ale.
  *
  * === Contenido a la derecha (celular en x −25%) ===
  * `margin-left: 40vw` en desktop dentro de `.seccion__caja` — el celular de esta sección queda
@@ -28,38 +34,82 @@
  */
 import Seccion from '../Seccion.astro';
 import Icono from '../Icono.astro';
+import IlusPasaporte from '../ilustraciones/IlusPasaporte.astro';
+import IlusSello from '../ilustraciones/IlusSello.astro';
+import IlusSenaletica from '../ilustraciones/IlusSenaletica.astro';
 import { herramientas } from '../../data/herramientas.ts';
 import { conMarca } from '../../lib/marca.ts';
 import { pasos } from '../../data/pasos.ts';
 
-// Rango contain-relativo de un elemento escalonado — mismo criterio que `escalonado()` de
-// escenario.ts, pero expresado como "contain X% contain Y%" (relativo al tramo pineado de ESTA
-// sección, restricción 4: animation-range nunca con var(), literal calculado acá).
-const rangoEscalonadoContain = (inicio: number, i: number, paso: number, duracion: number): string =>
-	`contain ${inicio + i * paso}% contain ${inicio + i * paso + duracion}%`;
-
-const RANGO_HERRAMIENTA = (i: number) => rangoEscalonadoContain(2, i, 4, 8);
+// Tramo de scroll (rango `contain`, relativo al pin de ESTA sección) de cada herramienta del Beat A,
+// en el orden de `herramientas`: App · Pasaporte · Sello · Señalética. Los cruces entre láminas
+// ocurren en VENTANAS IGUALES de 4% (8–12, 20–24, 32–36): la que sale y la que entra comparten
+// exactamente el mismo tramo, así no hay bache de opacidad. Los porcentajes de los @keyframes de
+// abajo (p3-slide-*, p3-chip-*) y de las ilustraciones salen de estos rangos: si se cambian acá,
+// hay que recalcularlos. Literales: `animation-range` nunca con var() (restricción 4 de escenario.ts).
+// La última queda hasta que sale el beat completo (44%→52%).
+const RANGOS = [
+	'contain 0% contain 12%',
+	'contain 8% contain 24%',
+	'contain 20% contain 36%',
+	'contain 32% contain 44%',
+];
+const POS = ['primero', 'medio', 'medio', 'ultimo'];
+// Click en un chip (% del tramo pineado): se salta DIRECTO a la entrada de la lámina (INICIO: ya
+// completa, sin vecinas, con sus animaciones propias en 0) y desde ahí avanza hasta DESTINO
+// (animaciones terminadas, antes de que empiece su salida). Nunca recorre láminas intermedias.
+const INICIO = [3, 12, 24, 36];
+const DESTINO = [4, 19, 31.5, 41];
+const COLORES = ['var(--color-celeste)', 'var(--color-bandera-amarillo)', 'var(--color-verde-vivo)', '#ffffff'];
+const CORTOS = ['App', 'Pasaporte', 'Sello', 'Señalética'];
 ---
 
 <Seccion id="como-lo-hace">
 	<div class="p3 seccion__caja">
 		<div class="p3-caja">
-			<!-- Beat A — 4 herramientas -->
+			<!-- Beat A — 4 herramientas, una a la vez, como ilustraciones -->
 			<div class="p3-beat-a">
-				<h2 class="p3-titular">Herramientas que conectan la experiencia</h2>
+				<h2 class="p3-titular">Herramientas que <span class="realce">conectan</span> la experiencia</h2>
 				<p class="p3-idea">Con herramientas que trabajan juntas.</p>
-				<div class="p3-herramientas">
+				<div class="p3-escena">
 					{
 						herramientas.map((h, i) => (
-							<div class="p3-herramienta" style={`animation-range: ${RANGO_HERRAMIENTA(i)}`}>
-								<span class="p3-herramienta-icono">
-									<Icono nombre={h.icono} tamano={28} acento="var(--color-verde)" />
-								</span>
-								<div class="p3-herramienta-texto">
-									<p class="p3-herramienta-nombre" set:html={conMarca(h.nombre)} />
-									<p class="p3-herramienta-que">{h.que}</p>
+							<div
+								class={`p3-slide p3-slide--${POS[i]}${h.icono === 'sello' ? ' p3-slide--sello' : ''}`}
+								style={`--c: ${COLORES[i]}; animation-range: ${RANGOS[i]}`}
+							>
+								<div class="p3-slide-obj">
+									{h.icono === 'app' && (
+										<svg class="p3-flecha" viewBox="0 0 120 120" aria-hidden="true">
+											<path d="M104 60 H22 M46 34 L20 60 L46 86" fill="none" stroke="currentColor" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" />
+										</svg>
+									)}
+									{h.icono === 'pasaporte' && <IlusPasaporte rango={RANGOS[i]} />}
+									{h.icono === 'sello' && <IlusSello rango={RANGOS[i]} />}
+									{h.icono === 'senaletica' && <IlusSenaletica rango={RANGOS[i]} />}
+								</div>
+								<div class="p3-slide-texto">
+									<p class="p3-slide-nombre" set:html={conMarca(h.nombre)} />
+									<p class="p3-slide-que">{h.que}</p>
+									{h.icono !== 'app' && <span class="p3-rotulo">Vista conceptual</span>}
 								</div>
 							</div>
+						))
+					}
+				</div>
+				<div class="p3-chips" role="group" aria-label="Herramientas">
+					{
+						CORTOS.map((c, i) => (
+							<button
+								type="button"
+								class={`p3-chip p3-chip--${POS[i]}`}
+								data-inicio={INICIO[i]}
+				data-destino={DESTINO[i]}
+								aria-label={`Ver ${herramientas[i].nombre}`}
+								style={`--c: ${COLORES[i]}; animation-range: ${RANGOS[i]}`}
+							>
+								{c}
+							</button>
 						))
 					}
 				</div>
@@ -122,15 +172,24 @@ const RANGO_HERRAMIENTA = (i: number) => rangoEscalonadoContain(2, i, 4, 8);
 		gap: var(--espacio-sm);
 	}
 
-	/* === Beat A — 4 herramientas === */
+	/* Beat B está después en el DOM (= encima): sin esto taparía los chips del Beat A. */
+	.p3-beat-b {
+		pointer-events: none;
+	}
+
+	/* === Beat A — 4 herramientas, UNA A LA VEZ === */
 	.p3-titular {
 		margin: 0;
 		font-family: var(--fuente-display);
-		font-weight: 800;
-		font-size: clamp(2rem, 1.2rem + 3vw, 4rem);
+		font-weight: 200;
+		font-size: clamp(2rem, 1.2rem + 3vw, 3.8rem);
 		line-height: 1.05;
 		max-width: 22ch;
 		color: var(--color-texto-sobre-foto);
+	}
+
+	.p3-titular .realce {
+		font-weight: 800;
 	}
 
 	.p3-idea {
@@ -141,57 +200,122 @@ const RANGO_HERRAMIENTA = (i: number) => rangoEscalonadoContain(2, i, 4, 8);
 		color: var(--color-verde-vivo);
 	}
 
-	.p3-herramientas {
+	/* Las 4 láminas comparten celda (grid-area 1/1): una sola se ve a la vez. */
+	.p3-escena {
 		display: grid;
-		grid-template-columns: repeat(2, minmax(0, 1fr));
-		gap: clamp(0.75rem, 1.6vw, 1.25rem);
-		perspective: 900px;
+		margin-block: clamp(0.5rem, 2svh, 1.25rem);
+		/* fundido al cambiar de herramienta con un chip (ver el script del final) */
+		transition: opacity 0.16s ease;
 	}
 
-	@media (width < 900px) {
-		.p3-herramientas {
-			grid-template-columns: minmax(0, 1fr);
-		}
-	}
-
-	.p3-herramienta {
-		display: flex;
+	.p3-slide {
+		grid-area: 1 / 1;
+		display: grid;
+		grid-template-columns: auto minmax(0, 1fr);
 		align-items: center;
-		gap: var(--espacio-xs);
-		padding: clamp(0.7rem, 1.6vh, 1rem) clamp(0.85rem, 1.8vw, 1.25rem);
-		background: var(--color-superficie);
-		border-radius: var(--radio-md);
-		box-shadow: 0 10px 22px -14px rgba(15, 43, 77, 0.28);
-		transform-origin: top center;
+		gap: clamp(1rem, 2.6vw, 2.4rem);
 	}
 
-	.p3-herramienta-icono {
-		flex-shrink: 0;
+	.p3-slide-obj {
 		display: grid;
 		place-items: center;
-		width: 2.6rem;
-		height: 2.6rem;
-		border-radius: 50%;
-		background: color-mix(in srgb, var(--color-verde) 12%, var(--color-superficie));
-		color: var(--color-marino);
+		min-width: 0;
 	}
 
-	.p3-herramienta-nombre {
+	/* Alto fijo + ancho automático por la proporción del viewBox. */
+	.p3-slide-obj :global(svg) {
+		height: min(40svh, 26vw);
+		width: auto;
+		overflow: visible;
+		filter: drop-shadow(0 12px 18px rgb(0 0 0 / 0.45));
+	}
+
+	.p3-slide-obj .p3-flecha {
+		height: min(16svh, 11vw);
+		color: var(--c);
+		filter: none;
+	}
+
+	.p3-slide-texto {
+		display: flex;
+		flex-direction: column;
+		gap: 0.4rem;
+		min-width: 0;
+	}
+
+	.p3-slide-nombre {
 		margin: 0;
-		font-family: var(--fuente-fina);
-		font-weight: 500;
-		font-size: clamp(0.85rem, 0.78rem + 0.35vw, 1rem);
-		line-height: 1.2;
-		color: var(--color-marino);
+		font-family: var(--fuente-display);
+		font-weight: 800;
+		font-size: clamp(1.6rem, 1rem + 1.9vw, 2.9rem);
+		line-height: 1.02;
+		color: var(--c);
 	}
 
-	.p3-herramienta-que {
-		margin: 0.15rem 0 0;
+	.p3-slide-que {
+		margin: 0;
 		font-family: var(--fuente-texto);
-		font-weight: 400;
-		font-size: clamp(0.7rem, 0.66rem + 0.2vw, 0.8rem);
-		line-height: 1.25;
-		color: var(--color-tinta-suave);
+		font-size: clamp(1rem, 0.9rem + 0.45vw, 1.3rem);
+		line-height: 1.3;
+		max-width: 26ch;
+		color: rgb(255 255 255 / 0.9);
+	}
+
+	.p3-rotulo {
+		font-family: var(--fuente-texto);
+		font-size: 0.68rem;
+		letter-spacing: 0.12em;
+		text-transform: uppercase;
+		color: rgb(255 255 255 / 0.55);
+	}
+
+	/* Selector de herramientas: 4 pastillas SIEMPRE bien visibles; la activa (atada al scroll) se
+	 * enciende con relleno sólido, halo y un poco más de tamaño. Click = scroll hasta esa lámina. */
+	.p3-chips {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.6rem;
+		padding: 0.35rem 0.3rem;
+	}
+
+	.p3-chip {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.5rem;
+		padding: 0.42rem 1rem;
+		border-radius: 999px;
+		font-family: var(--fuente-display);
+		font-weight: 700;
+		font-size: 0.88rem;
+		line-height: 1.2;
+		color: #ffffff;
+		border: 1px solid color-mix(in srgb, var(--c) 80%, transparent);
+		background-color: color-mix(in srgb, var(--c) 18%, transparent);
+		cursor: pointer;
+		-webkit-tap-highlight-color: transparent;
+	}
+
+	.p3-chip::before {
+		content: '';
+		width: 0.6rem;
+		height: 0.6rem;
+		border-radius: 50%;
+		background: var(--c);
+		box-shadow: 0 0 0 2px rgb(8 26 49 / 0.85);
+	}
+
+	.p3-chip:hover {
+		filter: brightness(1.25);
+	}
+
+	.p3-chip:focus-visible {
+		outline: 2px solid var(--color-bandera-amarillo);
+		outline-offset: 3px;
+	}
+
+	/* Sello: 40% más chico que el resto de las ilustraciones (pedido de Ale, 2026-11-02). */
+	.p3-slide--sello .p3-slide-obj :global(svg) {
+		height: min(24svh, 15.6vw);
 	}
 
 	.p3-beat-a-cierre {
@@ -201,10 +325,8 @@ const RANGO_HERRAMIENTA = (i: number) => rangoEscalonadoContain(2, i, 4, 8);
 		color: color-mix(in srgb, var(--color-texto-sobre-foto) 80%, transparent);
 	}
 
-	/* === Mobile: Beat A más compacto — AJUSTE DEL EJECUTOR sobre el plan (E9), con evidencia:
-	 * en 390×844/369×698 el cierre del beat A quedaba superpuesto con `.telefono__marco`
-	 * (confirmado con elementFromPoint, overlap real, ~30-40px). Gaps y paddings más chicos,
-	 * ningún texto se saca. */
+	/* === Mobile: Beat A más compacto — con evidencia (390×844/369×698): el contenido va arriba y el
+	 * celular ocupa la mitad de abajo; todo tiene que caber sin tocar `.telefono__marco`. */
 	@media (width < 900px) {
 		.p3-beat-a,
 		.p3-beat-b {
@@ -213,26 +335,143 @@ const RANGO_HERRAMIENTA = (i: number) => rangoEscalonadoContain(2, i, 4, 8);
 		.p3-titular {
 			font-size: clamp(1.6rem, 1.1rem + 2.5vw, 2.5rem);
 		}
-		.p3-herramientas {
-			gap: 0.55rem;
+		.p3-slide {
+			gap: 1rem;
 		}
-		.p3-herramienta {
-			padding: 0.5rem 0.75rem;
+		.p3-slide-obj :global(svg) {
+			height: min(21svh, 38vw);
 		}
-		.p3-herramienta-icono {
-			width: 2.15rem;
-			height: 2.15rem;
+		.p3-slide--sello .p3-slide-obj :global(svg) {
+			height: min(12.6svh, 22.8vw);
+		}
+		.p3-slide-obj .p3-flecha {
+			height: min(10svh, 18vw);
+			/* el celular está ABAJO en mobile: la flecha apunta hacia abajo */
+			transform: rotate(-90deg);
+		}
+		.p3-slide-nombre {
+			font-size: clamp(1.3rem, 1rem + 1.6vw, 1.8rem);
+		}
+		.p3-slide-que {
+			font-size: 0.95rem;
+		}
+		.p3-chips {
+			gap: 0.45rem;
+		}
+		.p3-chip {
+			font-size: 0.76rem;
+			padding: 0.32rem 0.7rem;
+			gap: 0.4rem;
 		}
 	}
 
-	@keyframes p3-herramienta-despliega {
-		from {
-			opacity: 0;
-			transform: rotateX(-78deg);
-		}
-		to {
+	/* Láminas: el cruce (4% de scroll) coincide con el de la vecina. Primera: 0–12% (sale 8–12 = 66,7–100%).
+	 * Medias: 16% de largo (entra 0–25%, sale 75–100%). Última: 12% (entra 0–33,3%). */
+	@keyframes p3-slide-primero {
+		0%,
+		66.67% {
 			opacity: 1;
-			transform: rotateX(0deg);
+			transform: none;
+		}
+		100% {
+			opacity: 0;
+			transform: translateY(-1.5rem);
+		}
+	}
+
+	@keyframes p3-slide-medio {
+		0% {
+			opacity: 0;
+			transform: translateY(1.5rem);
+		}
+		25%,
+		75% {
+			opacity: 1;
+			transform: none;
+		}
+		100% {
+			opacity: 0;
+			transform: translateY(-1.5rem);
+		}
+	}
+
+	@keyframes p3-slide-ultimo {
+		0% {
+			opacity: 0;
+			transform: translateY(1.5rem);
+		}
+		33.33%,
+		100% {
+			opacity: 1;
+			transform: none;
+		}
+	}
+
+	@keyframes p3-chip-primero {
+		0%,
+		66.67% {
+			transform: scale(1.1);
+			background-color: var(--c);
+			color: #081a31;
+			box-shadow:
+				0 0 0 4px color-mix(in srgb, var(--c) 35%, transparent),
+				0 0 22px color-mix(in srgb, var(--c) 55%, transparent);
+		}
+		100% {
+			transform: scale(1);
+			background-color: color-mix(in srgb, var(--c) 18%, transparent);
+			color: #ffffff;
+			box-shadow:
+				0 0 0 0 transparent,
+				0 0 0 0 transparent;
+		}
+	}
+
+	@keyframes p3-chip-medio {
+		0% {
+			transform: scale(1);
+			background-color: color-mix(in srgb, var(--c) 18%, transparent);
+			color: #ffffff;
+			box-shadow:
+				0 0 0 0 transparent,
+				0 0 0 0 transparent;
+		}
+		25%,
+		75% {
+			transform: scale(1.1);
+			background-color: var(--c);
+			color: #081a31;
+			box-shadow:
+				0 0 0 4px color-mix(in srgb, var(--c) 35%, transparent),
+				0 0 22px color-mix(in srgb, var(--c) 55%, transparent);
+		}
+		100% {
+			transform: scale(1);
+			background-color: color-mix(in srgb, var(--c) 18%, transparent);
+			color: #ffffff;
+			box-shadow:
+				0 0 0 0 transparent,
+				0 0 0 0 transparent;
+		}
+	}
+
+	@keyframes p3-chip-ultimo {
+		0% {
+			transform: scale(1);
+			background-color: color-mix(in srgb, var(--c) 18%, transparent);
+			color: #ffffff;
+			box-shadow:
+				0 0 0 0 transparent,
+				0 0 0 0 transparent;
+		}
+		33.33%,
+		100% {
+			transform: scale(1.1);
+			background-color: var(--c);
+			color: #081a31;
+			box-shadow:
+				0 0 0 4px color-mix(in srgb, var(--c) 35%, transparent),
+				0 0 22px color-mix(in srgb, var(--c) 55%, transparent);
 		}
 	}
 
@@ -257,16 +496,38 @@ const RANGO_HERRAMIENTA = (i: number) => rangoEscalonadoContain(2, i, 4, 8);
 	}
 
 	@supports (animation-timeline: scroll(root)) {
-		.p3-herramienta {
-			opacity: 0;
-			transform: rotateX(-78deg);
-			animation: p3-herramienta-despliega linear both;
+		.p3-slide,
+		.p3-chip {
+			animation-timing-function: linear;
+			animation-fill-mode: both;
 			animation-timeline: --como-lo-hace;
+		}
+		.p3-slide {
+			opacity: 0;
+		}
+		.p3-slide--primero {
+			opacity: 1;
+			animation-name: p3-slide-primero;
+		}
+		.p3-slide--medio {
+			animation-name: p3-slide-medio;
+		}
+		.p3-slide--ultimo {
+			animation-name: p3-slide-ultimo;
+		}
+		.p3-chip--primero {
+			animation-name: p3-chip-primero;
+		}
+		.p3-chip--medio {
+			animation-name: p3-chip-medio;
+		}
+		.p3-chip--ultimo {
+			animation-name: p3-chip-ultimo;
 		}
 		.p3-beat-a {
 			animation: p3-beat-a-sale linear both;
 			animation-timeline: --como-lo-hace;
-			animation-range: contain 30% contain 38%;
+			animation-range: contain 44% contain 52%;
 		}
 		/* HALLAZGO DEL EJECUTOR, corregido acá: Beat B (el carril + subtítulo) nunca tenía entrada
 		 * propia — solo la FILA del carril se animaba (traslado horizontal), no el beat en sí. Con
@@ -280,7 +541,7 @@ const RANGO_HERRAMIENTA = (i: number) => rangoEscalonadoContain(2, i, 4, 8);
 			opacity: 0;
 			animation: p3-beat-b-entra linear both;
 			animation-timeline: --como-lo-hace;
-			animation-range: contain 30% contain 38%;
+			animation-range: contain 44% contain 52%;
 		}
 	}
 
@@ -296,11 +557,6 @@ const RANGO_HERRAMIENTA = (i: number) => rangoEscalonadoContain(2, i, 4, 8);
 	 * contando como candidato de solapamiento) y el carril de Beat B queda en su posición FINAL
 	 * (recortada, como siempre) en vez de a mitad de camino. */
 	@media (prefers-reduced-motion: reduce) {
-		.p3-herramienta {
-			animation: none !important;
-			opacity: 1;
-			transform: none;
-		}
 		.p3-beat-a {
 			display: none;
 		}
@@ -477,7 +733,7 @@ const RANGO_HERRAMIENTA = (i: number) => rangoEscalonadoContain(2, i, 4, 8);
 		.p3-carril-fila {
 			animation: p3-carril-escritorio linear both;
 			animation-timeline: --como-lo-hace;
-			animation-range: contain 40% contain 95%;
+			animation-range: contain 54% contain 96%;
 		}
 
 		@media (width < 900px) {
@@ -491,7 +747,7 @@ const RANGO_HERRAMIENTA = (i: number) => rangoEscalonadoContain(2, i, 4, 8);
 			transform: translateY(1rem);
 			animation: p3-beat-b-cierre-entra linear both;
 			animation-timeline: --como-lo-hace;
-			animation-range: contain 92% contain 100%;
+			animation-range: contain 94% contain 100%;
 		}
 	}
 
@@ -516,6 +772,16 @@ const RANGO_HERRAMIENTA = (i: number) => rangoEscalonadoContain(2, i, 4, 8);
 		.p3-beat-b {
 			grid-area: auto;
 		}
+		/* Las 4 láminas se apilan en flujo (todas visibles, sin indicador de progreso). */
+		.p3-escena {
+			gap: var(--espacio-md);
+		}
+		.p3-slide {
+			grid-area: auto;
+		}
+		.p3-chips {
+			display: none;
+		}
 		.p3-caja {
 			grid-template-columns: minmax(0, 1fr);
 			gap: var(--espacio-lg);
@@ -536,3 +802,68 @@ const RANGO_HERRAMIENTA = (i: number) => rangoEscalonadoContain(2, i, 4, 8);
 		}
 	}
 </style>
+
+<script>
+	// Click en una pastilla del Beat A: cambia DIRECTO a esa herramienta, sin pasar por las
+	// intermedias. Como las láminas están atadas al scroll, se hace así: fundido a 0 de la escena →
+	// salto instantáneo del scroll hasta la ENTRADA de la lámina elegida → fundido de vuelta, y desde
+	// ahí un avance corto hasta su punto final (así se ven sus animaciones: río, sello, carteles).
+	// Los % son del tramo pineado de la sección (el mismo de `animation-range: contain`).
+	// Si el usuario mueve la rueda, toca la pantalla o usa el teclado, se cancela.
+	const seccion = document.getElementById('como-lo-hace');
+	const escena = document.querySelector<HTMLElement>('.p3-escena');
+	let cancelar: (() => void) | null = null;
+
+	const posicion = (porcentaje: number) => {
+		if (!seccion) return 0;
+		const arriba = seccion.getBoundingClientRect().top + window.scrollY;
+		const tramo = seccion.offsetHeight - window.innerHeight;
+		return arriba + (tramo * porcentaje) / 100;
+	};
+	const saltar = (y: number) => window.scrollTo({ top: y, behavior: 'instant' });
+
+	function cambiarA(inicio: number, destino: number, reducido: boolean) {
+		cancelar?.();
+		if (!escena || reducido) {
+			saltar(posicion(destino));
+			return;
+		}
+		let id = 0;
+		let espera = 0;
+		const parar = () => {
+			clearTimeout(espera);
+			cancelAnimationFrame(id);
+			escena.style.opacity = '';
+			cancelar = null;
+			['wheel', 'touchstart', 'keydown'].forEach((e) => window.removeEventListener(e, parar));
+		};
+		cancelar = parar;
+		['wheel', 'touchstart', 'keydown'].forEach((e) => window.addEventListener(e, parar, { passive: true }));
+
+		escena.style.opacity = '0'; // 1) se desvanece la lámina actual
+		espera = window.setTimeout(() => {
+			saltar(posicion(inicio)); // 2) salto directo a la entrada de la elegida (nadie lo ve)
+			id = requestAnimationFrame(() => {
+				escena.style.opacity = ''; // 3) aparece la elegida…
+				const origen = posicion(inicio);
+				const delta = posicion(destino) - origen;
+				const duracion = 900;
+				const t0 = performance.now();
+				const paso = (ahora: number) => {
+					const t = Math.min(1, (ahora - t0) / duracion);
+					saltar(origen + delta * (1 - Math.pow(1 - t, 3))); // …y avanza hasta su punto final
+					if (t < 1) id = requestAnimationFrame(paso);
+					else parar();
+				};
+				id = requestAnimationFrame(paso);
+			});
+		}, 170);
+	}
+
+	document.querySelectorAll<HTMLButtonElement>('.p3-chip').forEach((chip) => {
+		chip.addEventListener('click', () => {
+			const reducido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+			cambiarA(Number(chip.dataset.inicio), Number(chip.dataset.destino), reducido);
+		});
+	});
+</script>
