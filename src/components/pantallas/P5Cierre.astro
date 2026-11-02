@@ -1,168 +1,166 @@
 ---
 /**
  * P5Cierre.astro — P5 · Cierre / CTA (`cierre`), última de las 5 secciones del escenario vertical.
- * Reescrita sobre `<Seccion>` en Bloque E, E11 (docs/planes/2026-09-23-bloque-e-secciones-chrome.md
- * §5). Contenido en `src/data/cierre.ts`.
+ * Rediseño 2026-11-02 (fusión "la ruta llega a destino" + "el celular protagonista"). Contenido en
+ * `src/data/cierre.ts`.
+ *
+ * === Composición ===
+ * - El celular fijo (centrado, ver `TELEFONO.cierre` en escenario.ts) es el destino: una RUTA se
+ *   dibuja con el scroll desde el borde izquierdo del marco hasta el borde del celular y remata en
+ *   un pin.
+ * - Sobre la pantalla del celular se arma el LOGO (isotipo + nombre) con el gesto de P1 — vive en
+ *   `Telefono.astro` (`.telefono__bienvenida`) y lo enciende la clase `:root.en-cierre` que pone el
+ *   script de abajo cuando la sección ya está casi a la vista. El nombre de la marca aparece SOLO
+ *   ahí: ni el titular ni este componente lo repiten.
+ * - A la derecha del celular: kicker «Muy pronto», titular y CTA de WhatsApp.
  *
  * === Sin meseta (L=100) → rango `entry`, no `contain` ===
- * A diferencia de las otras 4 secciones, "cierre" mide exactamente 100svh (`PRESUPUESTO_SVH`,
- * escenario.ts): no hay tramo pineado, la sección entra y el documento termina. Todos los gestos
- * van sobre `animation-range: entry …` del propio `view-timeline: --cierre` (la fase en la que la
- * sección está ENTRANDO al viewport), no `contain` (que acá mediría 0).
+ * "cierre" mide 100svh: no hay tramo pineado, la sección entra y el documento termina. Los gestos
+ * van sobre `animation-range: entry …` del `view-timeline: --cierre`.
  *
- * === Barrido del titular — reimplementado para cumplir la restricción 4 (H de este bloque) ===
- * La versión "cinta" animaba `background-position` con un keyframe fijo (sin variable). Acá se
- * anima un `@property --p5-barrido` (`<percentage>`) registrado, y la declaración usa
- * `background-position: var(--p5-barrido) 0` — la variable va en la DECLARACIÓN, nunca dentro de
- * un `@keyframes` (restricción 3 de escenario.ts).
- *
- * === CTA bloqueado (D1) ===
- * `cierre.ts` tiene `cta: null`. En dev se ve un hueco marcado con borde punteado; en build no se
- * renderiza nada — nunca llega a producción un botón sin acción.
+ * === CTA ===
+ * Mientras `whatsapp.numero` sea `null` no se renderiza el botón en build (solo un hueco punteado
+ * bajo `astro dev`). Ver `cierre.ts`.
  */
 import Seccion from '../Seccion.astro';
-import logoUrl from '../../assets/logo/isotipo-original.svg?url';
-import { titular, cta } from '../../data/cierre.ts';
-import { conMarca } from '../../lib/marca.ts';
+import { kicker, titular, apoyo, whatsapp, enlaceWhatsApp } from '../../data/cierre.ts';
+
+const href = enlaceWhatsApp();
 ---
 
 <Seccion id="cierre">
 	<div class="p5 seccion__caja">
-		<div class="p5-contenido">
-			<div class="p5-marca">
-				<img class="p5-isotipo" src={logoUrl} alt="" width="96" height="88" />
-				<p class="p5-nombre">Sur en Ruta</p>
-			</div>
+		<!-- Ruta que llega al celular (solo escritorio). Ancho = del borde del marco al borde del celular. -->
+		<div class="p5-ruta" aria-hidden="true">
+			<svg viewBox="0 0 100 100" preserveAspectRatio="none">
+				<path
+					class="p5-ruta__base"
+					d="M 0 88 C 30 88, 38 50, 100 50"
+					pathLength="1"
+					vector-effect="non-scaling-stroke"></path>
+			</svg>
+			<svg class="p5-ruta__trazo" viewBox="0 0 100 100" preserveAspectRatio="none">
+				<path d="M 0 88 C 30 88, 38 50, 100 50" vector-effect="non-scaling-stroke"></path>
+			</svg>
+			<span class="p5-ruta__pin"></span>
+		</div>
 
-			<div class="p5-mensaje">
-				<h2 class="p5-titular" set:html={conMarca(titular)} />
-				<div class="p5-accion">
-					{
-						cta ? (
-							<>
-								<a class="p5-boton" href={cta.href}>
-									{cta.texto}
-								</a>
-								{cta.apoyo && <p class="p5-apoyo">{cta.apoyo}</p>}
-							</>
-						) : import.meta.env.DEV ? (
-							<p class="p5-hueco">[CTA — a definir (D1)]</p>
-						) : null
-					}
-				</div>
+		<div class="p5-mensaje">
+			<p class="p5-kicker">{kicker}</p>
+			<h2 class="p5-titular">{titular}</h2>
+			<div class="p5-accion">
+				{
+					href ? (
+						<>
+							<a class="p5-boton" href={href} target="_blank" rel="noopener">
+								{whatsapp.texto}
+							</a>
+							<p class="p5-apoyo">{apoyo}</p>
+						</>
+					) : (
+						<>
+							{import.meta.env.DEV && <p class="p5-hueco">[Botón de WhatsApp — falta el número]</p>}
+							<p class="p5-apoyo">{apoyo}</p>
+						</>
+					)
+				}
 			</div>
 		</div>
 	</div>
 </Seccion>
 
-<style>
-	@property --p5-barrido {
-		syntax: '<percentage>';
-		inherits: false;
-		initial-value: 140%;
+<script>
+	// Enciende el logo sobre el celular cuando la ruta LLEGA a destino (casi al final del tramo
+	// pineado de P5). Al volver hacia arriba se apaga y las piezas vuelven a su lugar de partida.
+	// Sin scroll-driven (Firefox: la sección mide ~100vh y no hay tramo pineado) el progreso no
+	// existe: se enciende apenas la sección está casi a la vista.
+	const seccion = document.getElementById('cierre');
+	if (seccion) {
+		const raiz = document.documentElement;
+		let pendiente = false;
+		const evaluar = () => {
+			pendiente = false;
+			const r = seccion.getBoundingClientRect();
+			const meseta = r.height - window.innerHeight;
+			const llego =
+				meseta > 8
+					? -r.top / meseta >= 0.92
+					: r.top < window.innerHeight * 0.4 && r.bottom > window.innerHeight * 0.6;
+			raiz.classList.toggle('en-cierre', llego);
+		};
+		const pedir = () => {
+			if (!pendiente) {
+				pendiente = true;
+				requestAnimationFrame(evaluar);
+			}
+		};
+		addEventListener('scroll', pedir, { passive: true });
+		addEventListener('resize', pedir);
+		evaluar();
 	}
+</script>
 
+<style>
+	/* Ancho del celular de P5: alto base 56svh × escala 1.04, relación 9/17 → ≈ 31svh; mitad ≈ 15.5svh.
+	 * Cota izquierda del bloque derecho y borde derecho de la ruta salen de acá. */
 	.p5 {
+		--p5-medio-celular: 15.5svh;
 		align-content: center;
 	}
 
-	.p5-contenido {
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-		gap: var(--espacio-lg);
-		width: 100%;
+	/* Marco de composición (como P1–P4, ver `--marco-max` en tokens.css). */
+	@media (width >= 900px) {
+		.p5 {
+			padding-inline: max(
+				clamp(1.25rem, 4vw, 4rem),
+				calc((100% - var(--marco-max)) / 2 + clamp(1.25rem, 4vw, 4rem))
+			);
+		}
 	}
 
-	/* Deja libre el ancho del celular (x 0, centrado) — cada columna se achica en función del
-	 * ancho disponible menos una reserva aproximada del celular (18svh). */
-	.p5-marca,
+	/* === Mensaje (a la derecha del celular) === */
 	.p5-mensaje {
-		max-width: calc(100vw / 2 - 18svh);
+		display: flex;
+		flex-direction: column;
+		align-items: flex-start;
+		gap: var(--espacio-md);
+		margin-inline-start: auto;
+		width: calc(50% - var(--p5-medio-celular) - 2rem);
+		max-width: 30rem;
 	}
 
 	@media (width < 900px) {
 		.p5 {
 			align-content: start;
 		}
-		.p5-contenido {
-			flex-direction: column;
+		.p5-mensaje {
+			width: auto;
+			max-width: none;
+			margin-inline: 0;
 			align-items: center;
 			text-align: center;
-			/* AJUSTE DEL EJECUTOR sobre el plan (E11), con evidencia: en 369×698 el hueco de CTA
-			 * (`astro dev`) quedaba superpuesto con `.telefono__marco` (confirmado con
-			 * elementFromPoint, overlap real, casi cero margen). Gap más chico. */
 			gap: 0.65rem;
 		}
-		.p5-marca,
-		.p5-mensaje {
-			max-width: none;
-		}
 	}
 
-	.p5-marca {
-		display: flex;
-		flex-direction: column;
-		align-items: flex-start;
-		gap: var(--espacio-xs);
-	}
-
-	@media (width < 900px) {
-		.p5-marca {
-			align-items: center;
-		}
-	}
-
-	.p5-isotipo {
-		width: clamp(4.5rem, 4vw + 3.5rem, 7rem);
-		height: auto;
-	}
-
-	@media (width < 900px) {
-		.p5-isotipo {
-			width: clamp(3rem, 8vw + 1.5rem, 4.5rem);
-		}
-	}
-
-	.p5-nombre {
+	.p5-kicker {
 		margin: 0;
-		font-family: var(--fuente-marca);
-		font-weight: 400;
+		font-family: var(--fuente-display);
+		font-weight: 800;
+		font-size: var(--texto-sm);
+		letter-spacing: 0.22em;
 		text-transform: uppercase;
-		letter-spacing: 0.06em;
-		font-size: clamp(2.5rem, 1.5rem + 3vw, 4.5rem);
-		color: var(--color-marino);
-	}
-
-	@media (width < 900px) {
-		.p5-nombre {
-			font-size: clamp(1.75rem, 1rem + 4vw, 2.75rem);
-		}
-	}
-
-	.p5-mensaje {
-		display: flex;
-		flex-direction: column;
-		align-items: flex-start;
-		gap: var(--espacio-md);
-	}
-
-	@media (width < 900px) {
-		.p5-mensaje {
-			align-items: center;
-		}
+		color: var(--color-verde-vivo);
 	}
 
 	.p5-titular {
 		margin: 0;
 		font-family: var(--fuente-display);
 		font-weight: 800;
-		font-size: clamp(2.25rem, 1.6rem + 3.2vw, 4.25rem);
+		font-size: clamp(2.25rem, 1.6rem + 3.2vw, 4rem);
 		line-height: 1.05;
-		max-width: 22ch;
-		/* Estado final / fallback (sin scroll-driven, o prefers-reduced-motion): color sólido, sin
-		 * background-clip — restricción 1 de escenario.ts. */
-		color: var(--color-marino);
+		color: #fff;
+		text-shadow: 0 1px 16px color-mix(in srgb, var(--color-marino-noche) 70%, transparent);
 	}
 
 	@media (width < 900px) {
@@ -201,124 +199,167 @@ import { conMarca } from '../../lib/marca.ts';
 		margin: 0;
 		font-family: var(--fuente-texto);
 		font-size: var(--texto-sm);
-		color: var(--color-tinta-suave);
+		color: rgb(255 255 255 / 0.7);
 	}
 
-	/* Hueco de desarrollo — solo bajo `astro dev` (ver frontmatter): nunca llega a `dist/`. */
+	/* Hueco de desarrollo — solo bajo `astro dev`: nunca llega a `dist/`. */
 	.p5-hueco {
 		margin: 0;
 		padding: 0.6rem 1.1rem;
-		border: 1.5px dashed var(--color-tinta-suave);
+		border: 1.5px dashed rgb(255 255 255 / 0.7);
 		border-radius: var(--radio-md);
 		font-family: var(--fuente-texto);
 		font-size: var(--texto-sm);
-		color: var(--color-tinta-suave);
+		color: rgb(255 255 255 / 0.7);
 	}
 
-	/* === "El bloque llega" — único zoom-out de toda la cinta === */
-	@keyframes p5-contenido-asienta {
+	/* === Ruta que llega al celular (solo escritorio) === */
+	.p5-ruta {
+		display: none;
+	}
+
+	@media (width >= 900px) {
+		.p5-ruta {
+			display: block;
+			position: absolute;
+			z-index: 0;
+			top: 0;
+			bottom: 0;
+			inset-inline-start: max(0px, calc((100% - var(--marco-max)) / 2));
+			inset-inline-end: calc(50% + var(--p5-medio-celular));
+			pointer-events: none;
+		}
+	}
+
+	.p5-ruta svg {
+		/* base punteada y trazo comparten caja; el trazo se REVELA de izquierda a derecha (clip-path) */
+		position: absolute;
+		inset: 0;
+		width: 100%;
+		height: 100%;
+		overflow: visible;
+	}
+
+	.p5-ruta path {
+		fill: none;
+		stroke-linecap: butt;
+		stroke-width: 5;
+		/* Trazos de ruta. En px de pantalla (non-scaling-stroke), igual en la base y en el trazo para que calcen. */
+		stroke-dasharray: 54 28;
+	}
+
+	.p5-ruta__base {
+		stroke: rgb(255 255 255 / 0.14);
+	}
+
+	.p5-ruta__trazo path {
+		stroke: var(--color-celeste);
+	}
+
+	/* Pin al final de la ruta: en el borde del celular, a media altura (y = 50% del trazo). */
+	.p5-ruta__pin {
+		position: absolute;
+		inset-inline-end: 0;
+		top: 50%;
+		width: 1.1rem;
+		height: 1.1rem;
+		translate: 50% -50%;
+		border-radius: 50%;
+		background: var(--color-bandera-amarillo);
+		box-shadow:
+			0 0 0 4px color-mix(in srgb, var(--color-bandera-amarillo) 30%, transparent),
+			0 0 22px color-mix(in srgb, var(--color-bandera-amarillo) 60%, transparent);
+	}
+
+	/* === Gesto de P5 ===
+	 * Entrada (la sección sube al viewport, ~100svh de scroll): los elementos CAEN en su lugar y la
+	 * ruta avanza hasta la mitad. Después, con P5 quieta (50svh de tramo pineado, `cierre: 150` en
+	 * escenario.ts), la ruta termina de llegar al celular, cae el pin y se arma el logo (script).
+	 * La ruta es UNA sola animación sobre `entry 0% → contain 100%`; entry ocupa 100/150 = 66,7% del
+	 * rango, ahí el trazo está a la mitad. Si cambia `cierre` en escenario.ts, recalcular ese 66.7%
+	 * y los de abajo. */
+	@keyframes p5-ruta-dibuja {
 		from {
-			transform: scale(1.1);
+			clip-path: inset(-10% 100% -10% 0);
+		}
+		66.7% {
+			clip-path: inset(-10% 50% -10% 0);
 		}
 		to {
-			transform: scale(1);
+			clip-path: inset(-10% 0% -10% 0);
 		}
 	}
 
-	@supports (animation-timeline: scroll(root)) {
-		.p5-contenido {
-			transform: scale(1.1);
-			animation: p5-contenido-asienta linear both;
-			animation-timeline: --cierre;
-			animation-range: entry 0% entry 80%;
+	/* El pin cae desde arriba sobre el destino y rebota (último 25% del tramo pineado). */
+	@keyframes p5-pin-cae {
+		0%,
+		50% {
+			opacity: 0;
+			translate: 50% -650%;
 		}
-	}
-
-	@media (prefers-reduced-motion: reduce) {
-		.p5-contenido {
-			animation: none !important;
-			transform: none;
+		52% {
+			opacity: 1;
 		}
-	}
-
-	/* === "El titular se enciende" — barrido de color, único gradient-text del sitio === */
-	@keyframes p5-titular-enciende {
-		from {
-			--p5-barrido: 140%;
+		75% {
+			translate: 50% -50%;
 		}
-		to {
-			--p5-barrido: 0%;
-		}
-	}
-
-	@supports (animation-timeline: scroll(root)) {
-		.p5-titular {
-			background-image: linear-gradient(
-				100deg,
-				var(--color-marino) 0%,
-				var(--color-marino) 35%,
-				var(--color-verde) 50%,
-				var(--color-marino) 65%,
-				var(--color-marino) 100%
-			);
-			background-size: 260% 100%;
-			background-position: var(--p5-barrido) 0;
-			-webkit-background-clip: text;
-			background-clip: text;
-			color: transparent;
-			animation: p5-titular-enciende linear both;
-			animation-timeline: --cierre;
-			animation-range: entry 20% entry 90%;
-		}
-	}
-
-	@media (prefers-reduced-motion: reduce) {
-		.p5-titular {
-			animation: none !important;
-			background-image: none;
-			-webkit-background-clip: unset;
-			background-clip: unset;
-			color: var(--color-marino);
-		}
-	}
-
-	/* === El isotipo "choca" — mismo gesto ya aprobado de la vieja Pantalla 1 === */
-	@keyframes p5-isotipo-choca {
-		0% {
-			transform: translateY(125%);
-		}
-		48% {
-			transform: translateY(0%);
-		}
-		58% {
-			transform: translateY(-20%) scaleY(1.12);
-		}
-		72% {
-			transform: translateY(7%) scaleY(0.84);
-		}
-		84% {
-			transform: translateY(-6%) scaleY(1.06);
-		}
-		93% {
-			transform: translateY(2%) scaleY(0.98);
+		87% {
+			translate: 50% -170%;
 		}
 		100% {
-			transform: translateY(0%) scaleY(1);
+			opacity: 1;
+			translate: 50% -50%;
+		}
+	}
+
+	@keyframes p5-cae {
+		from {
+			opacity: 0;
+			transform: translateY(-3.5rem);
+		}
+		to {
+			opacity: 1;
+			transform: translateY(0);
 		}
 	}
 
 	@supports (animation-timeline: scroll(root)) {
-		.p5-isotipo {
-			transform-origin: bottom center;
-			animation: p5-isotipo-choca linear both;
+		.p5-ruta__trazo {
+			animation: p5-ruta-dibuja linear both;
 			animation-timeline: --cierre;
-			animation-range: entry 70% entry 100%;
+			animation-range: entry 0% contain 100%;
+		}
+		.p5-ruta__pin {
+			translate: 50% -50%;
+			animation: p5-pin-cae linear both;
+			animation-timeline: --cierre;
+			animation-range: contain 0% contain 100%;
+		}
+		.p5-kicker,
+		.p5-titular,
+		.p5-accion {
+			animation: p5-cae cubic-bezier(0.2, 0.7, 0.2, 1) both;
+			animation-timeline: --cierre;
+		}
+		.p5-kicker {
+			animation-range: entry 5% entry 40%;
+		}
+		.p5-titular {
+			animation-range: entry 25% entry 65%;
+		}
+		.p5-accion {
+			animation-range: entry 50% entry 90%;
 		}
 	}
 
 	@media (prefers-reduced-motion: reduce) {
-		.p5-isotipo {
+		.p5-ruta__trazo,
+		.p5-ruta__pin,
+		.p5-kicker,
+		.p5-titular,
+		.p5-accion {
 			animation: none !important;
+			opacity: 1;
 			transform: none;
 		}
 	}

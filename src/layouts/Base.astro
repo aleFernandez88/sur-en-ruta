@@ -90,7 +90,8 @@ const urlImagenOG = new URL('/og-image.png', Astro.site ?? 'https://surenruta.uy
 		-->
 		<meta name="theme-color" content="#f1f0ee" />
 		<link rel="icon" type="image/svg+xml" href={`${import.meta.env.BASE_URL}favicon.svg`} />
-		<link rel="icon" href={`${import.meta.env.BASE_URL}favicon.ico`} />
+		<link rel="icon" href={`${import.meta.env.BASE_URL}favicon.ico`} sizes="48x48" />
+		<link rel="apple-touch-icon" href={`${import.meta.env.BASE_URL}apple-touch-icon.png`} />
 
 		<meta name="generator" content={Astro.generator} />
 	</head>

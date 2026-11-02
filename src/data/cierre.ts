@@ -1,22 +1,38 @@
 /**
- * cierre.ts — contenido de P5 · Cierre (`cierre`), última de las 5 secciones. El titular es texto
- * de spot, literal aprobado (`docs/landing-contenido.md` § P5). El CTA sigue bloqueado por Ale
- * (decisión D1, `docs/planes/2026-09-04-reescritura-index-p1-p5.md` §9): la app no existe, así que
- * el CTA no puede decir "descargala".
+ * cierre.ts — contenido de P5 · Cierre (`cierre`), última de las 5 secciones. Titular y kicker son
+ * texto de spot libre (CLAUDE.md §6). El nombre de la marca NO va en el titular: aparece una sola
+ * vez, como logo, sobre el propio celular.
  *
- * Mientras `cta` sea `null`, `P5Cierre.astro` NO renderiza ningún bloque de acción en build (nunca
- * llega a producción un botón sin acción) — solo bajo `astro dev` se ve un hueco marcado, para que
- * el layout no cambie el día que D1 se resuelva y se complete este archivo.
+ * CTA (D1): la app todavía no existe, así que no se puede decir "descargala". Se muestra «Muy
+ * pronto» y una invitación a consultar por WhatsApp. Mientras `whatsapp.numero` sea `null`, el build
+ * NO renderiza el botón (nunca llega a producción un botón sin destino) — solo bajo `astro dev` se
+ * ve un hueco marcado. Cuando haya número: formato internacional sin `+` ni espacios, ej.
+ * '59899123456'.
  */
 
-export const titular = 'Sur en Ruta está en camino.';
+export const kicker = 'Muy pronto';
 
-export interface CTA {
-	/** Texto del botón. Nunca "Descargá la app" — la app todavía no existe (regla D1). */
+export const titular = 'Tu próximo viaje ya tiene ruta.';
+
+/** Línea de apoyo bajo el botón. */
+export const apoyo = 'La app está en desarrollo.';
+
+export interface WhatsApp {
+	/** Número en formato internacional, solo dígitos. `null` = todavía no hay número. */
+	numero: string | null;
+	/** Texto del botón. */
 	texto: string;
-	href: string;
-	/** Línea de apoyo opcional debajo del botón (ej. "La app está en desarrollo", §14.4). */
-	apoyo?: string;
+	/** Mensaje precargado en el chat. */
+	mensaje: string;
 }
 
-export const cta: CTA | null = null;
+export const whatsapp: WhatsApp = {
+	numero: null,
+	texto: 'Consultanos por WhatsApp',
+	mensaje: 'Hola, quiero saber más sobre Sur en Ruta.',
+};
+
+/** Enlace `wa.me` o `null` si todavía no hay número. */
+export function enlaceWhatsApp(w: WhatsApp = whatsapp): string | null {
+	return w.numero ? `https://wa.me/${w.numero}?text=${encodeURIComponent(w.mensaje)}` : null;
+}

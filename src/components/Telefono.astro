@@ -34,6 +34,12 @@
  */
 import { Image } from 'astro:assets';
 import type { ImageMetadata } from 'astro';
+import logoSvg from '../assets/logo/isotipo-bandera.svg?raw';
+import { isotipoPiezas } from '../lib/isotipo-piezas.ts';
+import { NOMBRE_MARCA } from '../lib/marca.ts';
+
+/** Isotipo con piezas sueltas para la bienvenida de P5 (el gesto de armado de P1). */
+const piezas = isotipoPiezas(logoSvg, 'tel');
 
 interface Props {
 	modo?: 'vivo' | 'imagen';
@@ -72,6 +78,10 @@ const srcVivo = `${base}app-demo/index.html?embed=1`;
 						src && <Image class="telefono__imagen" src={src} alt="" width={390} height={844} />
 					)
 				}
+				<div class="telefono__bienvenida">
+					<svg class="telefono__isotipo" viewBox="0 0 1830 1670" aria-hidden="true" set:html={piezas} />
+					<p class="telefono__nombre marca">{NOMBRE_MARCA}</p>
+				</div>
 			</div>
 		</div>
 	</div>
@@ -159,6 +169,89 @@ const srcVivo = `${base}app-demo/index.html?embed=1`;
 	/* El iframe/imagen se renderiza SIEMPRE a 390px de ancho lógico (el ancho para el que está
 	 * diseñado el mockup, ver showcase.html) y se escala para calzar — así el layout no depende
 	 * del tamaño del celular en el escenario. `--fit` lo setea el ResizeObserver de Escenario.astro. */
+	/* Bienvenida de P5 (cierre): el logo se arma sobre la pantalla del celular, con el gesto de P1
+	 * (cada pieza llega de un lado y se arma). La enciende `:root.en-cierre` (script abajo). Fuera
+	 * de P5 está invisible. `container-type` para dimensionar con cqw según el celular. */
+	.telefono__pantalla {
+		container-type: size;
+	}
+
+	.telefono__bienvenida {
+		position: absolute;
+		inset: 0;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		gap: 5cqw;
+		background: linear-gradient(
+			170deg,
+			var(--color-bandera-azul) 0%,
+			var(--color-marino-noche) 85%
+		);
+		opacity: 0;
+		pointer-events: none;
+		transition: opacity 500ms ease-out;
+	}
+
+	:global(:root.en-cierre) .telefono__bienvenida {
+		opacity: 1;
+	}
+
+	.telefono__isotipo {
+		display: block;
+		width: 70cqw;
+		height: auto;
+	}
+
+	.telefono__nombre {
+		margin: 0;
+		font-size: 9.5cqw;
+		color: #fff;
+		white-space: nowrap;
+		opacity: 0;
+		transform: translateY(2cqw);
+		transition:
+			opacity 600ms ease-out 1.7s,
+			transform 600ms ease-out 1.7s;
+	}
+
+	:global(:root.en-cierre) .telefono__nombre {
+		opacity: 1;
+		transform: none;
+	}
+
+	.telefono__isotipo :global(.tel-pieza) {
+		transform-box: fill-box;
+		transform-origin: center;
+	}
+
+	:global(:root.js:not(.en-cierre)) .telefono__isotipo :global(.tel-pieza) {
+		opacity: 0;
+		transform: translate(calc(var(--dx) * 1px), calc(var(--dy) * 1px)) rotate(calc(var(--rot) * 1deg)) scale(0.5);
+	}
+
+	:global(:root.en-cierre) .telefono__isotipo :global(.tel-pieza) {
+		transition:
+			transform 1100ms cubic-bezier(0.16, 1, 0.3, 1) calc(250ms + var(--d)),
+			opacity 450ms ease-out calc(250ms + var(--d));
+	}
+
+	:global(:root.en-cierre) .telefono__isotipo :global(.tel-pieza--pin) {
+		transition:
+			transform 900ms cubic-bezier(0.34, 1.56, 0.64, 1) calc(250ms + var(--d)),
+			opacity 300ms ease-out calc(250ms + var(--d));
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.telefono__bienvenida,
+		.telefono__nombre,
+		:global(:root.en-cierre) .telefono__isotipo :global(.tel-pieza),
+		:global(:root.en-cierre) .telefono__isotipo :global(.tel-pieza--pin) {
+			transition: none;
+		}
+	}
+
 	.telefono__iframe,
 	.telefono__imagen {
 		width: 390px;

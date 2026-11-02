@@ -51,7 +51,7 @@ export const PRESUPUESTO_SVH: Record<string, number> = {
 	'que-hace': 160,
 	'como-lo-hace': 260,
 	donde: 260,
-	cierre: 100,
+	cierre: 150,
 };
 
 /** `ESCENARIO` se deriva de `recorrido` (orden y nombres) cruzado con `PRESUPUESTO_SVH` (largo) —
@@ -239,7 +239,7 @@ export const FONDO: Record<string, FondoSeccion> = {
 	'que-hace': { tokens: ['--color-bandera-azul'] },
 	'como-lo-hace': { tokens: ['--color-marino-noche'] },
 	donde: { tokens: rutas.map((r) => tokenDeVar(r.colorTrazo)), mezclaNoche: 0.2 },
-	cierre: { tokens: ['--color-arena'] },
+	cierre: { tokens: ['--color-marino-noche'] },
 };
 
 /** Tratamiento del rótulo "Vista conceptual de la app" (claro/oscuro) por sección — §4.1. */
@@ -248,5 +248,5 @@ export const ROTULO: Record<string, 'oscuro' | 'claro'> = {
 	'que-hace': 'oscuro',
 	'como-lo-hace': 'oscuro',
 	donde: 'oscuro',
-	cierre: 'claro',
+	cierre: 'oscuro',
 };
