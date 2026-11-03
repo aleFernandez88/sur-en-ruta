@@ -1,8 +1,9 @@
-name: Deploy a GitHub Pages
+name: Deploy a GitHub Pages (manual, respaldo)
+
+# Desde 2026-11-03 el deploy automático es a Hostinger (deploy-hostinger.yml). Este queda solo a mano
+# (workflow_dispatch) y compila con base '/sur-en-ruta/', que es donde sirve GitHub Pages de proyecto.
 
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
 
 permissions:
@@ -17,6 +18,9 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      SITE_URL: https://alefernandez88.github.io
+      BASE_PATH: /sur-en-ruta/
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -32,6 +36,9 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - name: Deploy a GitHub Pages
+      - name: Deploy a GitHub Pages (manual, respaldo)
+
+# Desde 2026-11-03 el deploy automático es a Hostinger (deploy-hostinger.yml). Este queda solo a mano
+# (workflow_dispatch) y compila con base '/sur-en-ruta/', que es donde sirve GitHub Pages de proyecto.
         id: deployment
         uses: actions/deploy-pages@v4

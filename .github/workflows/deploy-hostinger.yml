@@ -1,0 +1,68 @@
+name: Deploy a Hostinger
+
+# Cada push a `main` compila el sitio y sube SOLO `dist/` a Hostinger por SSH (rsync), nunca src/,
+# docs/ ni prototipos/. Hostinger no compila Astro, por eso el build corre acá.
+#
+# Secretos del repo (Settings → Secrets and variables → Actions); se cargan con `gh secret set`:
+#   SSH_KEY   llave PRIVADA de deploy (la pública va en hPanel → Avanzado → Acceso SSH)
+#   SSH_HOST  host/IP SSH de Hostinger
+#   SSH_PORT  puerto SSH (Hostinger no usa el 22)
+#   SSH_USER  usuario SSH (uNNNNNNNNN)
+# Variables (`gh variable set`):
+#   SSH_DIR   carpeta destino en el servidor, ej. /home/uNNN/domains/<dominio>/public_html/
+#   SITE_URL  (opcional) URL pública, para canonical/sitemap
+# `rsync --delete` borra en SSH_DIR lo que no esté en dist/ (salvo .htaccess, .well-known y cgi-bin):
+# SSH_DIR tiene que ser la carpeta de ESTE sitio, nunca una compartida con otro.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: hostinger
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+        env:
+          SITE_URL: ${{ vars.SITE_URL }}
+      - name: Chrome rechaza `animation` con scroll()/timeline dentro del shorthand
+        run: |
+          if grep -rhoE 'animation:[^;}]*(scroll\(|--(que|como|donde|cierre)[a-z-]*)' dist/_astro/*.css dist/index.html; then
+            echo "::error::El minificador fusionó animation-timeline dentro del shorthand animation"
+            exit 1
+          fi
+      - name: Preparar llave SSH
+        env:
+          SSH_KEY: ${{ secrets.SSH_KEY }}
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_PORT: ${{ secrets.SSH_PORT }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -p "$SSH_PORT" "$SSH_HOST" >> ~/.ssh/known_hosts
+      - name: Subir dist/ a Hostinger (rsync por SSH)
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_PORT: ${{ secrets.SSH_PORT }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_DIR: ${{ vars.SSH_DIR }}
+        run: |
+          rsync -az --delete \
+            --exclude '.htaccess' --exclude '.well-known' --exclude 'cgi-bin' \
+            -e "ssh -i ~/.ssh/deploy_key -p $SSH_PORT" \
+            dist/ "$SSH_USER@$SSH_HOST:$SSH_DIR"

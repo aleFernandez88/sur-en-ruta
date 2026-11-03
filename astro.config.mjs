@@ -1,12 +1,17 @@
 // @ts-check
 import { defineConfig } from 'astro/config';
 
+// `site` y `base` salen de variables de entorno para poder servir el mismo código desde:
+//   - Hostinger (dominio raíz, hoy el dominio temporal y luego surenruta.uy): SITE_URL / BASE_PATH sin definir → base '/'.
+//   - GitHub Pages de proyecto (deploy.yml, solo manual): define BASE_PATH='/sur-en-ruta/'.
+// Cuando el dominio definitivo esté conectado, poner SITE_URL=https://surenruta.uy en el workflow de deploy.
+const site = process.env.SITE_URL || undefined;
+const base = process.env.BASE_PATH || '/';
+
 // https://astro.build/config
 export default defineConfig({
-  // GitHub Pages de proyecto (no de usuario): sirve desde /sur-en-ruta/, no desde la raíz.
-  // PROVISORIO: cuando surenruta.uy tenga hosting definitivo (plan, paso 14), site/base cambian.
-  site: 'https://alefernandez88.github.io',
-  base: '/sur-en-ruta/',
+  site,
+  base,
   vite: {
     build: {
       // lightningcss (el minificador por defecto de Vite 8) fusiona `animation` + `animation-timeline`
