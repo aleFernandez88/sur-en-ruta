@@ -63,7 +63,20 @@ const href = enlaceWhatsApp();
 			<section class="p5-encuestas" aria-labelledby="p5-encuestas-titulo">
 				<h3 class="p5-encuestas__titulo" id="p5-encuestas-titulo">{encuestas.titulo}</h3>
 				<p class="p5-encuestas__bajada">{encuestas.bajada}</p>
-				<p class="p5-encuestas__instruccion">{encuestas.instruccion}</p>
+				<p class="p5-encuestas__instruccion">
+					<svg class="p5-encuestas__icono p5-encuestas__icono--qr" viewBox="0 0 24 24" aria-hidden="true">
+						<path d="M3 8V5a2 2 0 0 1 2-2h3M16 3h3a2 2 0 0 1 2 2v3M21 16v3a2 2 0 0 1-2 2h-3M8 21H5a2 2 0 0 1-2-2v-3" />
+						<rect x="7.5" y="7.5" width="3.5" height="3.5" rx=".6" />
+						<rect x="13" y="7.5" width="3.5" height="3.5" rx=".6" />
+						<rect x="7.5" y="13" width="3.5" height="3.5" rx=".6" />
+						<path d="M13.5 15h3M15 13.5v3" />
+					</svg>
+					<span class="p5-solo-escritorio">{encuestas.instruccion}</span>
+					<span class="p5-solo-movil">{encuestas.instruccionMovil}</span>
+					<svg class="p5-encuestas__icono" viewBox="0 0 24 24" aria-hidden="true">
+						<path d="M9 11V5a1.6 1.6 0 0 1 3.2 0v5.2m0 0V9.4a1.6 1.6 0 0 1 3.2 0v1.2m0 0v-.2a1.6 1.6 0 0 1 3.2 0V15a6 6 0 0 1-6 6h-1.2a6 6 0 0 1-4.7-2.3L4.4 15.6a1.7 1.7 0 0 1 2.6-2.1L9 15.5" />
+					</svg>
+				</p>
 				<ul class="p5-encuestas__lista">
 					{
 						encuestas.formularios.map((f) => (
@@ -339,7 +352,25 @@ const href = enlaceWhatsApp();
 		font-family: var(--fuente-texto);
 		font-weight: 600;
 		font-size: var(--texto-sm);
-		color: var(--color-celeste);
+		color: var(--color-verde-vivo);
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+	}
+
+	.p5-encuestas__icono {
+		width: 1.35rem;
+		height: 1.35rem;
+		flex: none;
+		fill: none;
+		stroke: currentColor;
+		stroke-width: 1.8;
+		stroke-linecap: round;
+		stroke-linejoin: round;
+	}
+
+	.p5-solo-movil {
+		display: none;
 	}
 
 	.p5-encuestas__lista {
@@ -401,6 +432,13 @@ const href = enlaceWhatsApp();
 	@media (width < 900px) {
 		.p5-encuestas {
 			align-items: center;
+		}
+		.p5-encuestas__icono--qr,
+		.p5-solo-escritorio {
+			display: none;
+		}
+		.p5-solo-movil {
+			display: inline;
 		}
 		.p5-encuestas__lista {
 			grid-template-columns: 1fr;

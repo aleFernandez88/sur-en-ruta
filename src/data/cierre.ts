@@ -43,6 +43,8 @@ export const encuestas = {
 	bajada: 'Respondé una breve encuesta y ayudanos a diseñar la app con quienes la van a usar.',
 	/** Instrucción sobre las tarjetas: el QR se escanea o se toca. */
 	instruccion: 'Escaneá el código o tocalo para responder.',
+	/** Versión móvil: ahí el QR no se ve, solo hay botones. */
+	instruccionMovil: 'Tocá para responder.',
 	formularios: [
 		{ id: 'extranjeros', etiqueta: 'Viajero extranjero', url: 'https://forms.gle/cfc3UXKegGsodcNV8' },
 		{ id: 'uruguayos', etiqueta: 'Viajero uruguayo', url: 'https://forms.gle/dithVeToxnTUZm4P8' },
