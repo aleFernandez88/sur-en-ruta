@@ -108,6 +108,7 @@
    * familia — elegida el 2026-08-28 para los nombres de sección del menú de HiloRuta, ya retirado (panel de
    * pantalla completa). Uso puntual, no reemplaza ningún rol de los 4 cerrados el 27/8. */
   --fuente-fina: 'Space Grotesk', var(--fuente-texto);
+  --fuente-manuscrita: 'Caveat', 'Segoe Script', cursive;
 
   /* Escala tipográfica fluida */
   --texto-xs: clamp(0.75rem, 0.71rem + 0.2vw, 0.85rem);

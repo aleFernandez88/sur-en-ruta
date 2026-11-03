@@ -147,7 +147,6 @@ bandaD += ` L 100 ${BANDA_ALTO} L 0 ${BANDA_ALTO} Z`;
 		>
 			<path d={bandaD}></path>
 		</svg>
-		<p class="escenario__firma">URUGUAY — <em>conecta · ordena · potencia</em></p>
 	</div>
 </div>
 
@@ -500,17 +499,6 @@ bandaD += ` L 100 ${BANDA_ALTO} L 0 ${BANDA_ALTO} Z`;
 
 	.escenario__banda-svg path {
 		fill: color-mix(in srgb, var(--color-marino-noche) 92%, transparent);
-	}
-
-	.escenario__firma {
-		position: absolute;
-		right: clamp(1.25rem, 4vw, 4rem);
-		bottom: 0.85rem;
-		margin: 0;
-		font-family: var(--fuente-texto);
-		font-size: var(--texto-xs);
-		letter-spacing: 0.18em;
-		color: color-mix(in srgb, var(--color-texto-sobre-foto) 85%, transparent);
 	}
 
 	@keyframes escenario-rotulo-entra {

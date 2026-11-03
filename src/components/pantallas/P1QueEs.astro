@@ -94,6 +94,12 @@ const isotipoPiezas = interior.replace(/<path /g, () => {
 						</ul>
 					</div>
 				</div>
+				<p class="p1-escrita" aria-label="Uruguay en movimiento">
+					<svg viewBox="0 -30 600 170" aria-hidden="true" focusable="false">
+						<defs><path id="p1-escrita-trazo" d="M 8 108 L 592 36" fill="none"></path></defs>
+						<text><textPath href="#p1-escrita-trazo" textLength="570" lengthAdjust="spacing">Uruguay en movimiento</textPath></text>
+					</svg>
+				</p>
 			</div>
 		</div>
 	</div>
@@ -166,6 +172,7 @@ const isotipoPiezas = interior.replace(/<path /g, () => {
 	}
 
 	.p1-texto__cuerpo {
+		position: relative; /* ancla de .p1-escrita (fuera del flujo) */
 		display: flex;
 		flex-direction: column;
 		gap: var(--espacio-sm);
@@ -283,6 +290,92 @@ const isotipoPiezas = interior.replace(/<path /g, () => {
 		:global(:root.entrada) .p1-pieza,
 		:global(:root.entrada) .p1-isotipo :global(.p1-pieza--pin) {
 			transition: none;
+		}
+	}
+
+	/* Frase manuscrita bajo el logo: SVG con el texto sobre una curva leve que sube hacia la derecha
+	 * (como escrita a mano, con inclinación y arco). Alto visual comparable al de «Uruguay» (Archivo
+	 * 800): Caveat tiene caja chica, por eso el texto en el SVG es grande. Se "escribe" de izquierda a
+	 * derecha con un recorte (clip-path) y después late el resplandor blanco de fondo. */
+	.p1-escrita {
+		/* Fuera del flujo: cuelga debajo de la columna sin empujar ni mover el resto del contenido. */
+		position: absolute;
+		top: calc(100% - 2.75rem);
+		left: 0;
+		margin: 0;
+		width: min(34rem, 100%);
+		line-height: 0;
+		pointer-events: none;
+	}
+
+	.p1-escrita svg {
+		display: block;
+		width: 100%;
+		height: auto;
+		overflow: visible;
+		filter: drop-shadow(0 0 4px rgb(255 255 255 / 0.25));
+	}
+
+	.p1-escrita text {
+		font-family: var(--fuente-manuscrita);
+		font-weight: 500;
+		font-size: 92px;
+		fill: var(--color-celeste);
+		stroke: none;
+		text-shadow: none;
+	}
+
+	@keyframes p1-escribe {
+		from {
+			clip-path: inset(-40px 100% -40px -20px);
+		}
+		to {
+			clip-path: inset(-40px -40px -40px -20px);
+		}
+	}
+	/* Latido: dos pulsos seguidos y una pausa, como un corazón. */
+	@keyframes p1-latido {
+		0%, 100% {
+			filter: drop-shadow(0 0 4px rgb(255 255 255 / 0.2));
+		}
+		14% {
+			filter: drop-shadow(0 0 14px rgb(255 255 255 / 0.75));
+		}
+		28% {
+			filter: drop-shadow(0 0 5px rgb(255 255 255 / 0.3));
+		}
+		42% {
+			filter: drop-shadow(0 0 11px rgb(255 255 255 / 0.6));
+		}
+		70% {
+			filter: drop-shadow(0 0 4px rgb(255 255 255 / 0.2));
+		}
+	}
+	:global(:root.js) .p1-escrita {
+		clip-path: inset(-40px 100% -40px -20px);
+		animation: p1-escribe 3000ms linear 2000ms both paused;
+	}
+	:global(:root.js) .p1-escrita svg {
+		animation: p1-latido 2.4s ease-in-out 5000ms infinite paused;
+	}
+	:global(:root.entrada) .p1-escrita,
+	:global(:root.entrada) .p1-escrita svg {
+		animation-play-state: running;
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		:global(:root.js) .p1-escrita {
+			animation: none !important;
+			clip-path: none;
+		}
+		:global(:root.js) .p1-escrita svg {
+			animation: none !important;
+		}
+	}
+
+	@media (width < 900px) {
+		.p1-escrita {
+			width: min(92vw, 26rem);
 		}
 	}
 
