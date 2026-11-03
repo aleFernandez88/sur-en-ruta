@@ -130,4 +130,4 @@ los SVG, `rutas/`); `prototipos/app-demo/` quedó reducido a `render/` (tooling 
 - Rutas siempre **absolutas** en lo que se reporta.
 - Ramas `feat/…` y `fix/…` desde `main` para cambios en curso; esta primera entrega va directo en
   `main` porque el repo nace vacío.
-- **Ningún agente deploya.** El deploy a producción (con backup y verificación) lo ejecuta Ale.
+- **Deploy (desde 2026-11-03):** cada push a `main` dispara `.github/workflows/deploy-hostinger.yml`, que compila y publica `dist/` en la rama `hostinger`; Hostinger (hPanel → Avanzado → Git, auto-deploy) la baja sola a `public_html` del dominio temporal `white-mongoose-727420.hostingersite.com`. Hostinger bloquea SSH/FTP desde los runners de GitHub, por eso se usa la rama. **`main` = producción:** pushear a `main` solo cuando Ale lo pida; `hostinger` nunca se edita a mano. `base` es `/` (`astro.config.mjs`; `BASE_PATH`/`SITE_URL` por entorno). Al conectar `surenruta.uy` / `surenruta.com.uy`, apuntar el dominio al sitio y actualizar la variable `SITE_URL`. GitHub Pages (`deploy.yml`) quedó solo manual.
