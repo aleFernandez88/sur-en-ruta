@@ -23,7 +23,17 @@
  * bajo `astro dev`). Ver `cierre.ts`.
  */
 import Seccion from '../Seccion.astro';
-import { kicker, titular, apoyo, whatsapp, enlaceWhatsApp } from '../../data/cierre.ts';
+import { kicker, titular, apoyo, whatsapp, enlaceWhatsApp, encuestas } from '../../data/cierre.ts';
+import logoWhatsApp from '../../assets/whatsapp.svg?raw';
+import qrExtranjeros from '../../assets/qr/extranjeros.svg?raw';
+import qrUruguayos from '../../assets/qr/uruguayos.svg?raw';
+import qrEstablecimientos from '../../assets/qr/establecimientos.svg?raw';
+
+const qr: Record<string, string> = {
+	extranjeros: qrExtranjeros,
+	uruguayos: qrUruguayos,
+	establecimientos: qrEstablecimientos,
+};
 
 const href = enlaceWhatsApp();
 ---
@@ -46,14 +56,38 @@ const href = enlaceWhatsApp();
 		</div>
 
 		<div class="p5-mensaje">
-			<p class="p5-kicker">{kicker}</p>
-			<h2 class="p5-titular">{titular}</h2>
+			<div class="p5-cabeza">
+				<p class="p5-kicker">{kicker}</p>
+				<h2 class="p5-titular">{titular}</h2>
+			</div>
+			<section class="p5-encuestas" aria-labelledby="p5-encuestas-titulo">
+				<h3 class="p5-encuestas__titulo" id="p5-encuestas-titulo">{encuestas.titulo}</h3>
+				<p class="p5-encuestas__bajada">{encuestas.bajada}</p>
+				<p class="p5-encuestas__instruccion">{encuestas.instruccion}</p>
+				<ul class="p5-encuestas__lista">
+					{
+						encuestas.formularios.map((f) => (
+							<li>
+								<a class="p5-encuesta" href={f.url} target="_blank" rel="noopener">
+									<span class="p5-encuesta__qr" aria-hidden="true" set:html={qr[f.id]} />
+									<span class="p5-encuesta__etiqueta">{f.etiqueta}</span>
+								</a>
+							</li>
+						))
+					}
+				</ul>
+			</section>
 			<div class="p5-accion">
 				{
 					href ? (
 						<>
-							<a class="p5-boton" href={href} target="_blank" rel="noopener">
-								{whatsapp.texto}
+							<a class="p5-wsp" href={href} target="_blank" rel="noopener" aria-label={whatsapp.texto}>
+								<span class="p5-wsp__texto">{whatsapp.texto}</span>
+								<svg class="p5-wsp__flecha" viewBox="0 0 60 24" aria-hidden="true">
+									<path d="M2 14 C 18 4, 34 4, 54 12" />
+									<path d="M45 5 L 55 12.5 L 44 18" />
+								</svg>
+								<span class="p5-wsp__logo" aria-hidden="true" set:html={logoWhatsApp} />
 							</a>
 							<p class="p5-apoyo">{apoyo}</p>
 						</>
@@ -143,6 +177,29 @@ const href = enlaceWhatsApp();
 		}
 	}
 
+	/* Kicker + titular: en escritorio van a la IZQUIERDA del celular (fuera del flujo, para no saturar
+	 * la columna derecha), en la parte alta, por encima de la ruta. En móvil siguen en la columna. */
+	.p5-cabeza {
+		display: flex;
+		flex-direction: column;
+		gap: var(--espacio-md);
+		align-items: inherit;
+	}
+
+	@media (width >= 900px) {
+		.p5-cabeza {
+			position: absolute;
+			z-index: 1;
+			top: 11%;
+			inset-inline-start: max(
+				clamp(1.25rem, 4vw, 4rem),
+				calc((100% - var(--marco-max)) / 2 + clamp(1.25rem, 4vw, 4rem))
+			);
+			width: calc(50% - var(--p5-medio-celular) - 2rem - max(clamp(1.25rem, 4vw, 4rem), calc((100% - var(--marco-max)) / 2 + clamp(1.25rem, 4vw, 4rem))));
+			align-items: flex-start;
+		}
+	}
+
 	.p5-kicker {
 		margin: 0;
 		font-family: var(--fuente-display);
@@ -182,17 +239,56 @@ const href = enlaceWhatsApp();
 		}
 	}
 
-	.p5-boton {
+	/* WhatsApp: logo y texto sueltos (sin botón), con una flecha que va del texto al logo. */
+	.p5-wsp {
 		display: inline-flex;
 		align-items: center;
-		padding: 0.85rem 1.75rem;
-		border-radius: var(--radio-full);
-		background: var(--color-verde);
-		color: var(--color-texto-sobre-foto);
-		font-family: var(--fuente-texto);
-		font-weight: 700;
-		font-size: var(--texto-base);
+		gap: 0.6rem;
+		color: #fff;
 		text-decoration: none;
+	}
+
+	.p5-wsp__texto {
+		font-family: var(--fuente-texto);
+		font-weight: 600;
+		font-size: var(--texto-base);
+	}
+
+	.p5-wsp__flecha {
+		width: 3rem;
+		height: auto;
+		flex: none;
+		fill: none;
+		stroke: var(--color-celeste);
+		stroke-width: 2.5;
+		stroke-linecap: round;
+		stroke-linejoin: round;
+		transition: translate 180ms ease;
+	}
+
+	.p5-wsp__logo {
+		display: block;
+		width: 2.75rem;
+		height: 2.75rem;
+		flex: none;
+		color: #25d366;
+		transition: scale 180ms ease;
+	}
+
+	.p5-wsp__logo :global(svg) {
+		display: block;
+		width: 100%;
+		height: 100%;
+	}
+
+	.p5-wsp:hover .p5-wsp__logo,
+	.p5-wsp:focus-visible .p5-wsp__logo {
+		scale: 1.12;
+	}
+
+	.p5-wsp:hover .p5-wsp__flecha,
+	.p5-wsp:focus-visible .p5-wsp__flecha {
+		translate: 4px 0;
 	}
 
 	.p5-apoyo {
@@ -211,6 +307,117 @@ const href = enlaceWhatsApp();
 		font-family: var(--fuente-texto);
 		font-size: var(--texto-sm);
 		color: rgb(255 255 255 / 0.7);
+	}
+
+	/* === Encuestas: tarjetas con QR clickeable (en móvil, solo botones) === */
+	.p5-encuestas {
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+		width: 100%;
+	}
+
+	.p5-encuestas__titulo {
+		margin: 0;
+		font-family: var(--fuente-display);
+		font-weight: 800;
+		font-size: clamp(1.35rem, 1.1rem + 0.9vw, 1.75rem);
+		line-height: 1.15;
+		color: var(--color-celeste);
+	}
+
+	.p5-encuestas__bajada {
+		margin: 0;
+		font-family: var(--fuente-texto);
+		font-size: var(--texto-sm);
+		line-height: 1.4;
+		color: rgb(255 255 255 / 0.78);
+	}
+
+	.p5-encuestas__instruccion {
+		margin: 0;
+		font-family: var(--fuente-texto);
+		font-weight: 600;
+		font-size: var(--texto-sm);
+		color: var(--color-celeste);
+	}
+
+	.p5-encuestas__lista {
+		list-style: none;
+		margin: 0.35rem 0 0;
+		padding: 0;
+		display: grid;
+		grid-template-columns: repeat(3, 1fr);
+		gap: 0.75rem;
+	}
+
+	.p5-encuesta {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 0.5rem;
+		padding: 0.4rem 0.25rem;
+		color: #fff;
+		text-decoration: none;
+		text-align: center;
+		transition:
+			transform 180ms ease,
+			box-shadow 180ms ease;
+	}
+
+	.p5-encuesta:hover,
+	.p5-encuesta:focus-visible {
+		transform: translateY(-3px);
+	}
+
+	.p5-encuesta:hover .p5-encuesta__qr,
+	.p5-encuesta:focus-visible .p5-encuesta__qr {
+		filter: drop-shadow(0 0 8px color-mix(in srgb, var(--color-celeste) 70%, transparent));
+	}
+
+	.p5-encuesta__qr {
+		display: block;
+		width: 100%;
+		max-width: 5.75rem;
+		aspect-ratio: 1;
+		color: var(--color-celeste);
+		transition: filter 180ms ease;
+	}
+
+	.p5-encuesta__qr :global(svg) {
+		display: block;
+		width: 100%;
+		height: 100%;
+	}
+
+	.p5-encuesta__etiqueta {
+		font-family: var(--fuente-texto);
+		font-weight: 700;
+		font-size: var(--texto-xs);
+		line-height: 1.2;
+	}
+
+	/* Móvil: nadie escanea un QR desde el mismo teléfono → tres botones con el enlace. */
+	@media (width < 900px) {
+		.p5-encuestas {
+			align-items: center;
+		}
+		.p5-encuestas__lista {
+			grid-template-columns: 1fr;
+			width: min(100%, 20rem);
+			gap: 0.5rem;
+		}
+		.p5-encuesta {
+			padding: 0.7rem 1rem;
+			border: 1.5px solid var(--color-celeste);
+			border-radius: var(--radio-full);
+		}
+		.p5-encuesta__qr {
+			display: none;
+		}
+		.p5-encuesta__etiqueta {
+			font-size: var(--texto-sm);
+		}
 	}
 
 	/* === Ruta que llega al celular (solo escritorio) === */
@@ -337,6 +544,7 @@ const href = enlaceWhatsApp();
 		}
 		.p5-kicker,
 		.p5-titular,
+		.p5-encuestas,
 		.p5-accion {
 			animation: p5-cae cubic-bezier(0.2, 0.7, 0.2, 1) both;
 			animation-timeline: --cierre;
@@ -347,8 +555,11 @@ const href = enlaceWhatsApp();
 		.p5-titular {
 			animation-range: entry 25% entry 65%;
 		}
+		.p5-encuestas {
+			animation-range: entry 40% entry 80%;
+		}
 		.p5-accion {
-			animation-range: entry 50% entry 90%;
+			animation-range: entry 55% entry 95%;
 		}
 	}
 
@@ -357,6 +568,7 @@ const href = enlaceWhatsApp();
 		.p5-ruta__pin,
 		.p5-kicker,
 		.p5-titular,
+		.p5-encuestas,
 		.p5-accion {
 			animation: none !important;
 			opacity: 1;

@@ -27,9 +27,27 @@ export interface WhatsApp {
 }
 
 export const whatsapp: WhatsApp = {
-	numero: null,
+	numero: '59899277669',
 	texto: 'Consultanos por WhatsApp',
 	mensaje: 'Hola, quiero saber más sobre Sur en Ruta.',
+};
+
+/**
+ * Encuestas (Google Forms), una por público. Cada tarjeta muestra un QR (escaneable desde otro
+ * dispositivo) que además es un enlace clickeable; en móvil se ven solo como botones.
+ * Los QR son SVG estáticos generados desde estas mismas URLs (`src/assets/qr/<id>.svg`): si cambia
+ * una URL hay que regenerar su QR.
+ */
+export const encuestas = {
+	titulo: 'Ayudanos a trazar la ruta.',
+	bajada: 'Respondé una breve encuesta y ayudanos a diseñar la app con quienes la van a usar.',
+	/** Instrucción sobre las tarjetas: el QR se escanea o se toca. */
+	instruccion: 'Escaneá el código o tocalo para responder.',
+	formularios: [
+		{ id: 'extranjeros', etiqueta: 'Viajero extranjero', url: 'https://forms.gle/cfc3UXKegGsodcNV8' },
+		{ id: 'uruguayos', etiqueta: 'Viajero uruguayo', url: 'https://forms.gle/dithVeToxnTUZm4P8' },
+		{ id: 'establecimientos', etiqueta: 'Establecimiento', url: 'https://forms.gle/QbfHUDRxxirKftZDA' },
+	],
 };
 
 /** Enlace `wa.me` o `null` si todavía no hay número. */

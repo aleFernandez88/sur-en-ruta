@@ -165,7 +165,10 @@ const keyframesGenerados = rutas
 	.p4-caja {
 		display: flex;
 		flex-direction: column;
-		gap: var(--espacio-md);
+		/* Las medidas verticales también dependen del ALTO (svh): en ventanas bajas (portátiles con
+		 * barras del navegador, ≈650px útiles) el bloque medía casi todo el viewport y se recortaba
+		 * por arriba. Con el alto de siempre (≥ 900px) los topes dan los mismos valores de antes. */
+		gap: clamp(0.5rem, 2.2svh, var(--espacio-md));
 		max-width: min(50vw, calc(var(--marco-max) / 2));
 	}
 
@@ -188,7 +191,7 @@ const keyframesGenerados = rutas
 		margin: 0;
 		font-family: var(--fuente-display);
 		font-weight: 200;
-		font-size: clamp(1.9rem, 1.1rem + 2.6vw, 3rem);
+		font-size: min(clamp(1.9rem, 1.1rem + 2.6vw, 3rem), 6.4svh);
 		line-height: 1.05;
 		color: var(--color-texto-sobre-foto);
 	}
@@ -214,7 +217,7 @@ const keyframesGenerados = rutas
 		margin: 0;
 		padding: 0;
 		list-style: none;
-		min-height: clamp(14rem, 30svh, 20rem);
+		min-height: clamp(10rem, 26svh, 20rem);
 		/* fundido al cambiar de ruta con una pastilla (ver el script del final) */
 		transition: opacity 0.16s ease;
 	}
@@ -229,7 +232,7 @@ const keyframesGenerados = rutas
 
 	.p4-ruta-icono {
 		color: var(--color-texto-sobre-foto);
-		margin-bottom: var(--espacio-xs);
+		margin-bottom: clamp(0.1rem, 0.8svh, var(--espacio-xs));
 	}
 
 	.p4-ruta-nombre {
@@ -237,7 +240,7 @@ const keyframesGenerados = rutas
 		margin: 0;
 		font-family: var(--fuente-display);
 		font-weight: 800;
-		font-size: clamp(2.5rem, 1.2rem + 5vw, 5.7rem); /* tope = lo que mide a 1440px */
+		font-size: min(clamp(2.5rem, 1.2rem + 5vw, 5.7rem), 10.5svh); /* tope = lo que mide a 1440px y 870px de alto */
 		line-height: 1.02;
 		color: var(--color-texto-sobre-foto);
 	}
